@@ -1,0 +1,42 @@
+<% layout = 'layouts/main' %> <% title = 'ورود به CRM' %> <% user = null %> <%
+includeFullCalendar = false %> <% pageScripts = ['/js/login.js'] %>
+
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title text-center">ورود به CRM-005</h5>
+          <form id="loginForm" method="post" action="/api/auth/login">
+            <div class="mb-3">
+              <label for="username" class="form-label">نام کاربری</label>
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                name="username"
+                placeholder="GOSTARESH\username"
+                value="GOSTARESH\ehsntb"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">رمز عبور</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                name="password"
+                value="Ss12345"
+                required
+              />
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">ورود</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

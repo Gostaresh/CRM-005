@@ -1,0 +1,54 @@
+body {
+  font-family: "Vazirmatn", sans-serif;
+}
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card {
+  border-radius: 10px;
+}
+
+.alert {
+  font-size: 0.9rem;
+}
+
+.calendar-container {
+  padding-top: 70px; /* Space for fixed navbar */
+}
+
+#calendar {
+  height: calc(100vh - 200px); /* Full height minus navbar and controls */
+  width: 100%;
+  margin: 0 auto;
+}
+
+.fc {
+  direction: rtl;
+}
+
+.fc .fc-daygrid-day-number,
+.fc .fc-col-header-cell-cushion {
+  font-family: "Vazirmatn", sans-serif;
+}
+
+#loadMoreBtn,
+#loadMoreActivitiesBtn {
+  min-width: 150px;
+}
+
+#activityDetailsContent p {
+  margin-bottom: 0.5rem;
+}
+
+#activityDetailsContent strong {
+  display: inline-block;
+  width: 100px;
+}
+
+@media (max-width: 768px) {
+  #calendar {
+    height: calc(100vh - 250px); /* Adjust for smaller screens */
+  }
+}

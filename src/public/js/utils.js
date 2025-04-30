@@ -1,0 +1,25 @@
+// Show error toast
+function showErrorToast(message) {
+  const toastEl = document.getElementById("errorToast");
+  if (toastEl) {
+    toastEl.querySelector(".toast-body").textContent = message;
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+  } else {
+    console.error("Error toast element not found");
+    alert(message);
+  }
+}
+
+// Show success toast
+function showSuccessToast(message) {
+  const toastEl = document.getElementById("successToast");
+  if (toastEl) {
+    toastEl.querySelector(".toast-body").textContent = message;
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+  } else {
+    console.error("Success toast element not found");
+    alert(message);
+  }
+}

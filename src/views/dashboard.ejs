@@ -1,0 +1,331 @@
+<% layout = 'layouts/main' %> <% title = 'داشبورد CRM' %> <% includeFullCalendar
+= true %> <% pageScripts = ['/js/dashboard.js', '/js/calendar.js',
+'/js/accounts.js'] %>
+
+<div class="container-fluid calendar-container">
+  <div class="card mt-5">
+    <div class="card-body">
+      <h5 class="card-title">فعالیت‌ها</h5>
+      <div class="mb-3">
+        <button
+          id="createTaskBtn"
+          class="btn btn-success me-2"
+          data-bs-toggle="modal"
+          data-bs-target="#createTaskModal"
+        >
+          ایجاد وظیفه جدید
+        </button>
+        <button id="allActivitiesBtn" class="btn btn-primary me-2">
+          همه فعالیت‌ها
+        </button>
+        <button id="myActivitiesBtn" class="btn btn-outline-primary">
+          فعالیت‌های من
+        </button>
+      </div>
+      <div id="calendar"></div>
+      <div class="text-center mt-3">
+        <button id="loadMoreActivitiesBtn" class="btn btn-primary">
+          بارگذاری فعالیت‌های بیشتر
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-body">
+      <h5 class="card-title">لیست حساب‌ها</h5>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>نام حساب</th>
+            <th>ایمیل</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody id="accountsTable"></tbody>
+      </table>
+      <div class="text-center mt-3">
+        <button id="loadMoreBtn" class="btn btn-primary">بارگذاری بیشتر</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Task Modal -->
+  <div
+    class="modal fade"
+    id="createTaskModal"
+    tabindex="-1"
+    aria-labelledby="createTaskModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createTaskModalLabel">
+            ایجاد وظیفه جدید
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form id="createTaskForm">
+            <div class="mb-3">
+              <label for="taskSubject" class="form-label">موضوع *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="taskSubject"
+                name="subject"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="taskDescription" class="form-label">توضیحات</label>
+              <textarea
+                class="form-control"
+                id="taskDescription"
+                name="description"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="taskPriority" class="form-label">اولویت</label>
+              <select class="form-select" id="taskPriority" name="prioritycode">
+                <option value="1">عادی</option>
+                <option value="2">بالا</option>
+                <option value="0">پایین</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="taskStartDate" class="form-label">تاریخ شروع</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="taskStartDate"
+                name="scheduledstart"
+              />
+            </div>
+            <div class="mb-3">
+              <label for="taskDueDate" class="form-label">تاریخ سررسید *</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="taskDueDate"
+                name="scheduledend"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="taskRegarding" class="form-label">مرتبط با</label>
+              <select
+                class="form-select"
+                id="taskRegarding"
+                name="regardingobjectid"
+              >
+                <option value="">انتخاب کنید</option>
+                <!-- Options will be populated dynamically -->
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">ایجاد</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Task Modal -->
+  <div
+    class="modal fade"
+    id="editTaskModal"
+    tabindex="-1"
+    aria-labelledby="editTaskModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editTaskModalLabel">ویرایش وظیفه</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form id="editTaskForm">
+            <input type="hidden" id="editTaskId" name="activityId" />
+            <div class="mb-3">
+              <label for="editTaskSubject" class="form-label">موضوع *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="editTaskSubject"
+                name="subject"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="editTaskDescription" class="form-label"
+                >توضیحات</label
+              >
+              <textarea
+                class="form-control"
+                id="editTaskDescription"
+                name="description"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="editTaskPriority" class="form-label">اولویت</label>
+              <select
+                class="form-select"
+                id="editTaskPriority"
+                name="prioritycode"
+              >
+                <option value="1">عادی</option>
+                <option value="2">بالا</option>
+                <option value="0">پایین</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editTaskStartDate" class="form-label"
+                >تاریخ شروع</label
+              >
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="editTaskStartDate"
+                name="scheduledstart"
+              />
+            </div>
+            <div class="mb-3">
+              <label for="editTaskDueDate" class="form-label"
+                >تاریخ سررسید *</label
+              >
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="editTaskDueDate"
+                name="scheduledend"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="editTaskRegarding" class="form-label">مرتبط با</label>
+              <select
+                class="form-select"
+                id="editTaskRegarding"
+                name="regardingobjectid"
+              >
+                <option value="">انتخاب کنید</option>
+                <!-- Options will be populated dynamically -->
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Details Modal -->
+  <div
+    class="modal fade"
+    id="activityDetailsModal"
+    tabindex="-1"
+    aria-labelledby="activityDetailsModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="activityDetailsModalLabel">
+            جزئیات فعالیت
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div id="activityDetailsContent">
+            <p><strong>موضوع:</strong> <span id="activitySubject"></span></p>
+            <p><strong>نوع فعالیت:</strong> <span id="activityType"></span></p>
+            <p><strong>زمان شروع:</strong> <span id="activityStart"></span></p>
+            <p><strong>زمان پایان:</strong> <span id="activityEnd"></span></p>
+            <p><strong>مالک:</strong> <span id="activityOwner"></span></p>
+            <p>
+              <strong>توضیحات:</strong> <span id="activityDescription"></span>
+            </p>
+            <p><strong>شناسه فعالیت:</strong> <span id="activityId"></span></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="editTaskBtn"
+            data-bs-toggle="modal"
+            data-bs-target="#editTaskModal"
+          >
+            ویرایش
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            بستن
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div
+      id="errorToast"
+      class="toast"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
+      <div class="toast-header">
+        <strong class="me-auto">خطا</strong>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="toast"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="toast-body"></div>
+    </div>
+    <div
+      id="successToast"
+      class="toast"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
+      <div class="toast-header">
+        <strong class="me-auto">موفقیت</strong>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="toast"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="toast-body"></div>
+    </div>
+  </div>
+</div>

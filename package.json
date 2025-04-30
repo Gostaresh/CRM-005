@@ -1,0 +1,36 @@
+{
+  "name": "crm-005",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 nodemon src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gostaresh/CRM-005.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Gostaresh/CRM-005/issues"
+  },
+  "homepage": "https://github.com/Gostaresh/CRM-005#readme",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "httpntlm": "^1.8.13",
+    "ldapjs": "^3.0.7",
+    "winston": "^3.17.0"
+  }
+}
