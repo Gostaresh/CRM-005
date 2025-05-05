@@ -1,331 +1,466 @@
-<% layout = 'layouts/main' %> <% title = 'داشبورد CRM' %> <% includeFullCalendar
-= true %> <% pageScripts = ['/js/dashboard.js', '/js/calendar.js',
-'/js/accounts.js'] %>
-
-<div class="container-fluid calendar-container">
-  <div class="card mt-5">
-    <div class="card-body">
-      <h5 class="card-title">فعالیت‌ها</h5>
-      <div class="mb-3">
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>داشبورد</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: "Vazirmatn", sans-serif;
+      }
+      #calendar {
+        max-width: 1100px;
+        margin: 40px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard">CRM</a>
         <button
-          id="createTaskBtn"
-          class="btn btn-success me-2"
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/crm/create-activity"
+                >ایجاد فعالیت جدید</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/crm/accounts">حساب‌ها</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <span class="nav-link">کاربر: <%= user.fullname %></span>
+            </li>
+            <li class="nav-item">
+              <button id="logoutBtn" class="nav-link btn btn-link">خروج</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <div class="d-flex justify-content-end mb-3">
+        <button
+          class="btn btn-success"
           data-bs-toggle="modal"
           data-bs-target="#createTaskModal"
         >
-          ایجاد وظیفه جدید
-        </button>
-        <button id="allActivitiesBtn" class="btn btn-primary me-2">
-          همه فعالیت‌ها
-        </button>
-        <button id="myActivitiesBtn" class="btn btn-outline-primary">
-          فعالیت‌های من
+          <i class="bi bi-plus-circle"></i> ایجاد وظیفه جدید
         </button>
       </div>
+      <h2 class="text-center mb-4">فعالیت‌های من</h2>
+
+      <!-- Buttons to toggle between views -->
+      <div class="mb-3 text-center">
+        <button id="myActivitiesBtn" class="btn btn-primary">
+          فعالیت‌های من
+        </button>
+        <button id="allActivitiesBtn" class="btn btn-outline-primary">
+          همه فعالیت‌ها
+        </button>
+      </div>
+
+      <!-- Calendar -->
       <div id="calendar"></div>
+
+      <!-- Load More Button -->
       <div class="text-center mt-3">
         <button id="loadMoreActivitiesBtn" class="btn btn-primary">
           بارگذاری فعالیت‌های بیشتر
         </button>
       </div>
     </div>
-  </div>
 
-  <div class="card mt-4">
-    <div class="card-body">
-      <h5 class="card-title">لیست حساب‌ها</h5>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>نام حساب</th>
-            <th>ایمیل</th>
-            <th>عملیات</th>
-          </tr>
-        </thead>
-        <tbody id="accountsTable"></tbody>
-      </table>
-      <div class="text-center mt-3">
-        <button id="loadMoreBtn" class="btn btn-primary">بارگذاری بیشتر</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Create Task Modal -->
-  <div
-    class="modal fade"
-    id="createTaskModal"
-    tabindex="-1"
-    aria-labelledby="createTaskModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="createTaskModalLabel">
-            ایجاد وظیفه جدید
-          </h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <form id="createTaskForm">
-            <div class="mb-3">
-              <label for="taskSubject" class="form-label">موضوع *</label>
-              <input
-                type="text"
-                class="form-control"
-                id="taskSubject"
-                name="subject"
-                required
-              />
+    <!-- Activity Details Modal -->
+    <div
+      class="modal fade"
+      id="activityDetailsModal"
+      tabindex="-1"
+      aria-labelledby="activityDetailsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="activityDetailsModalLabel">
+              <i class="bi bi-info-circle"></i> جزئیات فعالیت
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-2">
+              <i class="bi bi-card-text"></i>
+              <strong>موضوع:</strong>
+              <span id="activitySubject" class="ms-2"></span>
             </div>
-            <div class="mb-3">
-              <label for="taskDescription" class="form-label">توضیحات</label>
-              <textarea
-                class="form-control"
-                id="taskDescription"
-                name="description"
-                rows="3"
-              ></textarea>
+            <div class="mb-2">
+              <i class="bi bi-tag"></i>
+              <strong>نوع فعالیت:</strong>
+              <span
+                id="activityType"
+                class="badge bg-info text-dark ms-2"
+              ></span>
             </div>
-            <div class="mb-3">
-              <label for="taskPriority" class="form-label">اولویت</label>
-              <select class="form-select" id="taskPriority" name="prioritycode">
-                <option value="1">عادی</option>
-                <option value="2">بالا</option>
-                <option value="0">پایین</option>
-              </select>
+            <div class="mb-2">
+              <i class="bi bi-calendar-event"></i>
+              <strong>شروع:</strong>
+              <span id="activityStart" class="ms-2"></span>
             </div>
-            <div class="mb-3">
-              <label for="taskStartDate" class="form-label">تاریخ شروع</label>
-              <input
-                type="datetime-local"
-                class="form-control"
-                id="taskStartDate"
-                name="scheduledstart"
-              />
+            <div class="mb-2">
+              <i class="bi bi-calendar-check"></i>
+              <strong>پایان:</strong>
+              <span id="activityEnd" class="ms-2"></span>
             </div>
-            <div class="mb-3">
-              <label for="taskDueDate" class="form-label">تاریخ سررسید *</label>
-              <input
-                type="datetime-local"
-                class="form-control"
-                id="taskDueDate"
-                name="scheduledend"
-                required
-              />
+            <div class="mb-2">
+              <i class="bi bi-person"></i>
+              <strong>مالک:</strong>
+              <span id="activityOwner" class="ms-2"></span>
             </div>
-            <div class="mb-3">
-              <label for="taskRegarding" class="form-label">مرتبط با</label>
-              <select
-                class="form-select"
-                id="taskRegarding"
-                name="regardingobjectid"
+            <div class="mb-2">
+              <i class="bi bi-chat-left-text"></i>
+              <strong>توضیحات:</strong>
+              <span id="activityDescription" class="ms-2"></span>
+            </div>
+            <div class="mb-2">
+              <i class="bi bi-hash"></i>
+              <strong>شناسه فعالیت:</strong>
+              <span id="activityId" class="ms-2"></span>
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                onclick="navigator.clipboard.writeText(document.getElementById('activityId').textContent)"
               >
-                <option value="">انتخاب کنید</option>
-                <!-- Options will be populated dynamically -->
-              </select>
+                <i class="bi bi-clipboard"></i>
+              </button>
             </div>
-            <button type="submit" class="btn btn-primary">ایجاد</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit Task Modal -->
-  <div
-    class="modal fade"
-    id="editTaskModal"
-    tabindex="-1"
-    aria-labelledby="editTaskModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editTaskModalLabel">ویرایش وظیفه</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <form id="editTaskForm">
-            <input type="hidden" id="editTaskId" name="activityId" />
-            <div class="mb-3">
-              <label for="editTaskSubject" class="form-label">موضوع *</label>
-              <input
-                type="text"
-                class="form-control"
-                id="editTaskSubject"
-                name="subject"
-                required
-              />
-            </div>
-            <div class="mb-3">
-              <label for="editTaskDescription" class="form-label"
-                >توضیحات</label
-              >
-              <textarea
-                class="form-control"
-                id="editTaskDescription"
-                name="description"
-                rows="3"
-              ></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="editTaskPriority" class="form-label">اولویت</label>
-              <select
-                class="form-select"
-                id="editTaskPriority"
-                name="prioritycode"
-              >
-                <option value="1">عادی</option>
-                <option value="2">بالا</option>
-                <option value="0">پایین</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="editTaskStartDate" class="form-label"
-                >تاریخ شروع</label
-              >
-              <input
-                type="datetime-local"
-                class="form-control"
-                id="editTaskStartDate"
-                name="scheduledstart"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="editTaskDueDate" class="form-label"
-                >تاریخ سررسید *</label
-              >
-              <input
-                type="datetime-local"
-                class="form-control"
-                id="editTaskDueDate"
-                name="scheduledend"
-                required
-              />
-            </div>
-            <div class="mb-3">
-              <label for="editTaskRegarding" class="form-label">مرتبط با</label>
-              <select
-                class="form-select"
-                id="editTaskRegarding"
-                name="regardingobjectid"
-              >
-                <option value="">انتخاب کنید</option>
-                <!-- Options will be populated dynamically -->
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Activity Details Modal -->
-  <div
-    class="modal fade"
-    id="activityDetailsModal"
-    tabindex="-1"
-    aria-labelledby="activityDetailsModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="activityDetailsModalLabel">
-            جزئیات فعالیت
-          </h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <div id="activityDetailsContent">
-            <p><strong>موضوع:</strong> <span id="activitySubject"></span></p>
-            <p><strong>نوع فعالیت:</strong> <span id="activityType"></span></p>
-            <p><strong>زمان شروع:</strong> <span id="activityStart"></span></p>
-            <p><strong>زمان پایان:</strong> <span id="activityEnd"></span></p>
-            <p><strong>مالک:</strong> <span id="activityOwner"></span></p>
-            <p>
-              <strong>توضیحات:</strong> <span id="activityDescription"></span>
-            </p>
-            <p><strong>شناسه فعالیت:</strong> <span id="activityId"></span></p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              بستن
+            </button>
+            <button type="button" id="editTaskBtn" class="btn btn-primary">
+              ویرایش
+            </button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-primary"
-            id="editTaskBtn"
-            data-bs-toggle="modal"
-            data-bs-target="#editTaskModal"
-          >
-            ویرایش
-          </button>
-          <button
-            type="button"
-            class="btn btn-secondary"
-            data-bs-dismiss="modal"
-          >
-            بستن
-          </button>
+      </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div
+      class="modal fade"
+      id="editTaskModal"
+      tabindex="-1"
+      aria-labelledby="editTaskModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editTaskModalLabel">ویرایش وظیفه</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="editTaskForm">
+              <input type="hidden" id="editTaskId" name="activityId" />
+              <div class="mb-3">
+                <label for="editTaskSubject" class="form-label">موضوع</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editTaskSubject"
+                  name="subject"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="editTaskDescription" class="form-label"
+                  >توضیحات</label
+                >
+                <textarea
+                  class="form-control"
+                  id="editTaskDescription"
+                  name="description"
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskStartDate" class="form-label"
+                  >تاریخ شروع</label
+                >
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  id="editTaskStartDate"
+                  name="scheduledstart"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="editTaskDueDate" class="form-label"
+                  >تاریخ سررسید</label
+                >
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  id="editTaskDueDate"
+                  name="scheduledend"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="editTaskPriority" class="form-label">اولویت</label>
+                <select
+                  class="form-select"
+                  id="editTaskPriority"
+                  name="prioritycode"
+                >
+                  <option value="1">Normal</option>
+                  <option value="2">High</option>
+                  <option value="0">Low</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskRegarding" class="form-label"
+                  >مرتبط با</label
+                >
+                <select
+                  class="form-select"
+                  id="editTaskRegarding"
+                  name="regardingobjectid"
+                >
+                  <option value="">انتخاب کنید...</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">ذخیره</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Toast Container -->
-  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <!-- Create Task Modal -->
     <div
-      id="errorToast"
-      class="toast"
-      role="alert"
-      aria-live="assertive"
-      aria-atomic="true"
+      class="modal fade"
+      id="createTaskModal"
+      tabindex="-1"
+      aria-labelledby="createTaskModalLabel"
+      aria-hidden="true"
     >
-      <div class="toast-header">
-        <strong class="me-auto">خطا</strong>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="toast"
-          aria-label="Close"
-        ></button>
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <form id="createTaskForm">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="createTaskModalLabel">
+                ایجاد وظیفه جدید
+              </h5>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="بستن"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="taskSubject" class="form-label"
+                  >موضوع <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="taskSubject"
+                  name="subject"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="taskDescription" class="form-label">توضیحات</label>
+                <textarea
+                  class="form-control"
+                  id="taskDescription"
+                  name="description"
+                ></textarea>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">وضعیت فعالیت</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    value="Open"
+                    disabled
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">وضعیت دلیل</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    value="Not Started"
+                    disabled
+                  />
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="customworkflowid" class="form-label"
+                  >customworkflowid</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="customworkflowid"
+                  name="customworkflowid"
+                />
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="taskStartDate" class="form-label"
+                    >تاریخ شروع</label
+                  >
+                  <input
+                    type="datetime-local"
+                    class="form-control"
+                    id="taskStartDate"
+                    name="scheduledstart"
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="taskDueDate" class="form-label"
+                    >تاریخ مقرر <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="datetime-local"
+                    class="form-control"
+                    id="taskDueDate"
+                    name="scheduledend"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="taskPriority" class="form-label">اولویت</label>
+                  <select
+                    class="form-select"
+                    id="taskPriority"
+                    name="prioritycode"
+                  >
+                    <option value="1" selected>Normal</option>
+                    <option value="2">High</option>
+                    <option value="0">Low</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="taskRegarding" class="form-label">مرتبط با</label>
+                  <select
+                    class="form-select"
+                    id="taskRegarding"
+                    name="regardingobjectid"
+                  >
+                    <option value="">انتخاب کنید...</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="taskOwner" class="form-label">مالک</label>
+                <select
+                  class="form-select"
+                  id="taskOwner"
+                  name="ownerid"
+                  required
+                >
+                  <option value="<%= user.id %>" selected>
+                    <%= user.fullname %>
+                  </option>
+                </select>
+              </div>
+              <!-- Add more fields as needed -->
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                بستن
+              </button>
+              <button type="submit" class="btn btn-primary">ایجاد وظیفه</button>
+            </div>
+          </form>
+        </div>
       </div>
-      <div class="toast-body"></div>
     </div>
-    <div
-      id="successToast"
-      class="toast"
-      role="alert"
-      aria-live="assertive"
-      aria-atomic="true"
-    >
-      <div class="toast-header">
-        <strong class="me-auto">موفقیت</strong>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="toast"
-          aria-label="Close"
-        ></button>
+
+    <!-- Toasts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div
+        id="errorToast"
+        class="toast bg-danger text-white"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="toast-body"></div>
       </div>
-      <div class="toast-body"></div>
+      <div
+        id="successToast"
+        class="toast bg-success text-white"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="toast-body"></div>
+      </div>
     </div>
-  </div>
-</div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.5.43/builds/moment-timezone-with-data.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.10.4/builds/moment-jalaali.js"></script>
+    <script>
+      // Set current user information
+      window.currentUser = {
+        id: "<%= user.id %>",
+        fullname: "<%= user.fullname %>",
+      };
+    </script>
+    <script src="/js/dashboard.js"></script>
+  </body>
+</html>

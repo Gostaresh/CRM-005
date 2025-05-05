@@ -2,11 +2,17 @@ const express = require("express");
 const session = require("express-session");
 const env = require("./config/env");
 const logger = require("./utils/logger");
-const routes = require("./routes");
+const routesFactory = require("./routes");
 const errorMiddleware = require("./middleware/errorMiddleware");
+const config = require("./config/config");
+const MetadataLoader = require("./core/metadata/MetadataLoader");
+const FormGenerator = require("./core/metadata/FormGenerator");
+const DynamicsService = require("./core/services/DynamicsService");
+const ActivityController = require("./controllers/activityController");
 
 const app = express();
 
+// Essential middleware that must come first
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -17,6 +23,17 @@ app.use(
     cookie: { secure: process.env.NODE_ENV === "production" },
   })
 );
+
+// Debug middleware to log session information (after session middleware)
+app.use((req, res, next) => {
+  logger.debug(
+    `Request URL: ${req.url}, Session ID: ${
+      req.sessionID
+    }, User: ${JSON.stringify(req.session.user)}`
+  );
+  next();
+});
+
 app.set("view engine", "ejs");
 app.set("views", "src/views");
 
@@ -39,7 +56,19 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static("src/public"));
+
+// Initialize dependencies for activity routes
+const metadataLoader = new MetadataLoader(config.metadataPaths);
+metadataLoader.load();
+
+const dynamicsService = new DynamicsService(config.apiBaseUrl);
+const formGenerator = new FormGenerator(metadataLoader, dynamicsService);
+const activityController = new ActivityController(formGenerator);
+
+// Mount routes with activityController
+const routes = routesFactory(activityController);
 app.use("/", routes);
+
 app.use(errorMiddleware);
 
 const PORT = env.port || 3000;

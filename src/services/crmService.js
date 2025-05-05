@@ -1,6 +1,7 @@
 const httpntlm = require("httpntlm");
 const env = require("../config/env");
 const logger = require("../utils/logger");
+const { decrypt } = require("../utils/crypto");
 
 class CrmService {
   constructor() {
@@ -73,7 +74,7 @@ class CrmService {
           filter,
           orderby,
           top: pageSize,
-          // Explicitly request server-driven paging
+          expand: "ownerid",
           headers: {
             Prefer: `odata.maxpagesize=${pageSize}`,
           },
@@ -82,6 +83,21 @@ class CrmService {
     logger.info(
       `Raw fetchActivities response: ${JSON.stringify(data, null, 2)}`
     );
+
+    // For a list of activities
+    for (const activity of data.value) {
+      if (
+        activity.ownerid &&
+        activity.ownerid.ownerid &&
+        !activity.ownerid.name
+      ) {
+        activity.ownerid.name = await this.fetchOwnerName(
+          activity.ownerid.ownerid,
+          credentials
+        );
+      }
+    }
+
     return data;
   }
 
@@ -89,7 +105,7 @@ class CrmService {
     const query = {
       select:
         "subject,description,scheduledstart,scheduledend,activitytypecode,prioritycode",
-      expand: "ownerid,regardingobjectid_account($select=accountid,name)",
+      expand: "ownerid",
     };
     const data = await this.fetchEntity(
       `activitypointers(${activityId})`,
@@ -118,6 +134,11 @@ class CrmService {
         );
         ownerName = teamData.name || "-";
       }
+    }
+
+    // For a single activity
+    if (data.ownerid && data.ownerid.ownerid && !data.ownerid.name) {
+      data.ownerid.name = ownerName;
     }
 
     return {
@@ -161,7 +182,10 @@ class CrmService {
         `Sending POST request: ${JSON.stringify(requestOptions, null, 2)}`
       );
       httpntlm.post(requestOptions, (err, res) => {
-        if (err) return reject(err);
+        if (err) {
+          logger.error(`HTTP request error: ${err.message}`);
+          return reject(err);
+        }
         logger.debug(`Raw response: ${JSON.stringify(res, null, 2)}`);
         resolve(res);
       });
@@ -170,9 +194,15 @@ class CrmService {
     logger.info(`CRM create response status: ${res.statusCode}`);
     if (res.statusCode !== 201 && res.statusCode !== 204) {
       logger.error(
-        `CRM create request failed with status: ${res.statusCode}, body: ${res.body}`
+        `CRM create request failed with status: ${
+          res.statusCode
+        }, body: ${JSON.stringify(res.body)}`
       );
-      throw new Error(`CRM create request failed: ${res.statusCode}`);
+      throw new Error(
+        `CRM create request failed: ${res.statusCode} - ${JSON.stringify(
+          res.body
+        )}`
+      );
     }
 
     let activityId;
@@ -180,6 +210,7 @@ class CrmService {
       // Standard case: 201 Created with Location header
       const location = res.headers.location;
       activityId = location ? location.split("(")[1].split(")")[0] : null;
+      logger.info(`Created activity with ID: ${activityId}`);
     } else {
       // 204 No Content case: Fetch the task ID by querying with unique fields
       const ownerId = data["ownerid@odata.bind"]?.match(
@@ -197,11 +228,13 @@ class CrmService {
         orderby: "createdon desc",
         top: 1,
       };
+      logger.info(`Fetching created task with query: ${JSON.stringify(query)}`);
       const result = await this.fetchEntity("tasks", query, credentials);
       if (!result.value || result.value.length === 0) {
         throw new Error("Failed to fetch created task ID");
       }
       activityId = result.value[0].activityid;
+      logger.info(`Retrieved activity ID from query: ${activityId}`);
     }
 
     return { activityid: activityId };
@@ -281,6 +314,36 @@ class CrmService {
     }
 
     return { success: true };
+  }
+
+  async fetchOwnerName(ownerid, credentials) {
+    if (!ownerid) return "-";
+
+    // Try to fetch from systemuser
+    try {
+      const userData = await this.fetchEntity(
+        `systemusers(${ownerid})`,
+        { select: "fullname" },
+        credentials
+      );
+      if (userData && userData.fullname) return userData.fullname;
+    } catch (err) {
+      logger.error(`Error fetching systemuser: ${err.message}`);
+    }
+
+    // Try to fetch from team
+    try {
+      const teamData = await this.fetchEntity(
+        `teams(${ownerid})`,
+        { select: "name" },
+        credentials
+      );
+      if (teamData && teamData.name) return teamData.name;
+    } catch (err) {
+      logger.error(`Error fetching team: ${err.message}`);
+    }
+
+    return "-";
   }
 }
 

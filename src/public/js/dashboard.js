@@ -1,181 +1,261 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const logoutBtn = document.getElementById("logoutBtn");
-  const createTaskForm = document.getElementById("createTaskForm");
-  const editTaskForm = document.getElementById("editTaskForm");
-  const createTaskModal = document.getElementById("createTaskModal")
-    ? new bootstrap.Modal(document.getElementById("createTaskModal"))
-    : null;
-  const editTaskModal = document.getElementById("editTaskModal")
-    ? new bootstrap.Modal(document.getElementById("editTaskModal"))
-    : null;
-  const taskRegarding = document.getElementById("taskRegarding");
-  const editTaskRegarding = document.getElementById("editTaskRegarding");
+class DashboardManager {
+  constructor() {
+    this.calendarManager = new CalendarManager();
+    this.allActivitiesBtn = document.getElementById("allActivitiesBtn");
+    this.myActivitiesBtn = document.getElementById("myActivitiesBtn");
+    this.loadMoreActivitiesBtn = document.getElementById(
+      "loadMoreActivitiesBtn"
+    );
+    this.accounts = []; // Store accounts data
+  }
 
-  // Populate dropdowns for "Regarding"
-  const populateRegardingDropdown = async (dropdown) => {
+  async fetchAccounts() {
     try {
       const response = await fetch("/api/crm/accounts/dropdown");
-      const accounts = await response.json();
-      if (response.ok) {
-        accounts.forEach((account) => {
-          const option = document.createElement("option");
-          option.value = account.accountid;
-          option.textContent = account.name || "بدون نام";
-          dropdown.appendChild(option);
-        });
-      } else {
-        showErrorToast("خطا در بارگذاری حساب‌ها برای مرتبط با");
+      const data = await response.json();
+      this.accounts = data;
+
+      // Populate both create and edit task regarding dropdowns
+      const createRegardingSelect = document.getElementById("taskRegarding");
+      const editRegardingSelect = document.getElementById("editTaskRegarding");
+
+      const options =
+        '<option value="">انتخاب کنید...</option>' +
+        this.accounts
+          .map((acc) => `<option value="${acc.accountid}">${acc.name}</option>`)
+          .join("");
+
+      if (createRegardingSelect) {
+        createRegardingSelect.innerHTML = options;
+      }
+      if (editRegardingSelect) {
+        editRegardingSelect.innerHTML = options;
       }
     } catch (err) {
-      showErrorToast("خطا در ارتباط با سرور");
+      console.error("Error fetching accounts:", err);
+      Utils.showErrorToast("خطا در بارگذاری لیست حساب‌ها");
     }
-  };
-
-  if (taskRegarding) {
-    populateRegardingDropdown(taskRegarding);
   }
 
-  if (editTaskRegarding) {
-    populateRegardingDropdown(editTaskRegarding);
+  setOwnerFields() {
+    // Set owner for create task form
+    const createTaskOwner = document.getElementById("taskOwner");
+    if (createTaskOwner && window.currentUser) {
+      createTaskOwner.innerHTML = `<option value="${window.currentUser.id}" selected>${window.currentUser.fullname}</option>`;
+    }
+
+    // Set owner for edit task form
+    const editTaskOwner = document.getElementById("editTaskOwner");
+    if (editTaskOwner && window.currentUser) {
+      editTaskOwner.innerHTML = `<option value="${window.currentUser.id}" selected>${window.currentUser.fullname}</option>`;
+    }
   }
 
-  // Logout Button
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        const response = await fetch("/api/auth/logout", { method: "POST" });
-        if (response.ok) {
-          window.location.href = "/";
-        } else {
-          showErrorToast("خطا در خروج");
+  initialize() {
+    console.log("Initializing dashboard");
+    this.calendarManager.initializeCalendar();
+    this.calendarManager.fetchActivities();
+    this.fetchAccounts(); // Fetch accounts when dashboard initializes
+    this.setOwnerFields(); // Set owner fields
+
+    if (this.allActivitiesBtn) {
+      this.allActivitiesBtn.addEventListener("click", () => {
+        this.allActivitiesBtn.classList.add("btn-primary");
+        this.allActivitiesBtn.classList.remove("btn-outline-primary");
+        this.myActivitiesBtn.classList.add("btn-outline-primary");
+        this.myActivitiesBtn.classList.remove("btn-primary");
+        this.calendarManager.currentActivityView = "all";
+        this.calendarManager.activitiesNextLink = null;
+        this.calendarManager.hasMoreActivities = true;
+        if (this.loadMoreActivitiesBtn) {
+          this.loadMoreActivitiesBtn.disabled = false;
+          this.loadMoreActivitiesBtn.classList.add("btn-primary");
+          this.loadMoreActivitiesBtn.classList.remove("btn-secondary");
+          this.loadMoreActivitiesBtn.textContent = "بارگذاری فعالیت‌های بیشتر";
         }
-      } catch (err) {
-        showErrorToast("خطا در ارتباط با سرور");
-      }
-    });
-  }
+        this.calendarManager.fetchActivities(false, "all");
+      });
+    }
 
-  // Create Task Form
-  if (createTaskForm) {
-    createTaskForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const formData = new FormData(createTaskForm);
-      const taskData = {
-        subject: formData.get("subject"),
-        description: formData.get("description"),
-        scheduledstart: formData.get("scheduledstart"),
-        scheduledend: formData.get("scheduledend"),
-        prioritycode: formData.get("prioritycode"),
-        regardingobjectid: formData.get("regardingobjectid"),
-      };
-
-      try {
-        const response = await fetch("/api/crm/activities", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(taskData),
-        });
-        const data = await response.json();
-        if (response.ok) {
-          showSuccessToast("وظیفه با موفقیت ایجاد شد");
-          createTaskForm.reset();
-          createTaskModal.hide();
-          if (typeof window.fetchActivities === "function") {
-            window.fetchActivities(false, "my");
-            document.getElementById("myActivitiesBtn")?.click();
-          }
-        } else {
-          showErrorToast(data.error || "خطا در ایجاد وظیفه");
+    if (this.myActivitiesBtn) {
+      this.myActivitiesBtn.addEventListener("click", () => {
+        this.myActivitiesBtn.classList.add("btn-primary");
+        this.myActivitiesBtn.classList.remove("btn-outline-primary");
+        this.allActivitiesBtn.classList.add("btn-outline-primary");
+        this.allActivitiesBtn.classList.remove("btn-primary");
+        this.calendarManager.currentActivityView = "my";
+        this.calendarManager.activitiesNextLink = null;
+        this.calendarManager.hasMoreActivities = true;
+        if (this.loadMoreActivitiesBtn) {
+          this.loadMoreActivitiesBtn.disabled = false;
+          this.loadMoreActivitiesBtn.classList.add("btn-primary");
+          this.loadMoreActivitiesBtn.classList.remove("btn-secondary");
+          this.loadMoreActivitiesBtn.textContent = "بارگذاری فعالیت‌های بیشتر";
         }
-      } catch (err) {
-        showErrorToast("خطا در ارتباط با سرور");
-      }
-    });
-  }
+        this.calendarManager.fetchActivities(false, "my");
+      });
+    }
 
-  // Edit Task Button (in Activity Details Modal)
-  const editTaskBtn = document.getElementById("editTaskBtn");
-  if (editTaskBtn) {
-    editTaskBtn.addEventListener("click", () => {
-      if (currentTaskData) {
-        // Populate the edit form with the current task data
-        document.getElementById("editTaskId").value =
-          currentTaskData.activityid || "";
-        document.getElementById("editTaskSubject").value =
-          currentTaskData.subject || "";
+    if (this.loadMoreActivitiesBtn) {
+      this.loadMoreActivitiesBtn.addEventListener("click", () => {
+        this.calendarManager.fetchActivities(
+          true,
+          this.calendarManager.currentActivityView
+        );
+      });
+    }
+
+    document
+      .getElementById("editTaskBtn")
+      .addEventListener("click", function () {
+        const data = window.CalendarManager.currentTaskData;
+        if (!data) {
+          Utils.showErrorToast("اطلاعات وظیفه در دسترس نیست");
+          return;
+        }
+
+        // Hide the details modal
+        const detailsModal = bootstrap.Modal.getInstance(
+          document.getElementById("activityDetailsModal")
+        );
+        if (detailsModal) {
+          detailsModal.hide();
+        }
+
+        // Set form values
+        document.getElementById("editTaskId").value = data.activityid;
+        document.getElementById("editTaskSubject").value = data.subject || "";
         document.getElementById("editTaskDescription").value =
-          currentTaskData.description || "";
-        document.getElementById("editTaskPriority").value =
-          currentTaskData.prioritycode || "1";
+          data.description || "";
 
         // Format dates for datetime-local input
-        if (currentTaskData.scheduledstart) {
-          document.getElementById("editTaskStartDate").value = new Date(
-            currentTaskData.scheduledstart
-          )
-            .toLocaleString("sv", { timeZone: "Asia/Tehran" })
-            .slice(0, 16);
-        }
-        if (currentTaskData.scheduledend) {
-          document.getElementById("editTaskDueDate").value = new Date(
-            currentTaskData.scheduledend
-          )
-            .toLocaleString("sv", { timeZone: "Asia/Tehran" })
-            .slice(0, 16);
-        }
+        const formatDate = (dateStr) => {
+          if (!dateStr) return "";
+          const date = moment(dateStr).tz("Asia/Tehran");
+          return date.format("YYYY-MM-DDTHH:mm");
+        };
 
-        // Set the Regarding field
-        const regardingId = currentTaskData.regardingobjectid
-          ? currentTaskData.regardingobjectid.accountid
-          : "";
-        document.getElementById("editTaskRegarding").value = regardingId || "";
+        document.getElementById("editTaskStartDate").value = formatDate(
+          data.scheduledstart
+        );
+        document.getElementById("editTaskDueDate").value = formatDate(
+          data.scheduledend
+        );
+        document.getElementById("editTaskPriority").value =
+          data.prioritycode || "1";
 
         // Show the edit modal
-        editTaskModal.show();
-      }
-    });
-  }
+        const editModalEl = document.getElementById("editTaskModal");
+        const editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
+        editModal.show();
+      });
 
-  // Edit Task Form
-  if (editTaskForm) {
-    editTaskForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const formData = new FormData(editTaskForm);
-      const taskData = {
-        activityId: formData.get("activityId"),
-        subject: formData.get("subject"),
-        description: formData.get("description"),
-        scheduledstart:
-          formData.get("scheduledstart") || currentTaskData.scheduledstart, // Preserve original if unchanged
-        scheduledend:
-          formData.get("scheduledend") || currentTaskData.scheduledend, // Preserve original if unchanged
-        prioritycode: formData.get("prioritycode"),
-        regardingobjectid: formData.get("regardingobjectid"),
-      };
+    document
+      .getElementById("editTaskForm")
+      .addEventListener("submit", async function (e) {
+        e.preventDefault();
 
-      try {
-        const response = await fetch(
-          `/api/crm/activities/${taskData.activityId}`,
-          {
+        const activityId = document.getElementById("editTaskId").value;
+        const payload = {
+          subject: document.getElementById("editTaskSubject").value,
+          description: document.getElementById("editTaskDescription").value,
+          scheduledstart: document.getElementById("editTaskStartDate").value,
+          scheduledend: document.getElementById("editTaskDueDate").value,
+          prioritycode: document.getElementById("editTaskPriority").value,
+          regardingobjectid: document.getElementById("editTaskRegarding").value,
+          originalScheduledstart:
+            window.CalendarManager.currentTaskData.scheduledstart,
+          originalScheduledend:
+            window.CalendarManager.currentTaskData.scheduledend,
+        };
+
+        try {
+          const response = await fetch(`/api/crm/activities/${activityId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(taskData),
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json();
+          if (response.ok) {
+            // Success: close modal, refresh calendar, show toast
+            const editModal = bootstrap.Modal.getInstance(
+              document.getElementById("editTaskModal")
+            );
+            if (editModal) {
+              editModal.hide();
+            }
+            window.CalendarManager.fetchActivities(false); // reload events
+            Utils.showSuccessToast("وظیفه با موفقیت به‌روزرسانی شد");
+          } else {
+            Utils.showErrorToast(result.error || "خطا در ویرایش وظیفه");
           }
-        );
-        const data = await response.json();
-        if (response.ok) {
-          showSuccessToast("وظیفه با موفقیت به‌روزرسانی شد");
-          editTaskForm.reset();
-          editTaskModal.hide();
-          if (typeof window.fetchActivities === "function") {
-            window.fetchActivities(false, currentActivityView);
-          }
-        } else {
-          showErrorToast(data.error || "خطا در به‌روزرسانی وظیفه");
+        } catch (err) {
+          console.error("Error updating task:", err);
+          Utils.showErrorToast("خطا در ارتباط با سرور");
         }
-      } catch (err) {
-        showErrorToast("خطا در ارتباط با سرور");
-      }
-    });
+      });
+
+    // Add create task form submission handler
+    const createTaskForm = document.getElementById("createTaskForm");
+    if (createTaskForm) {
+      console.log("Found create task form, adding submit handler");
+      createTaskForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        console.log("Create task form submitted");
+        const form = e.target;
+        const payload = {
+          subject: form.subject.value,
+          description: form.description.value,
+          scheduledstart: form.scheduledstart.value,
+          scheduledend: form.scheduledend.value,
+          prioritycode: form.prioritycode.value,
+          ownerid: window.currentUser.id,
+          // Only include regardingobjectid if selected
+          ...(form.regardingobjectid && form.regardingobjectid.value
+            ? { regardingobjectid: form.regardingobjectid.value }
+            : {}),
+        };
+
+        console.log("Sending payload:", payload);
+
+        try {
+          const res = await fetch("/api/crm/activities", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          console.log("Response status:", res.status);
+          const data = await res.json();
+          console.log("Response data:", data);
+
+          if (res.ok) {
+            Utils.showSuccessToast("وظیفه با موفقیت ایجاد شد");
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("createTaskModal")
+            );
+            if (modal) {
+              modal.hide();
+            }
+            // Refresh the calendar to show the new task
+            window.CalendarManager.fetchActivities(false);
+            // Reset the form
+            form.reset();
+          } else {
+            Utils.showErrorToast(data.error || "خطا در ایجاد وظیفه");
+          }
+        } catch (err) {
+          console.error("Error creating task:", err);
+          Utils.showErrorToast("خطا در ارتباط با سرور");
+        }
+      });
+    } else {
+      console.error("Create task form not found!");
+    }
   }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const dashboardManager = new DashboardManager();
+  dashboardManager.initialize();
 });

@@ -1,0 +1,36 @@
+<%- include('layouts/main') %>
+<%- include('partials/navbar') %>
+<div class="container">
+  <h1>ایجاد <%= entity.displayName %></h1>
+  <form action="/crm/create-activity/<%= entity.logicalName %>" method="POST">
+    <% fields.forEach(field => { %>
+      <div class="form-group">
+        <label for="<%= field.logicalName %>"><%= field.displayName %></label>
+        <% if (field.inputType === 'textarea') { %>
+          <textarea name="<%= field.logicalName %>" id="<%= field.logicalName %>" class="form-control" <%= field.required ? 'required' : '' %>></textarea>
+        <% } else if (field.inputType === 'select' && field.type !== 'EntityReference') { %>
+          <select name="<%= field.logicalName %>" id="<%= field.logicalName %>" class="form-control" <%= field.required ? 'required' : '' %>>
+            <option value="">انتخاب کنید...</option>
+            <% field.options.forEach(option => { %>
+              <option value="<%= option.Value %>"><%= option.Label.UserLocalizedLabelName %></option>
+            <% }) %>
+          </select>
+        <% } else if (field.inputType === 'select' && field.type === 'EntityReference') { %>
+          <select name="<%= field.logicalName %>@odata.bind" id="<%= field.logicalName %>" class="form-control" <%= field.required ? 'required' : '' %>>
+            <option value="">انتخاب کنید...</option>
+            <% field.options.forEach(option => { %>
+              <option value="/accounts(<%= option.Value %>)"><%= option.Label.UserLocalizedLabelName %></option>
+            <% }) %>
+          </select>
+        <% } else if (field.inputType === 'checkbox') { %>
+          <input type="checkbox" name="<%= field.logicalName %>" id="<%= field.logicalName %>" class="form-check-input" />
+        <% } else { %>
+          <input type="<%= field.inputType %>" name="<%= field.logicalName %>" id="<%= field.logicalName %>" class="form-control" <%= field.required ? 'required' : '' %> />
+        <% } %>
+      </div>
+    <% }) %>
+    <button type="submit" class="btn btn-primary">ایجاد فعالیت</button>
+  </form>
+  <a href="/crm/create-activity" class="btn btn-secondary">بازگشت به انتخاب فعالیت</a>
+</div>
+<%- include('partials/scripts') %>

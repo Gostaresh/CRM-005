@@ -123,7 +123,7 @@ const fetchAccountsForDropdown = async (req, res) => {
   const query = {
     select: "accountid,name",
     filter: "",
-    top: 50,
+    top: 500,
   };
   logger.info(`Fetching accounts for dropdown: user: ${credentials.username}`);
   const data = await CrmService.fetchEntity("accounts", query, credentials);
@@ -150,6 +150,7 @@ const createActivity = async (req, res) => {
     scheduledend,
     prioritycode,
     regardingobjectid,
+    customworkflowid,
   } = req.body;
   const credentials = {
     username: req.session.user.username.split("\\")[1],
@@ -172,6 +173,10 @@ const createActivity = async (req, res) => {
     "ownerid@odata.bind": `/systemusers(${userId})`,
     activitytypecode: "task",
   };
+
+  if (customworkflowid) {
+    activityData.customworkflowid = customworkflowid;
+  }
 
   if (regardingobjectid) {
     activityData[
@@ -196,7 +201,7 @@ const createActivity = async (req, res) => {
     });
   } catch (err) {
     logger.error(`Create task error: ${err.message}`);
-    throw err;
+    res.status(500).json({ error: `خطا در ایجاد وظیفه: ${err.message}` });
   }
 };
 

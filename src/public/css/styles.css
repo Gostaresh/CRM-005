@@ -15,7 +15,12 @@ body {
 }
 
 .calendar-container {
-  padding-top: 70px; /* Space for fixed navbar */
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: 32px 16px;
+  margin: 40px auto;
+  max-width: 1200px;
 }
 
 #calendar {
@@ -51,4 +56,18 @@ body {
   #calendar {
     height: calc(100vh - 250px); /* Adjust for smaller screens */
   }
+}
+
+.fc .fc-day-today {
+  background: #e3f2fd !important;
+}
+
+.fc-event {
+  border-radius: 8px;
+  font-size: 1rem;
+  padding: 2px 6px;
+}
+
+.fc-event .fc-event-title {
+  font-weight: 500;
 }

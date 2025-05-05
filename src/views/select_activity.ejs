@@ -1,0 +1,22 @@
+<%- include('layouts/main') %> <%- include('partials/navbar') %>
+<div class="container">
+  <h1>ایجاد فعالیت جدید</h1>
+  <% if (errorMessage) { %>
+  <div class="alert alert-warning"><%= errorMessage %></div>
+  <% } %>
+  <form action="/crm/create-activity" method="GET">
+    <div class="form-group">
+      <label for="entity">نوع فعالیت را انتخاب کنید:</label>
+      <select name="entity" id="entity" class="form-control">
+        <option value="" disabled selected>نوع فعالیت را انتخاب کنید</option>
+        <% activityEntities.forEach(entity => { %>
+        <option value="<%= entity.logicalName %>">
+          <%= entity.displayName %>
+        </option>
+        <% }) %>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">ایجاد</button>
+  </form>
+</div>
+<%- include('partials/scripts') %>
