@@ -28,6 +28,7 @@ class CalendarManager {
       },
       locale: "fa",
       direction: "rtl",
+      nowIndicator: true,
       buttonText: {
         today: "امروز",
         month: "ماه",
@@ -47,6 +48,8 @@ class CalendarManager {
         hour12: false,
       },
       editable: true,
+      droppable: true,
+      selectable: true,
       events: [],
       eventResize: async (info) => {
         const event = info.event;
@@ -285,7 +288,7 @@ class CalendarManager {
               .format("jYYYY/jMM/jDD HH:mm");
 
             const eventColor =
-              activity.activitytypecode === "meeting" ? "#1976d2" : "#43a047";
+              activity.activitytypecode === "task" ? "#1976d2" : "#43a047";
             const event = {
               id: activity.activityid,
               title: `${activity.subject || "بدون عنوان"} - ${jalaliStart}`,

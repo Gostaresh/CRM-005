@@ -511,3 +511,6 @@ errorMessage is not defined
     at Route.dispatch (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:117:3)
     at handle (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:435:11)
     at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+[2025-05-05 17:41:34] ERROR: LDAP bind failed: 401
+[2025-05-05 17:41:41] ERROR: LDAP bind failed: 401
+[2025-05-05 17:41:51] ERROR: LDAP bind failed: 401
