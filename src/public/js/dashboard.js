@@ -58,43 +58,137 @@ class DashboardManager {
     this.fetchAccounts(); // Fetch accounts when dashboard initializes
     this.setOwnerFields(); // Set owner fields
 
-    if (this.allActivitiesBtn) {
-      this.allActivitiesBtn.addEventListener("click", () => {
-        this.allActivitiesBtn.classList.add("btn-primary");
-        this.allActivitiesBtn.classList.remove("btn-outline-primary");
-        this.myActivitiesBtn.classList.add("btn-outline-primary");
-        this.myActivitiesBtn.classList.remove("btn-primary");
-        this.calendarManager.currentActivityView = "all";
-        this.calendarManager.activitiesNextLink = null;
-        this.calendarManager.hasMoreActivities = true;
-        if (this.loadMoreActivitiesBtn) {
-          this.loadMoreActivitiesBtn.disabled = false;
-          this.loadMoreActivitiesBtn.classList.add("btn-primary");
-          this.loadMoreActivitiesBtn.classList.remove("btn-secondary");
-          this.loadMoreActivitiesBtn.textContent = "بارگذاری فعالیت‌های بیشتر";
-        }
+    // Initialize Select2 for owner filter
+    const $ownerFilter = $("#ownerFilter");
+    
+    // First fetch the data
+    fetch('/api/crm/systemusers/dropdown')
+      .then(response => response.json())
+      .then(data => {
+        $ownerFilter.select2({
+          placeholder: "انتخاب مالک",
+          allowClear: true,
+          multiple: true,
+          data: data,
+          templateResult: function(user) {
+            if (!user.id) {
+              return $('<div class="select2-result-department">' + user.text + '</div>');
+            }
+            return $('<div class="select2-result-user">' + user.text + '</div>');
+          },
+          templateSelection: function(user) {
+            if (!user.id) {
+              return user.text;
+            }
+            return user.text;
+          },
+          escapeMarkup: function(markup) {
+            return markup;
+          }
+        });
+
+        // Add custom CSS for Select2
+        const style = document.createElement('style');
+        style.textContent = `
+          .select2-container--default .select2-results__group {
+            background-color: #f8f9fa;
+            padding: 8px;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+          }
+          .select2-container--default .select2-results__option {
+            padding: 8px 12px;
+          }
+          .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #007bff;
+          }
+          .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            margin: 2px;
+          }
+          .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: white;
+            margin-right: 5px;
+          }
+          .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: #fff;
+            background-color: #0056b3;
+          }
+          .select2-dropdown {
+            border-color: #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+        `;
+        document.head.appendChild(style);
+      })
+      .catch(error => {
+        console.error('Error loading users:', error);
+        Utils.showErrorToast('خطا در بارگذاری لیست کاربران');
+      });
+
+    // Handle filter change
+    $ownerFilter.on('change', () => {
+      const selected = $ownerFilter.val();
+      if (specificMode) {
+        this.calendarManager.clearCalendar();
+        this.calendarManager.addActivitiesForOwners(selected);
+      } else {
+        this.calendarManager.filterByOwners(selected);
+      }
+    });
+
+    // Tab button logic
+    const allTab = document.getElementById("allActivitiesTab");
+    const myTab = document.getElementById("myActivitiesTab");
+    const specificTab = document.getElementById("specificActivitiesTab");
+
+    const $ownerFilterContainer = $("#ownerFilterContainer");
+    let specificMode = false;
+
+    if (allTab && myTab && specificTab) {
+      allTab.addEventListener("click", () => {
+        allTab.classList.add("btn-primary");
+        allTab.classList.remove("btn-outline-primary");
+        myTab.classList.add("btn-outline-primary");
+        myTab.classList.remove("btn-primary");
+        specificTab.classList.add("btn-outline-primary");
+        specificTab.classList.remove("btn-primary");
+        $ownerFilter.val(null).trigger("change");
+        specificMode = false;
+        $ownerFilterContainer.hide();
         this.calendarManager.fetchActivities(false, "all");
+      });
+      myTab.addEventListener("click", () => {
+        myTab.classList.add("btn-primary");
+        myTab.classList.remove("btn-outline-primary");
+        allTab.classList.add("btn-outline-primary");
+        allTab.classList.remove("btn-primary");
+        specificTab.classList.add("btn-outline-primary");
+        specificTab.classList.remove("btn-primary");
+        $ownerFilter.val(null).trigger("change");
+        specificMode = false;
+        $ownerFilterContainer.hide();
+        this.calendarManager.fetchActivities(false, "my");
+      });
+      specificTab.addEventListener("click", () => {
+        specificTab.classList.add("btn-primary");
+        specificTab.classList.remove("btn-outline-primary");
+        allTab.classList.add("btn-outline-primary");
+        allTab.classList.remove("btn-primary");
+        myTab.classList.add("btn-outline-primary");
+        myTab.classList.remove("btn-primary");
+        $ownerFilter.val(null).trigger("change");
+        specificMode = true;
+        this.calendarManager.clearCalendar();
+        $ownerFilterContainer.show();
       });
     }
 
-    if (this.myActivitiesBtn) {
-      this.myActivitiesBtn.addEventListener("click", () => {
-        this.myActivitiesBtn.classList.add("btn-primary");
-        this.myActivitiesBtn.classList.remove("btn-outline-primary");
-        this.allActivitiesBtn.classList.add("btn-outline-primary");
-        this.allActivitiesBtn.classList.remove("btn-primary");
-        this.calendarManager.currentActivityView = "my";
-        this.calendarManager.activitiesNextLink = null;
-        this.calendarManager.hasMoreActivities = true;
-        if (this.loadMoreActivitiesBtn) {
-          this.loadMoreActivitiesBtn.disabled = false;
-          this.loadMoreActivitiesBtn.classList.add("btn-primary");
-          this.loadMoreActivitiesBtn.classList.remove("btn-secondary");
-          this.loadMoreActivitiesBtn.textContent = "بارگذاری فعالیت‌های بیشتر";
-        }
-        this.calendarManager.fetchActivities(false, "my");
-      });
-    }
+    // On page load, hide Select2 unless specific tab is active
+    if (!specificMode) $ownerFilterContainer.hide();
 
     if (this.loadMoreActivitiesBtn) {
       this.loadMoreActivitiesBtn.addEventListener("click", () => {
@@ -203,11 +297,18 @@ class DashboardManager {
         e.preventDefault();
         console.log("Create task form submitted");
         const form = e.target;
+        // Convert Jalali to Gregorian for API
+        const convertToGregorian = (jalaliDate) => {
+          if (!jalaliDate) return null;
+          return moment(jalaliDate, "jYYYY/jMM/jDD HH:mm").format(
+            "YYYY-MM-DDTHH:mm"
+          );
+        };
         const payload = {
           subject: form.subject.value,
           description: form.description.value,
-          scheduledstart: form.scheduledstart.value,
-          scheduledend: form.scheduledend.value,
+          scheduledstart: convertToGregorian(form.scheduledstart.value),
+          scheduledend: convertToGregorian(form.scheduledend.value),
           prioritycode: form.prioritycode.value,
           ownerid: window.currentUser.id,
           // Only include regardingobjectid if selected
@@ -215,20 +316,14 @@ class DashboardManager {
             ? { regardingobjectid: form.regardingobjectid.value }
             : {}),
         };
-
         console.log("Sending payload:", payload);
-
         try {
           const res = await fetch("/api/crm/activities", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-
-          console.log("Response status:", res.status);
           const data = await res.json();
-          console.log("Response data:", data);
-
           if (res.ok) {
             Utils.showSuccessToast("وظیفه با موفقیت ایجاد شد");
             const modal = bootstrap.Modal.getInstance(
@@ -237,9 +332,7 @@ class DashboardManager {
             if (modal) {
               modal.hide();
             }
-            // Refresh the calendar to show the new task
             window.CalendarManager.fetchActivities(false);
-            // Reset the form
             form.reset();
           } else {
             Utils.showErrorToast(data.error || "خطا در ایجاد وظیفه");
@@ -258,4 +351,16 @@ class DashboardManager {
 document.addEventListener("DOMContentLoaded", () => {
   const dashboardManager = new DashboardManager();
   dashboardManager.initialize();
+  // Initialize babakhani Persian Datepicker for all date fields
+  $(function () {
+    $(".persian-datepicker").persianDatepicker({
+      format: "YYYY/MM/DD HH:mm",
+      timePicker: {
+        enabled: true,
+        meridiem: { enabled: false },
+      },
+      initialValue: false,
+      autoClose: true,
+    });
+  });
 });

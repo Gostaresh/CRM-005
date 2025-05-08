@@ -51,6 +51,28 @@ class CalendarManager {
       droppable: true,
       selectable: true,
       events: [],
+      select: (info) => {
+        // Save the selected dates globally so we can use them after the modal is shown
+        window.selectedTaskStart = info.start;
+        window.selectedTaskEnd = info.end;
+
+        // Show the modal (will trigger 'shown.bs.modal')
+        const createModalEl = document.getElementById("createTaskModal");
+        const createModal = bootstrap.Modal.getOrCreateInstance(createModalEl);
+        createModal.show();
+
+        // Set the date fields in Jalali format
+        if (window.selectedTaskStart) {
+          document.getElementById("taskStartDate").value = moment(
+            window.selectedTaskStart
+          ).format("jYYYY/jMM/jDD HH:mm");
+        }
+        if (window.selectedTaskEnd) {
+          document.getElementById("taskDueDate").value = moment(
+            window.selectedTaskEnd
+          ).format("jYYYY/jMM/jDD HH:mm");
+        }
+      },
       eventResize: async (info) => {
         const event = info.event;
         const activityId = event.id;
@@ -352,6 +374,127 @@ class CalendarManager {
       if (loadMoreActivitiesBtn) loadMoreActivitiesBtn.disabled = true;
     }
   }
+
+  async filterByOwners(ownerIds) {
+    // ownerIds: array of selected owner IDs (strings)
+    if (!Array.isArray(ownerIds) || ownerIds.length === 0) {
+      // If no filter, show all activities
+      await this.fetchActivities(false, "all");
+      return;
+    }
+    const url = `/api/crm/activities/filter?ownerids=${ownerIds.join(",")}`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (response.ok) {
+        const events = (data.value || [])
+          .map((activity) => {
+            // Convert UTC times to Tehran timezone for display
+            const startDate = activity.scheduledstart
+              ? this.DateTime.fromISO(activity.scheduledstart, { zone: "utc" })
+                  .setZone("Asia/Tehran")
+                  .toJSDate()
+              : this.DateTime.now().setZone("Asia/Tehran").toJSDate();
+            const endDate = activity.scheduledend
+              ? this.DateTime.fromISO(activity.scheduledend, { zone: "utc" })
+                  .setZone("Asia/Tehran")
+                  .toJSDate()
+              : startDate;
+            const jalaliStart = moment(startDate)
+              .tz("Asia/Tehran")
+              .format("jYYYY/jMM/jDD HH:mm");
+            const eventColor =
+              activity.activitytypecode === "task" ? "#1976d2" : "#43a047";
+            return {
+              id: activity.activityid,
+              title: `${activity.subject || "بدون عنوان"} - ${jalaliStart}`,
+              start: startDate,
+              end: endDate,
+              extendedProps: {
+                activityType: activity.activitytypecode,
+                originalStart: activity.scheduledstart,
+                originalEnd: activity.scheduledend,
+              },
+              color: eventColor,
+            };
+          })
+          .filter((event) => event.id);
+        this.calendar.removeAllEvents();
+        this.calendar.addEventSource(events);
+      } else {
+        Utils.showErrorToast(
+          `خطا در بارگذاری فعالیت‌ها: ${data.error || "خطا ناشناخته"}`
+        );
+      }
+    } catch (err) {
+      Utils.showErrorToast("خطا در ارتباط با سرور");
+    }
+  }
+
+  clearCalendar() {
+    if (this.calendar) {
+      this.calendar.removeAllEvents();
+    }
+  }
+
+  async addActivitiesForOwners(ownerIds) {
+    if (!Array.isArray(ownerIds) || ownerIds.length === 0) {
+      this.clearCalendar();
+      return;
+    }
+    // Fetch activities for each owner and add to calendar
+    for (const ownerId of ownerIds) {
+      const url = `/api/crm/activities/filter?ownerids=${ownerId}`;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (response.ok) {
+          const events = (data.value || [])
+            .map((activity) => {
+              // Convert UTC times to Tehran timezone for display
+              const startDate = activity.scheduledstart
+                ? this.DateTime.fromISO(activity.scheduledstart, { zone: "utc" })
+                    .setZone("Asia/Tehran")
+                    .toJSDate()
+                : this.DateTime.now().setZone("Asia/Tehran").toJSDate();
+              const endDate = activity.scheduledend
+                ? this.DateTime.fromISO(activity.scheduledend, { zone: "utc" })
+                    .setZone("Asia/Tehran")
+                    .toJSDate()
+                : startDate;
+              const jalaliStart = moment(startDate)
+                .tz("Asia/Tehran")
+                .format("jYYYY/jMM/jDD HH:mm");
+              const eventColor =
+                activity.activitytypecode === "task" ? "#1976d2" : "#43a047";
+              return {
+                id: activity.activityid,
+                title: `${activity.subject || "بدون عنوان"} - ${jalaliStart}`,
+                start: startDate,
+                end: endDate,
+                extendedProps: {
+                  activityType: activity.activitytypecode,
+                  originalStart: activity.scheduledstart,
+                  originalEnd: activity.scheduledend,
+                },
+                color: eventColor,
+              };
+            })
+            .filter((event) => event.id);
+          this.calendar.addEventSource(events);
+        }
+      } catch (err) {
+        Utils.showErrorToast("خطا در ارتباط با سرور");
+      }
+    }
+  }
 }
 
 window.CalendarManager = CalendarManager;
+
+jalaliDatepicker.startWatch();
+
+const convertToGregorian = (jalaliDate) => {
+  if (!jalaliDate) return null;
+  return moment(jalaliDate, "jYYYY/jMM/jDD HH:mm").format("YYYY-MM-DDTHH:mm");
+};

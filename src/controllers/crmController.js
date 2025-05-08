@@ -293,6 +293,98 @@ const updateTask = async (req, res) => {
   }
 };
 
+const fetchSystemUsersForDropdown = async (req, res) => {
+  const credentials = {
+    username: req.session.user.username.split("\\")[1],
+    password: decrypt(req.session.encryptedPassword),
+  };
+
+  // 1. Fetch all departments
+  const depQuery = {
+    select: "new_departmentid,new_name",
+    top: 500,
+  };
+  const depData = await CrmService.fetchEntity(
+    "new_departments",
+    depQuery,
+    credentials
+  );
+  const departmentMap = {};
+  (depData.value || []).forEach((dep) => {
+    departmentMap[dep.new_departmentid] = dep.new_name;
+  });
+
+  // 2. Fetch all users (with department ref and teams)
+  const userQuery = {
+    select: "systemuserid,fullname,domainname,_new_department_value",
+    top: 500,
+  };
+  const userData = await CrmService.fetchEntity(
+    "systemusers",
+    userQuery,
+    credentials
+  );
+
+  // 3. Add departmentName to each user
+  (userData.value || []).forEach((user) => {
+    user.departmentName =
+      departmentMap[user._new_department_value] || "بدون دپارتمان";
+  });
+
+  // 4. Group users by department
+  const groupedUsers = {};
+  userData.value.forEach((user) => {
+    if (!groupedUsers[user.departmentName]) {
+      groupedUsers[user.departmentName] = [];
+    }
+    groupedUsers[user.departmentName].push({
+      id: user.systemuserid,
+      text: user.fullname,
+      department: user.departmentName,
+    });
+  });
+
+  // Sort users within each department
+  Object.keys(groupedUsers).forEach((department) => {
+    groupedUsers[department].sort((a, b) => a.text.localeCompare(b.text));
+  });
+
+  // 5. Convert to Select2 format with groups and sort departments
+  const select2Data = Object.entries(groupedUsers)
+    .sort(([deptA], [deptB]) => deptA.localeCompare(deptB))
+    .map(([department, users]) => ({
+      text: department,
+      children: users,
+    }));
+
+  res.status(200).json(select2Data);
+};
+
+const fetchActivitiesByOwners = async (req, res) => {
+  const ownerids = req.query.ownerids ? req.query.ownerids.split(",") : [];
+  const nextLink = req.query.nextLink || null;
+  const pageSize = parseInt(req.query.pageSize) || 200;
+  const credentials = {
+    username: req.session.user.username.split("\\")[1],
+    password: decrypt(req.session.encryptedPassword),
+  };
+  let filter = "";
+  if (ownerids.length > 0) {
+    filter = ownerids.map((id) => `_ownerid_value eq '${id}'`).join(" or ");
+  }
+  const data = await CrmService.fetchActivities(
+    credentials,
+    null,
+    nextLink,
+    pageSize,
+    filter
+  );
+  res.status(200).json({
+    value: data.value || [],
+    nextLink: data["@odata.nextLink"] || null,
+  });
+};
+
 module.exports = {
   fetchEntity,
   fetchAllActivities,
@@ -304,4 +396,6 @@ module.exports = {
   createActivity,
   updateTaskDates,
   updateTask,
+  fetchSystemUsersForDropdown,
+  fetchActivitiesByOwners,
 };

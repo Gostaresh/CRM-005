@@ -58,13 +58,16 @@ class CrmService {
     credentials,
     userId = null,
     nextLink = null,
-    pageSize = 500
+    pageSize = 500,
+    customFilter = null
   ) {
     const select =
       "subject,scheduledstart,scheduledend,activitytypecode,ownerid,activityid";
     let filter = "";
-    if (userId) {
-      filter = `_ownerid_value eq ${userId}`;
+    if (customFilter) {
+      filter = customFilter;
+    } else if (userId) {
+      filter = `_ownerid_value eq '${userId}'`;
     }
     const orderby = "scheduledstart desc";
     const query = nextLink

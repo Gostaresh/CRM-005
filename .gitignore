@@ -3,5 +3,5 @@ debug.log
 error.log
 info.log
 tools/.venv
-Archive.zip
+*.zip
 .DS_Store

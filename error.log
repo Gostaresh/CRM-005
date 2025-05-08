@@ -514,3 +514,138 @@ errorMessage is not defined
 [2025-05-05 17:41:34] ERROR: LDAP bind failed: 401
 [2025-05-05 17:41:41] ERROR: LDAP bind failed: 401
 [2025-05-05 17:41:51] ERROR: LDAP bind failed: 401
+[2025-05-07 11:11:54] ERROR: Error: Invalid time value, Stack: RangeError: Invalid time value
+    at Date.toISOString (<anonymous>)
+    at updateTask (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:273:36)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at /Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:295:15
+    at param (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:600:14)
+    at param (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:610:14)
+[2025-05-07 11:12:16] ERROR: Error: Invalid time value, Stack: RangeError: Invalid time value
+    at Date.toISOString (<anonymous>)
+    at createActivity (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:169:34)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at /Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:295:15
+    at processParams (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:582:12)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:291:5)
+[2025-05-07 11:12:20] ERROR: Error: Invalid time value, Stack: RangeError: Invalid time value
+    at Date.toISOString (<anonymous>)
+    at createActivity (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:169:34)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at /Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:295:15
+    at processParams (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:582:12)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:291:5)
+[2025-05-07 11:12:21] ERROR: Error: Invalid time value, Stack: RangeError: Invalid time value
+    at Date.toISOString (<anonymous>)
+    at createActivity (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:169:34)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at /Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:295:15
+    at processParams (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:582:12)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:291:5)
+[2025-05-07 11:12:24] ERROR: Error: Invalid time value, Stack: RangeError: Invalid time value
+    at Date.toISOString (<anonymous>)
+    at createActivity (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:169:34)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at /Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:295:15
+    at processParams (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:582:12)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:291:5)
+[2025-05-07 11:26:15] ERROR: Error: this.dynamicsService.getAccounts is not a function, Stack: TypeError: this.dynamicsService.getAccounts is not a function
+    at FormGenerator.generateFormFields (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/core/metadata/FormGenerator.js:71:51)
+    at ActivityController.getCreateActivityPage (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/activityController.js:56:53)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at authMiddleware (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/middleware/authMiddleware.js:8:3)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+[2025-05-07 11:26:28] ERROR: Error: this.dynamicsService.getAccounts is not a function, Stack: TypeError: this.dynamicsService.getAccounts is not a function
+    at FormGenerator.generateFormFields (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/core/metadata/FormGenerator.js:71:51)
+    at ActivityController.getCreateActivityPage (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/activityController.js:56:53)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at authMiddleware (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/middleware/authMiddleware.js:8:3)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/router/lib/layer.js:152:17)
+[2025-05-07 14:49:22] ERROR: CRM request failed with status: 400, body: {"error":{"code":"0x0","message":"Could not find a property named 'name' on type 'Microsoft.Dynamics.CRM.new_department'."}}
+[2025-05-07 14:49:22] ERROR: Error: CRM request failed: 400, Stack: Error: CRM request failed: 400
+    at CrmService.fetchEntity (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:51:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async fetchSystemUsersForDropdown (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:307:19)
+[2025-05-07 15:12:23] ERROR: Error: connect ETIMEDOUT 192.168.1.6:80, Stack: Error: connect ETIMEDOUT 192.168.1.6:80
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)
+[2025-05-07 15:12:24] ERROR: Error: connect ETIMEDOUT 192.168.1.6:80, Stack: Error: connect ETIMEDOUT 192.168.1.6:80
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)
+[2025-05-07 17:07:28] ERROR: Error: connect EHOSTDOWN 192.168.1.6:80 - Local (192.168.1.199:63462), Stack: Error: connect EHOSTDOWN 192.168.1.6:80 - Local (192.168.1.199:63462)
+    at internalConnect (node:net:1115:16)
+    at defaultTriggerAsyncIdScope (node:internal/async_hooks:464:18)
+    at node:net:1355:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+[2025-05-07 17:08:06] ERROR: Error: connect EHOSTDOWN 192.168.1.6:80 - Local (192.168.1.199:63483), Stack: Error: connect EHOSTDOWN 192.168.1.6:80 - Local (192.168.1.199:63483)
+    at internalConnect (node:net:1115:16)
+    at defaultTriggerAsyncIdScope (node:internal/async_hooks:464:18)
+    at node:net:1355:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+[2025-05-07 17:08:37] ERROR: Error: connect ETIMEDOUT 192.168.1.6:80, Stack: Error: connect ETIMEDOUT 192.168.1.6:80
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)
+[2025-05-07 17:09:18] ERROR: Error: connect ETIMEDOUT 192.168.1.6:80, Stack: Error: connect ETIMEDOUT 192.168.1.6:80
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)
+[2025-05-07 17:09:38] ERROR: Error: connect EHOSTDOWN 192.168.1.6:80 - Local (192.168.1.199:63502), Stack: Error: connect EHOSTDOWN 192.168.1.6:80 - Local (192.168.1.199:63502)
+    at internalConnect (node:net:1115:16)
+    at defaultTriggerAsyncIdScope (node:internal/async_hooks:464:18)
+    at node:net:1355:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+[2025-05-07 17:10:42] ERROR: Error: connect ETIMEDOUT 192.168.1.6:80, Stack: Error: connect ETIMEDOUT 192.168.1.6:80
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)
+[2025-05-07 17:12:04] ERROR: Error: Couldn't find NTLM in the message type2 coming from the server, Stack: Error: Couldn't find NTLM in the message type2 coming from the server
+    at Object.parseType2Message (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/httpntlm/ntlm.js:121:12)
+    at sendType3Message (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/httpntlm/httpntlm.js:78:23)
+    at Immediate.<anonymous> (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/httpntlm/httpntlm.js:108:4)
+    at process.processImmediate (node:internal/timers:505:21)
+[2025-05-07 17:12:04] ERROR: Error: Couldn't find NTLM in the message type2 coming from the server, Stack: Error: Couldn't find NTLM in the message type2 coming from the server
+    at Object.parseType2Message (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/httpntlm/ntlm.js:121:12)
+    at sendType3Message (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/httpntlm/httpntlm.js:78:23)
+    at Immediate.<anonymous> (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/node_modules/httpntlm/httpntlm.js:108:4)
+    at process.processImmediate (node:internal/timers:505:21)
+[2025-05-07 17:33:47] ERROR: CRM request failed with status: 400, body: {"error":{"code":"0x8006088a","message":"Bad Request - Error in query syntax."}}
+[2025-05-07 17:33:47] ERROR: Error: CRM request failed: 400, Stack: Error: CRM request failed: 400
+    at CrmService.fetchEntity (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:51:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async CrmService.fetchActivityDetails (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:110:18)
+    at async fetchActivityDetails (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:89:16)
+[2025-05-07 17:34:05] ERROR: CRM request failed with status: 400, body: {"error":{"code":"0x8006088a","message":"Bad Request - Error in query syntax."}}
+[2025-05-07 17:34:05] ERROR: Error: CRM request failed: 400, Stack: Error: CRM request failed: 400
+    at CrmService.fetchEntity (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:51:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async CrmService.fetchActivityDetails (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:110:18)
+    at async fetchActivityDetails (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:89:16)
+[2025-05-07 17:34:16] ERROR: CRM request failed with status: 400, body: {"error":{"code":"0x8006088a","message":"Bad Request - Error in query syntax."}}
+[2025-05-07 17:34:16] ERROR: Error: CRM request failed: 400, Stack: Error: CRM request failed: 400
+    at CrmService.fetchEntity (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:51:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async CrmService.fetchActivityDetails (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:110:18)
+    at async fetchActivityDetails (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crmController.js:89:16)

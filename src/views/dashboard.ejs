@@ -74,13 +74,17 @@
       <h2 class="text-center mb-4">فعالیت‌های من</h2>
 
       <!-- Buttons to toggle between views -->
-      <div class="mb-3 text-center">
-        <button id="myActivitiesBtn" class="btn btn-primary">
-          فعالیت‌های من
-        </button>
-        <button id="allActivitiesBtn" class="btn btn-outline-primary">
-          همه فعالیت‌ها
-        </button>
+      <div class="activity-tabs mb-3 text-center">
+        <button id="allActivitiesTab" class="btn btn-outline-primary">همه فعالیت‌ها</button>
+        <button id="myActivitiesTab" class="btn btn-primary">فعالیت‌های من</button>
+        <button id="specificActivitiesTab" class="btn btn-outline-primary">انتخابی فعالیت‌ها</button>
+      </div>
+
+      <!-- Owner Filter -->
+      <div id="ownerFilterContainer" class="mb-3 text-center">
+        <select id="ownerFilter" class="form-select" multiple="multiple" style="width: 300px; display: inline-block;">
+          <!-- Options will be populated by JS -->
+        </select>
       </div>
 
       <!-- Calendar -->
@@ -224,8 +228,8 @@
                   >تاریخ شروع</label
                 >
                 <input
-                  type="datetime-local"
-                  class="form-control"
+                  type="text"
+                  class="form-control persian-datepicker"
                   id="editTaskStartDate"
                   name="scheduledstart"
                 />
@@ -235,8 +239,8 @@
                   >تاریخ سررسید</label
                 >
                 <input
-                  type="datetime-local"
-                  class="form-control"
+                  type="text"
+                  class="form-control persian-datepicker"
                   id="editTaskDueDate"
                   name="scheduledend"
                 />
@@ -352,10 +356,11 @@
                     >تاریخ شروع</label
                   >
                   <input
-                    type="datetime-local"
-                    class="form-control"
+                    type="text"
+                    class="form-control persian-datepicker"
                     id="taskStartDate"
                     name="scheduledstart"
+                    placeholder="تاریخ شروع"
                   />
                 </div>
                 <div class="col-md-6 mb-3">
@@ -363,10 +368,11 @@
                     >تاریخ مقرر <span class="text-danger">*</span></label
                   >
                   <input
-                    type="datetime-local"
-                    class="form-control"
+                    type="text"
+                    class="form-control persian-datepicker"
                     id="taskDueDate"
                     name="scheduledend"
+                    placeholder="تاریخ مقرر"
                     required
                   />
                 </div>
