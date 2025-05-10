@@ -1,38 +1,34 @@
 const express = require("express");
 const {
-  fetchEntity,
-  fetchAllActivities,
-  fetchMyActivities,
-  fetchActivityDetails,
-  fetchPaginatedAccounts,
-  fetchAccountsForDropdown,
-  createEntity,
-  createActivity,
-  updateTaskDates,
-  updateTask,
-  fetchSystemUsersForDropdown,
-  fetchActivitiesByOwners,
-} = require("../../controllers/crmController");
+    activityController,
+    accountController,
+    entityController,
+    userController
+} = require("../../controllers/crm");
 const authMiddleware = require("../../middleware/authMiddleware");
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
-// Specific routes should come before generic ones
-router.post("/activities", createActivity); // Moved up to ensure it matches before /:entity
-router.patch("/activities/:activityId/update-dates", updateTaskDates);
-router.patch("/activities/:activityId", updateTask);
-router.get("/activities/all", fetchAllActivities);
-router.get("/activities/my", fetchMyActivities);
-router.get("/activities/filter", fetchActivitiesByOwners);
-router.get("/activities/:activityId", fetchActivityDetails);
-router.get("/accounts/paginated", fetchPaginatedAccounts);
-router.get("/accounts/dropdown", fetchAccountsForDropdown);
-router.get("/systemusers/dropdown", fetchSystemUsersForDropdown);
+// Activity routes
+router.get("/activities/all", activityController.fetchAllActivities);
+router.get("/activities/my", activityController.fetchMyActivities);
+router.get("/activities/filter", activityController.fetchActivitiesByOwners);
+router.get("/activities/:activityId", activityController.fetchActivityDetails);
+router.post("/activities", activityController.createActivity);
+router.patch("/activities/:activityId/update-dates", activityController.updateTaskDates);
+router.patch("/activities/:activityId", activityController.updateTask);
 
-// Generic routes should come last
-router.get("/:entity", fetchEntity);
-router.post("/:entity", createEntity);
+// Account routes
+router.get("/accounts", accountController.fetchPaginatedAccounts);
+router.get("/accounts/dropdown", accountController.fetchAccountsForDropdown);
+
+// Entity routes
+router.get("/entities/:entity", entityController.fetchEntity);
+
+// User routes
+router.get("/users/me", userController.getCurrentUser);
+router.get("/systemusers/dropdown", userController.fetchSystemUsersForDropdown);
 
 module.exports = router;

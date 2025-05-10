@@ -1,12 +1,14 @@
 class DashboardManager {
   constructor() {
     this.calendarManager = new CalendarManager();
-    this.allActivitiesBtn = document.getElementById("allActivitiesBtn");
-    this.myActivitiesBtn = document.getElementById("myActivitiesBtn");
-    this.loadMoreActivitiesBtn = document.getElementById(
-      "loadMoreActivitiesBtn"
-    );
+    this.allActivitiesTab = document.getElementById("allActivitiesTab");
+    this.myActivitiesTab = document.getElementById("myActivitiesTab");
+    this.specificActivitiesTab = document.getElementById("specificActivitiesTab");
+    this.loadMoreActivitiesBtn = document.getElementById("loadMoreActivitiesBtn");
+    this.ownerFilterContainer = document.getElementById("ownerFilterContainer");
+    this.ownerFilter = $("#ownerFilter");
     this.accounts = []; // Store accounts data
+    this.specificMode = false;
   }
 
   async fetchAccounts() {
@@ -51,306 +53,311 @@ class DashboardManager {
     }
   }
 
-  initialize() {
-    console.log("Initializing dashboard");
+  async initialize() {
+    // Initialize calendar
     this.calendarManager.initializeCalendar();
-    this.calendarManager.fetchActivities();
-    this.fetchAccounts(); // Fetch accounts when dashboard initializes
-    this.setOwnerFields(); // Set owner fields
-
-    // Initialize Select2 for owner filter
-    const $ownerFilter = $("#ownerFilter");
     
-    // First fetch the data
-    fetch('/api/crm/systemusers/dropdown')
-      .then(response => response.json())
-      .then(data => {
-        $ownerFilter.select2({
-          placeholder: "انتخاب مالک",
-          allowClear: true,
-          multiple: true,
-          data: data,
-          templateResult: function(user) {
-            if (!user.id) {
-              return $('<div class="select2-result-department">' + user.text + '</div>');
-            }
-            return $('<div class="select2-result-user">' + user.text + '</div>');
-          },
-          templateSelection: function(user) {
-            if (!user.id) {
+    // Initialize owner filter
+    await this.initializeOwnerFilter();
+    
+    // Set up event listeners
+    this.setupEventListeners();
+    
+    // Fetch accounts for dropdowns
+    await this.fetchAccounts();
+    
+    // Set owner fields
+    this.setOwnerFields();
+  }
+
+  initializeOwnerFilter() {
+    return new Promise((resolve, reject) => {
+      // Initialize Select2 for owner filter
+      fetch('/api/crm/systemusers/dropdown')
+        .then(response => response.json())
+        .then(data => {
+          this.ownerFilter.select2({
+            placeholder: "انتخاب مالک",
+            allowClear: true,
+            multiple: true,
+            data: data.map(user => ({
+              id: user.systemuserid,
+              text: user.fullname
+            })),
+            templateResult: function(user) {
+              if (!user.id) {
+                return $('<div class="select2-result-department">' + user.text + '</div>');
+              }
+              return $('<div class="select2-result-user">' + user.text + '</div>');
+            },
+            templateSelection: function(user) {
+              if (!user.id) {
+                return user.text;
+              }
               return user.text;
+            },
+            escapeMarkup: function(markup) {
+              return markup;
             }
-            return user.text;
-          },
-          escapeMarkup: function(markup) {
-            return markup;
-          }
+          });
+
+          // Add custom CSS for Select2
+          const style = document.createElement('style');
+          style.textContent = `
+            .select2-container--default .select2-results__group {
+              background-color: #f8f9fa;
+              padding: 8px;
+              font-weight: bold;
+              border-bottom: 1px solid #dee2e6;
+            }
+            .select2-container--default .select2-results__option {
+              padding: 8px 12px;
+            }
+            .select2-container--default .select2-results__option--highlighted[aria-selected] {
+              background-color: #007bff;
+            }
+            .select2-container--default .select2-selection--multiple .select2-selection__choice {
+              background-color: #007bff;
+              color: white;
+              border: none;
+              padding: 4px 8px;
+              margin: 2px;
+            }
+            .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+              color: white;
+              margin-right: 5px;
+            }
+            .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+              color: #fff;
+              background-color: #0056b3;
+            }
+            .select2-dropdown {
+              border-color: #dee2e6;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+          `;
+          document.head.appendChild(style);
+          resolve();
+        })
+        .catch(error => {
+          console.error('Error loading users:', error);
+          Utils.showErrorToast('خطا در بارگذاری لیست کاربران');
+          reject(error);
         });
+    });
+  }
 
-        // Add custom CSS for Select2
-        const style = document.createElement('style');
-        style.textContent = `
-          .select2-container--default .select2-results__group {
-            background-color: #f8f9fa;
-            padding: 8px;
-            font-weight: bold;
-            border-bottom: 1px solid #dee2e6;
-          }
-          .select2-container--default .select2-results__option {
-            padding: 8px 12px;
-          }
-          .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #007bff;
-          }
-          .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            margin: 2px;
-          }
-          .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-            color: white;
-            margin-right: 5px;
-          }
-          .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
-            color: #fff;
-            background-color: #0056b3;
-          }
-          .select2-dropdown {
-            border-color: #dee2e6;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          }
-        `;
-        document.head.appendChild(style);
-      })
-      .catch(error => {
-        console.error('Error loading users:', error);
-        Utils.showErrorToast('خطا در بارگذاری لیست کاربران');
-      });
-
+  setupEventListeners() {
     // Handle filter change
-    $ownerFilter.on('change', () => {
-      const selected = $ownerFilter.val();
-      if (specificMode) {
+    this.ownerFilter.on('change', () => {
+      const selected = this.ownerFilter.val();
+      if (this.specificMode) {
         this.calendarManager.clearCalendar();
         this.calendarManager.addActivitiesForOwners(selected);
-      } else {
-        this.calendarManager.filterByOwners(selected);
       }
     });
 
-    // Tab button logic
-    const allTab = document.getElementById("allActivitiesTab");
-    const myTab = document.getElementById("myActivitiesTab");
-    const specificTab = document.getElementById("specificActivitiesTab");
+    // Tab click handlers
+    this.allActivitiesTab.addEventListener("click", () => {
+      this.specificMode = false;
+      this.ownerFilterContainer.style.display = "none";
+      this.calendarManager.clearCalendar();
+      this.calendarManager.addAllActivities();
+      this.updateTabStyles(this.allActivitiesTab);
+    });
 
-    const $ownerFilterContainer = $("#ownerFilterContainer");
-    let specificMode = false;
+    this.myActivitiesTab.addEventListener("click", () => {
+      this.specificMode = false;
+      this.ownerFilterContainer.style.display = "none";
+      this.calendarManager.clearCalendar();
+      this.calendarManager.addMyActivities();
+      this.updateTabStyles(this.myActivitiesTab);
+    });
 
-    if (allTab && myTab && specificTab) {
-      allTab.addEventListener("click", () => {
-        allTab.classList.add("btn-primary");
-        allTab.classList.remove("btn-outline-primary");
-        myTab.classList.add("btn-outline-primary");
-        myTab.classList.remove("btn-primary");
-        specificTab.classList.add("btn-outline-primary");
-        specificTab.classList.remove("btn-primary");
-        $ownerFilter.val(null).trigger("change");
-        specificMode = false;
-        $ownerFilterContainer.hide();
-        this.calendarManager.fetchActivities(false, "all");
+    this.specificActivitiesTab.addEventListener("click", () => {
+      this.specificMode = true;
+      this.ownerFilterContainer.style.display = "block";
+      this.calendarManager.clearCalendar();
+      this.updateTabStyles(this.specificActivitiesTab);
+    });
+
+    // Load more button click handler
+    this.loadMoreActivitiesBtn.addEventListener("click", () => {
+      this.calendarManager.loadMoreActivities();
+    });
+  }
+
+  updateTabStyles(activeTab) {
+    [this.allActivitiesTab, this.myActivitiesTab, this.specificActivitiesTab].forEach(
+      (tab) => {
+        tab.classList.remove("btn-primary");
+        tab.classList.add("btn-outline-primary");
+      }
+    );
+    activeTab.classList.remove("btn-outline-primary");
+    activeTab.classList.add("btn-primary");
+  }
+
+  initializeTabSwitching() {
+    if (this.allActivitiesTab && this.myActivitiesTab && this.specificActivitiesTab) {
+      this.allActivitiesTab.addEventListener("click", () => {
+        this.switchToAllActivities();
       });
-      myTab.addEventListener("click", () => {
-        myTab.classList.add("btn-primary");
-        myTab.classList.remove("btn-outline-primary");
-        allTab.classList.add("btn-outline-primary");
-        allTab.classList.remove("btn-primary");
-        specificTab.classList.add("btn-outline-primary");
-        specificTab.classList.remove("btn-primary");
-        $ownerFilter.val(null).trigger("change");
-        specificMode = false;
-        $ownerFilterContainer.hide();
-        this.calendarManager.fetchActivities(false, "my");
-      });
-      specificTab.addEventListener("click", () => {
-        specificTab.classList.add("btn-primary");
-        specificTab.classList.remove("btn-outline-primary");
-        allTab.classList.add("btn-outline-primary");
-        allTab.classList.remove("btn-primary");
-        myTab.classList.add("btn-outline-primary");
-        myTab.classList.remove("btn-primary");
-        $ownerFilter.val(null).trigger("change");
-        specificMode = true;
-        this.calendarManager.clearCalendar();
-        $ownerFilterContainer.show();
-      });
-    }
 
-    // On page load, hide Select2 unless specific tab is active
-    if (!specificMode) $ownerFilterContainer.hide();
+      this.myActivitiesTab.addEventListener("click", () => {
+        this.switchToMyActivities();
+      });
 
-    if (this.loadMoreActivitiesBtn) {
-      this.loadMoreActivitiesBtn.addEventListener("click", () => {
-        this.calendarManager.fetchActivities(
-          true,
-          this.calendarManager.currentActivityView
-        );
+      this.specificActivitiesTab.addEventListener("click", () => {
+        this.switchToSpecificActivities();
       });
     }
+  }
 
-    document
-      .getElementById("editTaskBtn")
-      .addEventListener("click", function () {
-        const data = window.CalendarManager.currentTaskData;
-        if (!data) {
-          Utils.showErrorToast("اطلاعات وظیفه در دسترس نیست");
-          return;
-        }
+  switchToAllActivities() {
+    this.allActivitiesTab.classList.add("btn-primary");
+    this.allActivitiesTab.classList.remove("btn-outline-primary");
+    this.myActivitiesTab.classList.add("btn-outline-primary");
+    this.myActivitiesTab.classList.remove("btn-primary");
+    this.specificActivitiesTab.classList.add("btn-outline-primary");
+    this.specificActivitiesTab.classList.remove("btn-primary");
+    
+    this.ownerFilter.val(null).trigger("change");
+    this.specificMode = false;
+    this.ownerFilterContainer.style.display = "none";
+    
+    this.calendarManager.clearCalendar();
+    this.calendarManager.fetchActivities(false, "all");
+  }
 
-        // Hide the details modal
-        const detailsModal = bootstrap.Modal.getInstance(
-          document.getElementById("activityDetailsModal")
-        );
-        if (detailsModal) {
-          detailsModal.hide();
-        }
+  switchToMyActivities() {
+    this.myActivitiesTab.classList.add("btn-primary");
+    this.myActivitiesTab.classList.remove("btn-outline-primary");
+    this.allActivitiesTab.classList.add("btn-outline-primary");
+    this.allActivitiesTab.classList.remove("btn-primary");
+    this.specificActivitiesTab.classList.add("btn-outline-primary");
+    this.specificActivitiesTab.classList.remove("btn-primary");
+    
+    this.ownerFilter.val(null).trigger("change");
+    this.specificMode = false;
+    this.ownerFilterContainer.style.display = "none";
+    
+    this.calendarManager.clearCalendar();
+    this.calendarManager.fetchActivities(false, "my");
+  }
 
-        // Set form values
-        document.getElementById("editTaskId").value = data.activityid;
-        document.getElementById("editTaskSubject").value = data.subject || "";
-        document.getElementById("editTaskDescription").value =
-          data.description || "";
+  switchToSpecificActivities() {
+    this.specificActivitiesTab.classList.add("btn-primary");
+    this.specificActivitiesTab.classList.remove("btn-outline-primary");
+    this.allActivitiesTab.classList.add("btn-outline-primary");
+    this.allActivitiesTab.classList.remove("btn-primary");
+    this.myActivitiesTab.classList.add("btn-outline-primary");
+    this.myActivitiesTab.classList.remove("btn-primary");
+    
+    this.ownerFilter.val(null).trigger("change");
+    this.specificMode = true;
+    this.ownerFilterContainer.style.display = "block";
+    
+    this.calendarManager.clearCalendar();
+  }
 
-        // Format dates for datetime-local input
-        const formatDate = (dateStr) => {
-          if (!dateStr) return "";
-          const date = moment(dateStr).tz("Asia/Tehran");
-          return date.format("YYYY-MM-DDTHH:mm");
-        };
+  async fetchSystemUsers() {
+    try {
+      const response = await fetch('/api/crm/systemusers/dropdown');
+      const users = await response.json();
+      return users;
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      Utils.showErrorToast('خطا در بارگذاری لیست کاربران');
+      return [];
+    }
+  }
 
-        document.getElementById("editTaskStartDate").value = formatDate(
-          data.scheduledstart
-        );
-        document.getElementById("editTaskDueDate").value = formatDate(
-          data.scheduledend
-        );
-        document.getElementById("editTaskPriority").value =
-          data.prioritycode || "1";
+  async setEditModalFields(data) {
+    // Set basic fields
+    document.getElementById("editTaskId").value = data.activityid;
+    document.getElementById("editTaskSubject").value = data.subject || "";
+    document.getElementById("editTaskDescription").value = data.description || "";
+    document.getElementById("editTaskStartDate").value = data.scheduledstart ? moment(data.scheduledstart).format("YYYY-MM-DDTHH:mm") : "";
+    document.getElementById("editTaskDueDate").value = data.scheduledend ? moment(data.scheduledend).format("YYYY-MM-DDTHH:mm") : "";
+    document.getElementById("editTaskPriority").value = data.prioritycode || "1";
+    document.getElementById("editTaskRegarding").value = data._regardingobjectid_value || "";
 
-        // Show the edit modal
-        const editModalEl = document.getElementById("editTaskModal");
-        const editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
-        editModal.show();
-      });
+    // Set status
+    document.getElementById("editTaskStatus").value = data.statuscode || "0";
 
-    document
-      .getElementById("editTaskForm")
-      .addEventListener("submit", async function (e) {
-        e.preventDefault();
+    // Set previous owner (display only)
+    document.getElementById("editPreviousOwner").value = data.new_lastownerid_name || "";
 
-        const activityId = document.getElementById("editTaskId").value;
-        const payload = {
-          subject: document.getElementById("editTaskSubject").value,
-          description: document.getElementById("editTaskDescription").value,
-          scheduledstart: document.getElementById("editTaskStartDate").value,
-          scheduledend: document.getElementById("editTaskDueDate").value,
-          prioritycode: document.getElementById("editTaskPriority").value,
-          regardingobjectid: document.getElementById("editTaskRegarding").value,
-          originalScheduledstart:
-            window.CalendarManager.currentTaskData.scheduledstart,
-          originalScheduledend:
-            window.CalendarManager.currentTaskData.scheduledend,
-        };
+    // Set seen
+    document.getElementById("editTaskSeen").checked = !!data.new_seen;
 
-        try {
-          const response = await fetch(`/api/crm/activities/${activityId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const result = await response.json();
-          if (response.ok) {
-            // Success: close modal, refresh calendar, show toast
-            const editModal = bootstrap.Modal.getInstance(
-              document.getElementById("editTaskModal")
-            );
-            if (editModal) {
-              editModal.hide();
-            }
-            window.CalendarManager.fetchActivities(false); // reload events
-            Utils.showSuccessToast("وظیفه با موفقیت به‌روزرسانی شد");
-          } else {
-            Utils.showErrorToast(result.error || "خطا در ویرایش وظیفه");
+    // Populate and set assigned to
+    const assignedToSelect = document.getElementById("editTaskAssignedTo");
+    const users = await this.fetchSystemUsers();
+    assignedToSelect.innerHTML = '<option value="">انتخاب کنید...</option>' +
+      users.map(u => `<option value="${u.systemuserid}">${u.fullname}</option>`).join("");
+    assignedToSelect.value = data.ownerid || "";
+  }
+
+  setupEditTaskButton() {
+    document.getElementById("editTaskBtn").addEventListener("click", async () => {
+      const data = window.CalendarManager.currentTaskData;
+      if (!data) {
+        Utils.showErrorToast("اطلاعات وظیفه در دسترس نیست");
+        return;
+      }
+      await this.setEditModalFields(data);
+      const editModalEl = document.getElementById("editTaskModal");
+      const editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
+      editModal.show();
+    });
+  }
+
+  setupEditTaskFormSubmit() {
+    document.getElementById("editTaskForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const activityId = document.getElementById("editTaskId").value;
+      const payload = {
+        subject: document.getElementById("editTaskSubject").value,
+        description: document.getElementById("editTaskDescription").value,
+        scheduledstart: document.getElementById("editTaskStartDate").value,
+        scheduledend: document.getElementById("editTaskDueDate").value,
+        prioritycode: document.getElementById("editTaskPriority").value,
+        regardingobjectid: document.getElementById("editTaskRegarding").value,
+        statuscode: document.getElementById("editTaskStatus").value,
+        ownerid: document.getElementById("editTaskAssignedTo").value,
+        new_seen: document.getElementById("editTaskSeen").checked
+      };
+      try {
+        const response = await fetch(`/api/crm/activities/${activityId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          // Success: close modal, refresh calendar, show toast
+          const editModal = bootstrap.Modal.getInstance(document.getElementById("editTaskModal"));
+          if (editModal) {
+            editModal.hide();
           }
-        } catch (err) {
-          console.error("Error updating task:", err);
-          Utils.showErrorToast("خطا در ارتباط با سرور");
+          window.CalendarManager.fetchActivities(false); // reload events
+          Utils.showSuccessToast("وظیفه با موفقیت به‌روزرسانی شد");
+        } else {
+          Utils.showErrorToast(result.error || "خطا در ویرایش وظیفه");
         }
-      });
-
-    // Add create task form submission handler
-    const createTaskForm = document.getElementById("createTaskForm");
-    if (createTaskForm) {
-      console.log("Found create task form, adding submit handler");
-      createTaskForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        console.log("Create task form submitted");
-        const form = e.target;
-        // Convert Jalali to Gregorian for API
-        const convertToGregorian = (jalaliDate) => {
-          if (!jalaliDate) return null;
-          return moment(jalaliDate, "jYYYY/jMM/jDD HH:mm").format(
-            "YYYY-MM-DDTHH:mm"
-          );
-        };
-        const payload = {
-          subject: form.subject.value,
-          description: form.description.value,
-          scheduledstart: convertToGregorian(form.scheduledstart.value),
-          scheduledend: convertToGregorian(form.scheduledend.value),
-          prioritycode: form.prioritycode.value,
-          ownerid: window.currentUser.id,
-          // Only include regardingobjectid if selected
-          ...(form.regardingobjectid && form.regardingobjectid.value
-            ? { regardingobjectid: form.regardingobjectid.value }
-            : {}),
-        };
-        console.log("Sending payload:", payload);
-        try {
-          const res = await fetch("/api/crm/activities", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json();
-          if (res.ok) {
-            Utils.showSuccessToast("وظیفه با موفقیت ایجاد شد");
-            const modal = bootstrap.Modal.getInstance(
-              document.getElementById("createTaskModal")
-            );
-            if (modal) {
-              modal.hide();
-            }
-            window.CalendarManager.fetchActivities(false);
-            form.reset();
-          } else {
-            Utils.showErrorToast(data.error || "خطا در ایجاد وظیفه");
-          }
-        } catch (err) {
-          console.error("Error creating task:", err);
-          Utils.showErrorToast("خطا در ارتباط با سرور");
-        }
-      });
-    } else {
-      console.error("Create task form not found!");
-    }
+      } catch (err) {
+        console.error("Error updating task:", err);
+        Utils.showErrorToast("خطا در ارتباط با سرور");
+      }
+    });
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const dashboardManager = new DashboardManager();
-  dashboardManager.initialize();
+  window.dashboardManager = new DashboardManager();
+  window.dashboardManager.initialize();
   // Initialize babakhani Persian Datepicker for all date fields
   $(function () {
     $(".persian-datepicker").persianDatepicker({

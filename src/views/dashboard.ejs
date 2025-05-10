@@ -61,7 +61,7 @@
       </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
       <div class="d-flex justify-content-end mb-3">
         <button
           class="btn btn-success"
@@ -73,360 +73,211 @@
       </div>
       <h2 class="text-center mb-4">فعالیت‌های من</h2>
 
-      <!-- Buttons to toggle between views -->
-      <div class="activity-tabs mb-3 text-center">
-        <button id="allActivitiesTab" class="btn btn-outline-primary">همه فعالیت‌ها</button>
-        <button id="myActivitiesTab" class="btn btn-primary">فعالیت‌های من</button>
-        <button id="specificActivitiesTab" class="btn btn-outline-primary">انتخابی فعالیت‌ها</button>
+      <!-- Activity Filter Buttons -->
+      <div class="row mb-3">
+        <div class="col-md-8">
+          <div class="btn-group" role="group">
+            <button type="button" id="allActivitiesTab" class="btn btn-outline-primary">
+              همه فعالیت‌ها
+            </button>
+            <button type="button" id="myActivitiesTab" class="btn btn-primary">
+              فعالیت‌های من
+            </button>
+            <button type="button" id="specificActivitiesTab" class="btn btn-outline-primary">
+              انتخابی فعالیت‌ها
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4 text-end">
+          <div id="ownerFilterContainer" style="display: none;">
+            <select id="ownerFilter" class="form-select" multiple="multiple">
+              <option value="">انتخاب مالک...</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <!-- Owner Filter -->
-      <div id="ownerFilterContainer" class="mb-3 text-center">
-        <select id="ownerFilter" class="form-select" multiple="multiple" style="width: 300px; display: inline-block;">
-          <!-- Options will be populated by JS -->
-        </select>
-      </div>
-
-      <!-- Calendar -->
-      <div id="calendar"></div>
-
-      <!-- Load More Button -->
-      <div class="text-center mt-3">
-        <button id="loadMoreActivitiesBtn" class="btn btn-primary">
-          بارگذاری فعالیت‌های بیشتر
-        </button>
+      <!-- Calendar Container -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card h-100">
+            <div class="card-body p-0">
+              <div id="calendar" style="height: calc(100vh - 200px);"></div>
+              <div class="text-center mt-3">
+                <button id="loadMoreActivitiesBtn" class="btn btn-primary" style="display: none;">
+                  بارگذاری فعالیت‌های بیشتر
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Activity Details Modal -->
-    <div
-      class="modal fade"
-      id="activityDetailsModal"
-      tabindex="-1"
-      aria-labelledby="activityDetailsModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="activityDetailsModalLabel">
-              <i class="bi bi-info-circle"></i> جزئیات فعالیت
-            </h5>
-            <button
-              type="button"
-              class="btn-close btn-close-white"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+    <div class="modal fade" id="activityDetailsModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">جزئیات فعالیت</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <div class="mb-2">
-              <i class="bi bi-card-text"></i>
-              <strong>موضوع:</strong>
-              <span id="activitySubject" class="ms-2"></span>
+            <div class="mb-3">
+              <h6>موضوع</h6>
+              <p id="activitySubject" class="mb-0"></p>
             </div>
-            <div class="mb-2">
-              <i class="bi bi-tag"></i>
-              <strong>نوع فعالیت:</strong>
-              <span
-                id="activityType"
-                class="badge bg-info text-dark ms-2"
-              ></span>
+            <div class="mb-3">
+              <h6>توضیحات</h6>
+              <p id="activityDescription" class="mb-0"></p>
             </div>
-            <div class="mb-2">
-              <i class="bi bi-calendar-event"></i>
-              <strong>شروع:</strong>
-              <span id="activityStart" class="ms-2"></span>
+            <div class="mb-3">
+              <h6>تاریخ شروع</h6>
+              <p id="activityStartDate" class="mb-0"></p>
             </div>
-            <div class="mb-2">
-              <i class="bi bi-calendar-check"></i>
-              <strong>پایان:</strong>
-              <span id="activityEnd" class="ms-2"></span>
+            <div class="mb-3">
+              <h6>تاریخ پایان</h6>
+              <p id="activityDueDate" class="mb-0"></p>
             </div>
-            <div class="mb-2">
-              <i class="bi bi-person"></i>
-              <strong>مالک:</strong>
-              <span id="activityOwner" class="ms-2"></span>
-            </div>
-            <div class="mb-2">
-              <i class="bi bi-chat-left-text"></i>
-              <strong>توضیحات:</strong>
-              <span id="activityDescription" class="ms-2"></span>
-            </div>
-            <div class="mb-2">
-              <i class="bi bi-hash"></i>
-              <strong>شناسه فعالیت:</strong>
-              <span id="activityId" class="ms-2"></span>
-              <button
-                class="btn btn-sm btn-outline-secondary"
-                onclick="navigator.clipboard.writeText(document.getElementById('activityId').textContent)"
-              >
-                <i class="bi bi-clipboard"></i>
-              </button>
+            <div class="mb-3">
+              <h6>اولویت</h6>
+              <p id="activityPriority" class="mb-0"></p>
             </div>
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              بستن
-            </button>
-            <button type="button" id="editTaskBtn" class="btn btn-primary">
-              ویرایش
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+            <button type="button" id="editTaskBtn" class="btn btn-primary">ویرایش</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Edit Task Modal -->
-    <div
-      class="modal fade"
-      id="editTaskModal"
-      tabindex="-1"
-      aria-labelledby="editTaskModalLabel"
-      aria-hidden="true"
-    >
+    <div class="modal fade" id="editTaskModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="editTaskModalLabel">ویرایش وظیفه</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+            <h5 class="modal-title">ویرایش وظیفه</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <form id="editTaskForm">
-              <input type="hidden" id="editTaskId" name="activityId" />
+              <input type="hidden" id="editTaskId">
               <div class="mb-3">
                 <label for="editTaskSubject" class="form-label">موضوع</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="editTaskSubject"
-                  name="subject"
-                  required
-                />
+                <input type="text" class="form-control" id="editTaskSubject" required>
               </div>
               <div class="mb-3">
-                <label for="editTaskDescription" class="form-label"
-                  >توضیحات</label
-                >
-                <textarea
-                  class="form-control"
-                  id="editTaskDescription"
-                  name="description"
-                ></textarea>
+                <label for="editTaskDescription" class="form-label">توضیحات</label>
+                <textarea class="form-control" id="editTaskDescription" rows="3"></textarea>
               </div>
               <div class="mb-3">
-                <label for="editTaskStartDate" class="form-label"
-                  >تاریخ شروع</label
-                >
-                <input
-                  type="text"
-                  class="form-control persian-datepicker"
-                  id="editTaskStartDate"
-                  name="scheduledstart"
-                />
+                <label for="editTaskStartDate" class="form-label">تاریخ شروع</label>
+                <input type="datetime-local" class="form-control" id="editTaskStartDate" required>
               </div>
               <div class="mb-3">
-                <label for="editTaskDueDate" class="form-label"
-                  >تاریخ سررسید</label
-                >
-                <input
-                  type="text"
-                  class="form-control persian-datepicker"
-                  id="editTaskDueDate"
-                  name="scheduledend"
-                />
+                <label for="editTaskDueDate" class="form-label">تاریخ پایان</label>
+                <input type="datetime-local" class="form-control" id="editTaskDueDate" required>
               </div>
               <div class="mb-3">
                 <label for="editTaskPriority" class="form-label">اولویت</label>
-                <select
-                  class="form-select"
-                  id="editTaskPriority"
-                  name="prioritycode"
-                >
-                  <option value="1">Normal</option>
-                  <option value="2">High</option>
-                  <option value="0">Low</option>
+                <select class="form-select" id="editTaskPriority" required>
+                  <option value="0">کم</option>
+                  <option value="1">عادی</option>
+                  <option value="2">زیاد</option>
+                  <option value="3">فوری</option>
                 </select>
               </div>
               <div class="mb-3">
-                <label for="editTaskRegarding" class="form-label"
-                  >مرتبط با</label
-                >
-                <select
-                  class="form-select"
-                  id="editTaskRegarding"
-                  name="regardingobjectid"
-                >
+                <label for="editTaskRegarding" class="form-label">مربوط به</label>
+                <select class="form-select" id="editTaskRegarding">
                   <option value="">انتخاب کنید...</option>
                 </select>
               </div>
-              <button type="submit" class="btn btn-primary">ذخیره</button>
+              <div class="mb-3">
+                <label for="editTaskStatus" class="form-label">وضعیت</label>
+                <select class="form-select" id="editTaskStatus" required>
+                  <option value="0">در جریان</option>
+                  <option value="1">تکمیل</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskAssignedTo" class="form-label">تخصیص به</label>
+                <select class="form-select" id="editTaskAssignedTo" required>
+                  <option value="">انتخاب کنید...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">مالک قبلی</label>
+                <input type="text" class="form-control" id="editPreviousOwner" readonly>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="editTaskSeen">
+                <label class="form-check-label" for="editTaskSeen">مشاهده شده</label>
+              </div>
             </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" form="editTaskForm" class="btn btn-primary">ذخیره تغییرات</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Create Task Modal -->
-    <div
-      class="modal fade"
-      id="createTaskModal"
-      tabindex="-1"
-      aria-labelledby="createTaskModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal fade" id="createTaskModal" tabindex="-1">
+      <div class="modal-dialog">
         <div class="modal-content">
-          <form id="createTaskForm">
-            <div class="modal-header bg-primary text-white">
-              <h5 class="modal-title" id="createTaskModalLabel">
-                ایجاد وظیفه جدید
-              </h5>
-              <button
-                type="button"
-                class="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                aria-label="بستن"
-              ></button>
-            </div>
-            <div class="modal-body">
+          <div class="modal-header">
+            <h5 class="modal-title">ایجاد وظیفه جدید</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="createTaskForm">
               <div class="mb-3">
-                <label for="taskSubject" class="form-label"
-                  >موضوع <span class="text-danger">*</span></label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="taskSubject"
-                  name="subject"
-                  required
-                />
+                <label for="taskSubject" class="form-label">موضوع</label>
+                <input type="text" class="form-control" id="taskSubject" required>
               </div>
               <div class="mb-3">
                 <label for="taskDescription" class="form-label">توضیحات</label>
-                <textarea
-                  class="form-control"
-                  id="taskDescription"
-                  name="description"
-                ></textarea>
-              </div>
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">وضعیت فعالیت</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    value="Open"
-                    disabled
-                  />
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">وضعیت دلیل</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    value="Not Started"
-                    disabled
-                  />
-                </div>
+                <textarea class="form-control" id="taskDescription" rows="3"></textarea>
               </div>
               <div class="mb-3">
-                <label for="customworkflowid" class="form-label"
-                  >customworkflowid</label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="customworkflowid"
-                  name="customworkflowid"
-                />
+                <label for="taskStartDate" class="form-label">تاریخ شروع</label>
+                <input type="datetime-local" class="form-control" id="taskStartDate" required>
               </div>
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="taskStartDate" class="form-label"
-                    >تاریخ شروع</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control persian-datepicker"
-                    id="taskStartDate"
-                    name="scheduledstart"
-                    placeholder="تاریخ شروع"
-                  />
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="taskDueDate" class="form-label"
-                    >تاریخ مقرر <span class="text-danger">*</span></label
-                  >
-                  <input
-                    type="text"
-                    class="form-control persian-datepicker"
-                    id="taskDueDate"
-                    name="scheduledend"
-                    placeholder="تاریخ مقرر"
-                    required
-                  />
-                </div>
+              <div class="mb-3">
+                <label for="taskDueDate" class="form-label">تاریخ پایان</label>
+                <input type="datetime-local" class="form-control" id="taskDueDate" required>
               </div>
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="taskPriority" class="form-label">اولویت</label>
-                  <select
-                    class="form-select"
-                    id="taskPriority"
-                    name="prioritycode"
-                  >
-                    <option value="1" selected>Normal</option>
-                    <option value="2">High</option>
-                    <option value="0">Low</option>
-                  </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="taskRegarding" class="form-label">مرتبط با</label>
-                  <select
-                    class="form-select"
-                    id="taskRegarding"
-                    name="regardingobjectid"
-                  >
-                    <option value="">انتخاب کنید...</option>
-                  </select>
-                </div>
+              <div class="mb-3">
+                <label for="taskPriority" class="form-label">اولویت</label>
+                <select class="form-select" id="taskPriority" required>
+                  <option value="0">کم</option>
+                  <option value="1">عادی</option>
+                  <option value="2">زیاد</option>
+                  <option value="3">فوری</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="taskRegarding" class="form-label">مربوط به</label>
+                <select class="form-select" id="taskRegarding">
+                  <option value="">انتخاب کنید...</option>
+                </select>
               </div>
               <div class="mb-3">
                 <label for="taskOwner" class="form-label">مالک</label>
-                <select
-                  class="form-select"
-                  id="taskOwner"
-                  name="ownerid"
-                  required
-                >
-                  <option value="<%= user.id %>" selected>
-                    <%= user.fullname %>
-                  </option>
+                <select class="form-select" id="taskOwner" required>
+                  <option value="">انتخاب کنید...</option>
                 </select>
               </div>
-              <!-- Add more fields as needed -->
-            </div>
-            <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal"
-              >
-                بستن
-              </button>
-              <button type="submit" class="btn btn-primary">ایجاد وظیفه</button>
-            </div>
-          </form>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" form="createTaskForm" class="btn btn-primary">ایجاد وظیفه</button>
+          </div>
         </div>
       </div>
     </div>
@@ -468,5 +319,6 @@
       };
     </script>
     <script src="/js/dashboard.js"></script>
+    <script src="/js/calendar.js"></script>
   </body>
 </html>

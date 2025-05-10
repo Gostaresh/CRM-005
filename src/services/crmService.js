@@ -15,6 +15,7 @@ class CrmService {
     if (query.filter) params.push(`$filter=${query.filter}`);
     if (query.orderby) params.push(`$orderby=${query.orderby}`);
     if (query.top) params.push(`$top=${query.top}`);
+    if (query.skip) params.push(`$skip=${query.skip}`);
     if (query.expand) params.push(`$expand=${query.expand}`);
     if (params.length) url += `?${params.join("&")}`;
 
@@ -58,96 +59,101 @@ class CrmService {
     credentials,
     userId = null,
     nextLink = null,
-    pageSize = 500,
+    pageSize = 50,
     customFilter = null
   ) {
-    const select =
-      "subject,scheduledstart,scheduledend,activitytypecode,ownerid,activityid";
-    let filter = "";
-    if (customFilter) {
-      filter = customFilter;
-    } else if (userId) {
-      filter = `_ownerid_value eq '${userId}'`;
-    }
-    const orderby = "scheduledstart desc";
-    const query = nextLink
-      ? { nextLink }
-      : {
-          select,
-          filter,
-          orderby,
-          top: pageSize,
-          expand: "ownerid",
-          headers: {
-            Prefer: `odata.maxpagesize=${pageSize}`,
-          },
-        };
-    const data = await this.fetchEntity("activitypointers", query, credentials);
-    logger.info(
-      `Raw fetchActivities response: ${JSON.stringify(data, null, 2)}`
-    );
-
-    // For a list of activities
-    for (const activity of data.value) {
-      if (
-        activity.ownerid &&
-        activity.ownerid.ownerid &&
-        !activity.ownerid.name
-      ) {
-        activity.ownerid.name = await this.fetchOwnerName(
-          activity.ownerid.ownerid,
-          credentials
-        );
+    try {
+      const select =
+        "subject,scheduledstart,scheduledend,activitytypecode,ownerid,activityid,description,prioritycode,_regardingobjectid_value";
+      let filter = "";
+      
+      if (customFilter) {
+        filter = customFilter;
+      } else if (userId) {
+        filter = `_ownerid_value eq '${userId}'`;
       }
-    }
 
-    return data;
+      const orderby = "scheduledstart desc";
+      const query = nextLink
+        ? { nextLink }
+        : {
+            select,
+            filter,
+            orderby,
+            top: pageSize,
+            expand: "ownerid",
+            headers: {
+              Prefer: `odata.maxpagesize=${pageSize}`,
+            },
+          };
+
+      const data = await this.fetchEntity("activitypointers", query, credentials);
+      logger.info(
+        `Raw fetchActivities response: ${JSON.stringify(data, null, 2)}`
+      );
+
+      if (!data || !data.value) {
+        logger.error('Invalid response format from CRM');
+        throw new Error('Invalid response format from CRM');
+      }
+
+      // For a list of activities
+      for (const activity of data.value) {
+        if (
+          activity.ownerid &&
+          activity.ownerid.ownerid &&
+          !activity.ownerid.name
+        ) {
+          activity.ownerid.name = await this.fetchOwnerName(
+            activity.ownerid.ownerid,
+            credentials
+          );
+        }
+      }
+
+      return {
+        value: data.value || [],
+        nextLink: data["@odata.nextLink"] || null
+      };
+    } catch (error) {
+      logger.error(`Error in fetchActivities: ${error.message}`);
+      throw error;
+    }
   }
 
   async fetchActivityDetails(activityId, credentials) {
     const query = {
-      select:
-        "subject,description,scheduledstart,scheduledend,activitytypecode,prioritycode",
-      expand: "ownerid",
+      select: "subject,description,scheduledstart,scheduledend,activitytypecode,prioritycode,_ownerid_value,activityid",
+      expand: "ownerid($select=fullname,ownerid)"
     };
+    
     const data = await this.fetchEntity(
       `activitypointers(${activityId})`,
       query,
       credentials
     );
 
+    // Get owner name
     let ownerName = "-";
-    const owner = data.ownerid;
-    if (owner) {
-      const ownerId = owner.ownerid;
-      const ownerType = owner["@odata.type"];
-
-      if (ownerType === "#Microsoft.Dynamics.CRM.systemuser") {
-        const userData = await this.fetchEntity(
-          `systemusers(${ownerId})`,
+    if (data._ownerid_value) {
+      try {
+        const ownerData = await this.fetchEntity(
+          `systemusers(${data._ownerid_value})`,
           { select: "fullname" },
           credentials
         );
-        ownerName = userData.fullname || "-";
-      } else if (ownerType === "#Microsoft.Dynamics.CRM.team") {
-        const teamData = await this.fetchEntity(
-          `teams(${ownerId})`,
-          { select: "name" },
-          credentials
-        );
-        ownerName = teamData.name || "-";
+        ownerName = ownerData.fullname || "-";
+      } catch (err) {
+        logger.error(`Error fetching owner name: ${err.message}`);
       }
-    }
-
-    // For a single activity
-    if (data.ownerid && data.ownerid.ownerid && !data.ownerid.name) {
-      data.ownerid.name = ownerName;
     }
 
     return {
       ...data,
-      owner: { name: ownerName },
-      regardingobjectid: data.regardingobjectid_account || null,
+      owner: { 
+        id: data._ownerid_value,
+        name: ownerName 
+      }
     };
   }
 
