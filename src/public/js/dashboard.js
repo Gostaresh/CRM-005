@@ -278,9 +278,9 @@ class DashboardManager {
     document.getElementById("editTaskId").value = data.activityid;
     document.getElementById("editTaskSubject").value = data.subject || "";
     document.getElementById("editTaskDescription").value = data.description || "";
-    // Convert Gregorian to Jalali for display
-    document.getElementById("editTaskStartDate").value = data.scheduledstart ? moment(data.scheduledstart).format("jYYYY-MM-DDTHH:mm") : "";
-    document.getElementById("editTaskDueDate").value = data.scheduledend ? moment(data.scheduledend).format("jYYYY-MM-DDTHH:mm") : "";
+    // Convert UTC to Tehran, then to Jalali for display
+    document.getElementById("editTaskStartDate").value = data.scheduledstart ? moment.utc(data.scheduledstart).tz("Asia/Tehran").format("jYYYY-MM-DDTHH:mm") : "";
+    document.getElementById("editTaskDueDate").value = data.scheduledend ? moment.utc(data.scheduledend).tz("Asia/Tehran").format("jYYYY-MM-DDTHH:mm") : "";
     document.getElementById("editTaskPriority").value = data.prioritycode || "1";
     document.getElementById("editTaskRegarding").value = data._regardingobjectid_value || "";
 
@@ -319,16 +319,18 @@ class DashboardManager {
     document.getElementById("editTaskForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const activityId = document.getElementById("editTaskId").value;
-      // Convert Jalali to Gregorian before saving
+      // Convert Jalali to Gregorian, then treat as Tehran time and convert to UTC ISO string before saving
       const jalaliStart = document.getElementById("editTaskStartDate").value;
       const jalaliEnd = document.getElementById("editTaskDueDate").value;
       const gregorianStart = moment(jalaliStart, "jYYYY-MM-DDTHH:mm").format("YYYY-MM-DDTHH:mm");
       const gregorianEnd = moment(jalaliEnd, "jYYYY-MM-DDTHH:mm").format("YYYY-MM-DDTHH:mm");
+      const startUtc = moment.tz(gregorianStart, "YYYY-MM-DDTHH:mm", "Asia/Tehran").utc().format();
+      const endUtc = moment.tz(gregorianEnd, "YYYY-MM-DDTHH:mm", "Asia/Tehran").utc().format();
       const payload = {
         subject: document.getElementById("editTaskSubject").value,
         description: document.getElementById("editTaskDescription").value,
-        scheduledstart: gregorianStart,
-        scheduledend: gregorianEnd,
+        scheduledstart: startUtc,
+        scheduledend: endUtc,
         prioritycode: document.getElementById("editTaskPriority").value,
         regardingobjectid: document.getElementById("editTaskRegarding").value,
         statuscode: document.getElementById("editTaskStatus").value,
