@@ -278,8 +278,9 @@ class DashboardManager {
     document.getElementById("editTaskId").value = data.activityid;
     document.getElementById("editTaskSubject").value = data.subject || "";
     document.getElementById("editTaskDescription").value = data.description || "";
-    document.getElementById("editTaskStartDate").value = data.scheduledstart ? moment(data.scheduledstart).format("YYYY-MM-DDTHH:mm") : "";
-    document.getElementById("editTaskDueDate").value = data.scheduledend ? moment(data.scheduledend).format("YYYY-MM-DDTHH:mm") : "";
+    // Convert Gregorian to Jalali for display
+    document.getElementById("editTaskStartDate").value = data.scheduledstart ? moment(data.scheduledstart).format("jYYYY-MM-DDTHH:mm") : "";
+    document.getElementById("editTaskDueDate").value = data.scheduledend ? moment(data.scheduledend).format("jYYYY-MM-DDTHH:mm") : "";
     document.getElementById("editTaskPriority").value = data.prioritycode || "1";
     document.getElementById("editTaskRegarding").value = data._regardingobjectid_value || "";
 
@@ -318,11 +319,16 @@ class DashboardManager {
     document.getElementById("editTaskForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const activityId = document.getElementById("editTaskId").value;
+      // Convert Jalali to Gregorian before saving
+      const jalaliStart = document.getElementById("editTaskStartDate").value;
+      const jalaliEnd = document.getElementById("editTaskDueDate").value;
+      const gregorianStart = moment(jalaliStart, "jYYYY-MM-DDTHH:mm").format("YYYY-MM-DDTHH:mm");
+      const gregorianEnd = moment(jalaliEnd, "jYYYY-MM-DDTHH:mm").format("YYYY-MM-DDTHH:mm");
       const payload = {
         subject: document.getElementById("editTaskSubject").value,
         description: document.getElementById("editTaskDescription").value,
-        scheduledstart: document.getElementById("editTaskStartDate").value,
-        scheduledend: document.getElementById("editTaskDueDate").value,
+        scheduledstart: gregorianStart,
+        scheduledend: gregorianEnd,
         prioritycode: document.getElementById("editTaskPriority").value,
         regardingobjectid: document.getElementById("editTaskRegarding").value,
         statuscode: document.getElementById("editTaskStatus").value,

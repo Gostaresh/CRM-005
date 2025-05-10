@@ -144,6 +144,9 @@ const updateTask = async (req, res) => {
         scheduledend,
         prioritycode,
         regardingobjectid,
+        statuscode,
+        ownerid,
+        new_seen,
     } = req.body;
     const credentials = {
         username: req.session.user.username.split("\\")[1],
@@ -160,6 +163,15 @@ const updateTask = async (req, res) => {
 
     if (regardingobjectid) {
         updateData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
+    }
+    if (statuscode !== undefined) {
+        updateData.statuscode = parseInt(statuscode);
+    }
+    if (ownerid) {
+        updateData["ownerid@odata.bind"] = `/systemusers(${ownerid})`;
+    }
+    if (typeof new_seen !== 'undefined') {
+        updateData.new_seen = !!new_seen;
     }
 
     logger.info(
