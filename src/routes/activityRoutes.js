@@ -1,17 +1,2 @@
-const express = require("express");
-const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware");
-
-module.exports = (activityController) => {
-  router.get(
-    "/create-activity",
-    authMiddleware,
-    activityController.getCreateActivityPage.bind(activityController)
-  );
-  router.post(
-    "/create-activity/:entity",
-    authMiddleware,
-    activityController.createActivity.bind(activityController)
-  );
-  return router;
-};
+// This file is no longer needed as we're removing the activity controller
+// You can create specific routes for your custom forms instead

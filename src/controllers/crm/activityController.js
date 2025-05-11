@@ -1,6 +1,44 @@
 const CrmService = require("../../services/crmService");
 const logger = require("../../utils/logger");
 const { decrypt } = require("../../utils/crypto");
+const { ActivityPointer, SystemUser } = require("../../core/resources");
+const DateTimeService = require("../../core/services/DateTimeService");
+const moment = require('jalali-moment');
+// Helper function to add Jalali date fields to activity data
+const convertActivityDates = (activityOrArray) => {
+    const dateFields = [
+        'scheduledstart',
+        'scheduledend',
+        'actualstart',
+        'actualend',
+        'createdon',
+        'modifiedon'
+    ];
+    function addJalaliToOne(activity) {
+        if (!activity || typeof activity !== 'object') return activity;
+        const result = { ...activity };
+        dateFields.forEach(field => {
+            if (result[field]) {
+                result[`${field}_jalali`] = DateTimeService.toJalali(result[field]);
+            }
+        });
+        return result;
+    }
+    if (Array.isArray(activityOrArray)) {
+        return activityOrArray.map(addJalaliToOne);
+    } else {
+        return addJalaliToOne(activityOrArray);
+    }
+};
+
+// Helper: Validate CRM date
+function isValidCrmDate(dateStr) {
+    if (!dateStr) return false;
+    // Accepts YYYY-MM-DD HH:mm:ss or YYYY/MM/DD HH:mm:ss
+    const minDate = new Date('1753-01-01T00:00:00Z');
+    let d = new Date(dateStr.replace(/\//g, '-'));
+    return d instanceof Date && !isNaN(d) && d >= minDate;
+}
 
 const fetchAllActivities = async (req, res) => {
     try {
@@ -14,8 +52,16 @@ const fetchAllActivities = async (req, res) => {
             `Fetching all activities for user: ${credentials.username}, nextLink: ${nextLink || "none"}`
         );
         const data = await CrmService.fetchActivities(credentials, null, nextLink, pageSize);
-        logger.info(`All activities response: ${JSON.stringify(data.value, null, 2)}`);
-        logger.info(`Next link for all activities: ${data.nextLink || "none"}`);
+        
+        // Convert dates in the response
+        if (data.value) {
+            data.value = data.value.map(convertActivityDates);
+        }
+        
+        // logger.info(`All activities response: ${JSON.stringify(data.value, null, 2)}`);
+        // logger.info(`Next link for all activities: ${data.nextLink || "none"}`);
+        logger.info('All activities fetched successfully');
+
         res.status(200).json(data);
     } catch (error) {
         logger.error(`Error fetching all activities: ${error.message}`);
@@ -24,9 +70,10 @@ const fetchAllActivities = async (req, res) => {
 };
 
 const fetchMyActivities = async (req, res) => {
-    const nextLink = req.query.nextLink || null;
-    const pageSize = parseInt(req.query.pageSize) || 50;
-    const credentials = {
+    try {
+        const nextLink = req.query.nextLink || null;
+        const pageSize = parseInt(req.query.pageSize) || 50;
+        const credentials = {
         username: req.session.user.username.split("\\")[1],
         password: decrypt(req.session.encryptedPassword),
     };
@@ -35,9 +82,21 @@ const fetchMyActivities = async (req, res) => {
         `Fetching my activities for user: ${credentials.username}, userId: ${userId}, nextLink: ${nextLink || "none"}`
     );
     const data = await CrmService.fetchActivities(credentials, userId, nextLink, pageSize);
-    logger.info(`My activities response: ${JSON.stringify(data)}`);
-    logger.info(`Next link for my activities: ${data.nextLink || "none"}`);
+    
+    // Convert dates in the response
+    if (data.value) {
+        data.value = data.value.map(convertActivityDates);
+    }
+    
+    // logger.info(`My activities response: ${JSON.stringify(data.value, null, 2)}`);
+    // logger.info(`Next link for my activities: ${data.nextLink || "none"}`);
+    logger.info('My activities fetched successfully');
+
     res.status(200).json(data);
+    } catch (error) {
+        logger.error(`Error fetching my activities: ${error.message}`);
+        res.status(500).json({ error: error.message });
+    }
 };
 
 const fetchActivityDetails = async (req, res) => {
@@ -50,7 +109,11 @@ const fetchActivityDetails = async (req, res) => {
         `Fetching activity details for activityId: ${activityId}, user: ${credentials.username}`
     );
     const data = await CrmService.fetchActivityDetails(activityId, credentials);
-    res.status(200).json(data);
+    
+    // Convert dates in the response
+    const convertedData = convertActivityDates(data);
+    
+    res.status(200).json(convertedData);
 };
 
 const createActivity = async (req, res) => {
@@ -73,14 +136,22 @@ const createActivity = async (req, res) => {
         return res.status(400).json({ error: "موضوع و تاریخ سررسید الزامی است" });
     }
 
+    // Convert Jalali dates to UTC for CRM
+    const utcStartDate = scheduledstart ? DateTimeService.toUTC(scheduledstart) : null;
+    const utcEndDate = DateTimeService.toUTC(scheduledend);
+
+    if (!utcEndDate) {
+        return res.status(400).json({ error: "فرمت تاریخ سررسید نامعتبر است" });
+    }
+
     const activityData = {
-        subject,
-        description: description || "",
-        scheduledstart: scheduledstart ? new Date(scheduledstart).toISOString() : null,
-        scheduledend: new Date(scheduledend).toISOString(),
-        prioritycode: parseInt(prioritycode) || 1,
-        "ownerid@odata.bind": `/systemusers(${userId})`,
-        activitytypecode: "task",
+        [ActivityPointer.properties.subject]: subject,
+        [ActivityPointer.properties.description]: description || "",
+        [ActivityPointer.properties.scheduledStart]: utcStartDate ? utcStartDate.toISOString() : null,
+        [ActivityPointer.properties.scheduledEnd]: utcEndDate.toISOString(),
+        [ActivityPointer.properties.priorityCode]: parseInt(prioritycode) || 1,
+        "ownerid@odata.bind": `/${SystemUser.type}(${userId})`,
+        [ActivityPointer.properties.activityTypeCode]: "task",
     };
 
     if (customworkflowid) {
@@ -118,9 +189,18 @@ const updateTaskDates = async (req, res) => {
         return res.status(400).json({ error: "تاریخ سررسید الزامی است" });
     }
 
+    // Convert Jalali dates to UTC for CRM
+    const utcStartDate = scheduledstart ? DateTimeService.toUTC(scheduledstart) : null;
+    const utcEndDate = DateTimeService.toUTC(scheduledend);
+
+    // Backend validation for CRM date
+    if ((utcStartDate && !isValidCrmDate(utcStartDate)) || !isValidCrmDate(utcEndDate)) {
+        return res.status(400).json({ error: "تاریخ وارد شده معتبر نیست یا کمتر از حد مجاز است" });
+    }
+
     const updateData = {
-        scheduledstart: scheduledstart || null,
-        scheduledend: scheduledend,
+        scheduledstart: utcStartDate,
+        scheduledend: utcEndDate
     };
 
     logger.info(
@@ -153,14 +233,27 @@ const updateTask = async (req, res) => {
         password: decrypt(req.session.encryptedPassword),
     };
 
+    // Convert Jalali dates to UTC for CRM
+    const utcStartDate = moment.from(scheduledstart, 'fa', 'YYYY/MM/DD HH:mm:ss').format('YYYY-M-D HH:mm:ss');
+    const utcEndDate = moment.from(scheduledend, 'fa', 'YYYY/MM/DD HH:mm:ss').format('YYYY-M-D HH:mm:ss');
+
+    // Backend validation for CRM date
+    if ((utcStartDate && !isValidCrmDate(utcStartDate)) || !isValidCrmDate(utcEndDate)) {
+        return res.status(400).json({ error: "تاریخ وارد شده معتبر نیست یا کمتر از حد مجاز است" });
+    }
+
+    if (scheduledend && !utcEndDate) {
+        return res.status(400).json({ error: "فرمت تاریخ سررسید نامعتبر است" });
+    }
+
     const updateData = {
         subject,
         description,
-        scheduledstart: scheduledstart ? new Date(scheduledstart).toISOString() : null,
-        scheduledend: scheduledend ? new Date(scheduledend).toISOString() : null,
+        scheduledstart: utcStartDate,
+        scheduledend: utcEndDate,
         prioritycode: prioritycode ? parseInt(prioritycode) : undefined,
     };
-
+    logger.info(`updateData: ${JSON.stringify(updateData)}`);
     if (regardingobjectid) {
         updateData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
     }
@@ -201,7 +294,6 @@ const fetchActivitiesByOwners = async (req, res) => {
 
         let result;
         if (nextLink) {
-            // If we have a nextLink, use it directly
             result = await CrmService.fetchActivities(
                 credentials,
                 null,
@@ -209,7 +301,6 @@ const fetchActivitiesByOwners = async (req, res) => {
                 parseInt(pageSize)
             );
         } else {
-            // For initial request, construct the filter
             const ownerIds = owners.split(',').map(id => id.trim());
             if (ownerIds.length === 0) {
                 return res.status(400).json({ error: "At least one owner ID is required" });
@@ -225,6 +316,11 @@ const fetchActivitiesByOwners = async (req, res) => {
                 parseInt(pageSize),
                 `(${ownerFilter})`
             );
+        }
+
+        // Convert dates in the response
+        if (result.value) {
+            result.value = result.value.map(convertActivityDates);
         }
 
         res.json(result);

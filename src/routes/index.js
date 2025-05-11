@@ -1,16 +1,12 @@
 const express = require("express");
 const authRoutes = require("./api/authRoutes");
 const crmRoutes = require("./api/crmRoutes");
-const activityRoutesFactory = require("./activityRoutes");
 
-module.exports = (activityController) => {
+module.exports = () => {
   const router = express.Router();
 
   router.use("/api/auth", authRoutes);
   router.use("/api/crm", crmRoutes);
-
-  // Mount activity routes for server-side rendering
-  router.use("/crm", activityRoutesFactory(activityController));
 
   router.get("/", (req, res) => {
     if (req.session.user) {

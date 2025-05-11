@@ -173,11 +173,31 @@
               </div>
               <div class="mb-3">
                 <label for="editTaskStartDate" class="form-label">تاریخ شروع</label>
-                <input type="datetime-local" class="form-control" id="editTaskStartDate" required>
+                <div class="input-group">
+                  <input type="text" 
+                         class="form-control jalali-datepicker" 
+                         id="editTaskStartDate_display" 
+                         placeholder="YYYY/MM/DD HH:mm:ss"
+                         autocomplete="off"
+                         required />
+                  <input type="hidden" 
+                         name="editTaskStartDate" 
+                         id="editTaskStartDate" />
+                </div>
               </div>
               <div class="mb-3">
                 <label for="editTaskDueDate" class="form-label">تاریخ پایان</label>
-                <input type="datetime-local" class="form-control" id="editTaskDueDate" required>
+                <div class="input-group">
+                  <input type="text" 
+                         class="form-control jalali-datepicker" 
+                         id="editTaskDueDate_display" 
+                         placeholder="YYYY/MM/DD HH:mm:ss"
+                         autocomplete="off"
+                         required />
+                  <input type="hidden" 
+                         name="editTaskDueDate" 
+                         id="editTaskDueDate" />
+                </div>
               </div>
               <div class="mb-3">
                 <label for="editTaskPriority" class="form-label">اولویت</label>
@@ -189,31 +209,11 @@
                 </select>
               </div>
               <div class="mb-3">
-                <label for="editTaskRegarding" class="form-label">مربوط به</label>
-                <select class="form-select" id="editTaskRegarding">
-                  <option value="">انتخاب کنید...</option>
-                </select>
-              </div>
-              <div class="mb-3">
                 <label for="editTaskStatus" class="form-label">وضعیت</label>
                 <select class="form-select" id="editTaskStatus" required>
                   <option value="0">در جریان</option>
                   <option value="1">تکمیل</option>
                 </select>
-              </div>
-              <div class="mb-3">
-                <label for="editTaskAssignedTo" class="form-label">تخصیص به</label>
-                <select class="form-select" id="editTaskAssignedTo" required>
-                  <option value="">انتخاب کنید...</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">مالک قبلی</label>
-                <input type="text" class="form-control" id="editPreviousOwner" readonly>
-              </div>
-              <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="editTaskSeen">
-                <label class="form-check-label" for="editTaskSeen">مشاهده شده</label>
               </div>
             </form>
           </div>
@@ -245,11 +245,31 @@
               </div>
               <div class="mb-3">
                 <label for="taskStartDate" class="form-label">تاریخ شروع</label>
-                <input type="datetime-local" class="form-control" id="taskStartDate" required>
+                <div class="input-group">
+                  <input type="text" 
+                         class="form-control jalali-datepicker" 
+                         id="taskStartDate_display" 
+                         placeholder="YYYY/MM/DD HH:mm:ss"
+                         autocomplete="off"
+                         required />
+                  <input type="hidden" 
+                         name="taskStartDate" 
+                         id="taskStartDate" />
+                </div>
               </div>
               <div class="mb-3">
                 <label for="taskDueDate" class="form-label">تاریخ پایان</label>
-                <input type="datetime-local" class="form-control" id="taskDueDate" required>
+                <div class="input-group">
+                  <input type="text" 
+                         class="form-control jalali-datepicker" 
+                         id="taskDueDate_display" 
+                         placeholder="YYYY/MM/DD HH:mm:ss"
+                         autocomplete="off"
+                         required />
+                  <input type="hidden" 
+                         name="taskDueDate" 
+                         id="taskDueDate" />
+                </div>
               </div>
               <div class="mb-3">
                 <label for="taskPriority" class="form-label">اولویت</label>
@@ -258,18 +278,6 @@
                   <option value="1">عادی</option>
                   <option value="2">زیاد</option>
                   <option value="3">فوری</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="taskRegarding" class="form-label">مربوط به</label>
-                <select class="form-select" id="taskRegarding">
-                  <option value="">انتخاب کنید...</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="taskOwner" class="form-label">مالک</label>
-                <select class="form-select" id="taskOwner" required>
-                  <option value="">انتخاب کنید...</option>
                 </select>
               </div>
             </form>
@@ -308,9 +316,163 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.5.43/builds/moment-timezone-with-data.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.10.4/builds/moment-jalaali.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+    <script src="/src/public/js/dateUtils.js"></script>
+    <script src="/js/calendar.js"></script>
+
+    <script>
+    function convertPersianDigitsToEnglish(str) {
+      var persian = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+      var english = ['0','1','2','3','4','5','6','7','8','9'];
+      for (var i=0; i<persian.length; i++) {
+        str = str.replace(new RegExp(persian[i], 'g'), english[i]);
+      }
+      return str;
+    }
+    function syncJalaliToGregorian(displayId, hiddenId) {
+      var persian = $('#' + displayId).val();
+      if (persian) {
+        persian = convertPersianDigitsToEnglish(persian);
+        var pDate = new persianDate(persian);
+        var gregorian = pDate.toCalendar('gregorian').format('YYYY/MM/DD HH:mm:ss');
+        $('#' + hiddenId).val(gregorian);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Jalali date pickers
+        $('.jalali-datepicker').persianDatepicker({
+            format: 'YYYY/MM/DD HH:mm:ss',
+            initialValue: false,
+            autoClose: true,
+            timePicker: {
+                enabled: true,
+                meridian: {
+                    enabled: false
+                }
+            },
+            onSelect: function(unix) {
+                var $input = $(this);
+                var pDate = new persianDate(unix);
+                var persian = pDate.format('YYYY/MM/DD HH:mm:ss'); // Jalali for display
+                var gregorian = pDate.toCalendar('gregorian').format('YYYY/MM/DD HH:mm:ss');
+                gregorian = convertPersianDigitsToEnglish(gregorian); // To Latin
+                $input.val(persian); // visible input (Jalali)
+                var inputId = $input.attr('id');
+                if (inputId && inputId.endsWith('_display')) {
+                  var hiddenId = inputId.replace('_display', '');
+                  $('#' + hiddenId).val(gregorian); // hidden input (Gregorian, Latin digits)
+                }
+            }
+        });
+
+        // Robust sync: on change/blur of *_display, update hidden field
+        $('#editTaskStartDate_display').on('change blur', function() {
+          syncJalaliToGregorian('editTaskStartDate_display', 'editTaskStartDate');
+        });
+        $('#editTaskDueDate_display').on('change blur', function() {
+          syncJalaliToGregorian('editTaskDueDate_display', 'editTaskDueDate');
+        });
+        $('#taskStartDate_display').on('change blur', function() {
+          syncJalaliToGregorian('taskStartDate_display', 'taskStartDate');
+        });
+        $('#taskDueDate_display').on('change blur', function() {
+          syncJalaliToGregorian('taskDueDate_display', 'taskDueDate');
+        });
+
+        // Fallback: sync before form submit
+        document.getElementById('editTaskForm').addEventListener('submit', function(e) {
+          syncJalaliToGregorian('editTaskStartDate_display', 'editTaskStartDate');
+          syncJalaliToGregorian('editTaskDueDate_display', 'editTaskDueDate');
+          // Prevent submit if hidden fields are empty
+          if (!document.getElementById('editTaskStartDate').value || !document.getElementById('editTaskDueDate').value) {
+            e.preventDefault();
+            alert('تاریخ شروع و پایان معتبر وارد کنید');
+            return false;
+          }
+        });
+        document.getElementById('createTaskForm').addEventListener('submit', function(e) {
+          syncJalaliToGregorian('taskStartDate_display', 'taskStartDate');
+          syncJalaliToGregorian('taskDueDate_display', 'taskDueDate');
+          // Prevent submit if hidden fields are empty
+          if (!document.getElementById('taskStartDate').value || !document.getElementById('taskDueDate').value) {
+            e.preventDefault();
+            alert('تاریخ شروع و پایان معتبر وارد کنید');
+            return false;
+          }
+        });
+
+        // Handle create task form submission
+        document.getElementById('createTaskForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                subject: document.getElementById('taskSubject').value,
+                description: document.getElementById('taskDescription').value,
+                scheduledstart: document.getElementById('taskStartDate').value,
+                scheduledend: document.getElementById('taskDueDate').value,
+                prioritycode: document.getElementById('taskPriority').value
+            };
+
+            try {
+                const response = await fetch('/api/crm/activities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    Utils.showSuccessToast('وظیفه با موفقیت ایجاد شد');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('createTaskModal'));
+                    modal.hide();
+                    window.calendarManager.fetchActivities(false, window.calendarManager.currentActivityView);
+                } else {
+                    Utils.showErrorToast(data.error || 'خطا در ایجاد وظیفه');
+                }
+            } catch (err) {
+                Utils.showErrorToast('خطا در ارتباط با سرور');
+            }
+        });
+
+        // Handle edit task form submission
+        document.getElementById('editTaskForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const activityId = document.getElementById('editTaskId').value;
+            const formData = {
+                subject: document.getElementById('editTaskSubject').value,
+                description: document.getElementById('editTaskDescription').value,
+                scheduledstart: document.getElementById('editTaskStartDate').value,
+                scheduledend: document.getElementById('editTaskDueDate').value,
+                prioritycode: document.getElementById('editTaskPriority').value,
+                statecode: document.getElementById('editTaskStatus').value
+            };
+
+            try {
+                const response = await fetch(`/api/crm/activities/${activityId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    Utils.showSuccessToast('وظیفه با موفقیت به‌روزرسانی شد');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editTaskModal'));
+                    modal.hide();
+                    window.calendarManager.fetchActivities(false, window.calendarManager.currentActivityView);
+                } else {
+                    Utils.showErrorToast(data.error || 'خطا در به‌روزرسانی وظیفه');
+                }
+            } catch (err) {
+                Utils.showErrorToast('خطا در ارتباط با سرور');
+            }
+        });
+    });
+    </script>
+
     <script>
       // Set current user information
       window.currentUser = {
@@ -318,7 +480,5 @@
         fullname: "<%= user.fullname %>",
       };
     </script>
-    <script src="/js/dashboard.js"></script>
-    <script src="/js/calendar.js"></script>
   </body>
 </html>

@@ -1,24 +1,12 @@
-[2025-05-10 12:53:42] ERROR: CRM request failed with status: 400, body: {"error":{"code":"0x8006088a","message":"')' or ',' expected at position 3 in '(by-owners)'."}}
-[2025-05-10 12:53:42] ERROR: Error: CRM request failed: 400, Stack: Error: CRM request failed: 400
-    at CrmService.fetchEntity (/home/administrator/CRM-005/src/services/crmService.js:52:13)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async CrmService.fetchActivityDetails (/home/administrator/CRM-005/src/services/crmService.js:130:18)
-    at async fetchActivityDetails (/home/administrator/CRM-005/src/controllers/crm/activityController.js:52:18)
-[2025-05-10 12:53:47] ERROR: CRM request failed with status: 400, body: {"error":{"code":"0x8006088a","message":"')' or ',' expected at position 3 in '(by-owners)'."}}
-[2025-05-10 12:53:47] ERROR: Error: CRM request failed: 400, Stack: Error: CRM request failed: 400
-    at CrmService.fetchEntity (/home/administrator/CRM-005/src/services/crmService.js:52:13)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async CrmService.fetchActivityDetails (/home/administrator/CRM-005/src/services/crmService.js:130:18)
-    at async fetchActivityDetails (/home/administrator/CRM-005/src/controllers/crm/activityController.js:52:18)
-[2025-05-10 12:53:51] ERROR: CRM request failed with status: 400, body: {"error":{"code":"0x8006088a","message":"')' or ',' expected at position 3 in '(by-owners)'."}}
-[2025-05-10 12:53:51] ERROR: Error: CRM request failed: 400, Stack: Error: CRM request failed: 400
-    at CrmService.fetchEntity (/home/administrator/CRM-005/src/services/crmService.js:52:13)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async CrmService.fetchActivityDetails (/home/administrator/CRM-005/src/services/crmService.js:130:18)
-    at async fetchActivityDetails (/home/administrator/CRM-005/src/controllers/crm/activityController.js:52:18)
-[2025-05-10 12:53:58] ERROR: CRM request failed with status: 400, body: {"error":{"code":"0x8006088a","message":"')' or ',' expected at position 3 in '(by-owners)'."}}
-[2025-05-10 12:53:58] ERROR: Error: CRM request failed: 400, Stack: Error: CRM request failed: 400
-    at CrmService.fetchEntity (/home/administrator/CRM-005/src/services/crmService.js:52:13)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async CrmService.fetchActivityDetails (/home/administrator/CRM-005/src/services/crmService.js:130:18)
-    at async fetchActivityDetails (/home/administrator/CRM-005/src/controllers/crm/activityController.js:52:18)
+[2025-05-11 13:03:13] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 03/21/0621 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-11 13:03:13] ERROR: Update task error: CRM update request failed: 400
+[2025-05-11 13:03:13] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 03/21/0621 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-11 13:03:13] ERROR: Update task error: CRM update request failed: 400
+[2025-05-11 13:06:52] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 03/21/0621 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-11 13:06:52] ERROR: Update task error: CRM update request failed: 400
+[2025-05-11 13:06:52] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 03/21/0621 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-11 13:06:52] ERROR: Update task error: CRM update request failed: 400
+[2025-05-11 13:09:09] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 03/21/0621 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-11 13:09:09] ERROR: Update task error: CRM update request failed: 400
+[2025-05-11 13:09:09] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 03/21/0621 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-11 13:09:09] ERROR: Update task error: CRM update request failed: 400

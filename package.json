@@ -1,13 +1,13 @@
 {
   "name": "crm-005",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Dynamics 365 CRM Integration Project",
+  "main": "src/index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "node src/index.js",
     "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 nodemon --openssl-legacy-provider src/index.js"
   },
@@ -34,9 +34,15 @@
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "httpntlm": "^1.8.13",
+    "jalali-moment": "^3.3.11",
     "ldapjs": "^3.0.7",
+    "moment": "^2.29.4",
+    "moment-jalaali": "^0.10.0",
     "moment-jalali": "^0.3.9",
     "node-http-ntlm": "^1.7.5",
     "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
   }
 }

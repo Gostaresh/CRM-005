@@ -1,0 +1,138 @@
+{
+    "@odata.context": "http://192.168.1.6/gostaresh/api/data/v9.1/$metadata#EntityDefinitions('contact')/Attributes/Microsoft.Dynamics.CRM.StatusAttributeMetadata",
+    "value": [
+        {
+            "DefaultFormValue": -1,
+            "AttributeOf": null,
+            "AttributeType": "Status",
+            "ColumnNumber": 78,
+            "DeprecatedVersion": null,
+            "IntroducedVersion": "5.0.0.0",
+            "EntityLogicalName": "contact",
+            "IsCustomAttribute": false,
+            "IsPrimaryId": false,
+            "IsValidODataAttribute": true,
+            "IsPrimaryName": false,
+            "IsValidForCreate": true,
+            "IsValidForRead": true,
+            "IsValidForUpdate": true,
+            "CanBeSecuredForRead": false,
+            "CanBeSecuredForCreate": false,
+            "CanBeSecuredForUpdate": false,
+            "IsSecured": false,
+            "IsRetrievable": false,
+            "IsFilterable": false,
+            "IsSearchable": false,
+            "IsManaged": true,
+            "LinkedAttributeId": null,
+            "LogicalName": "statuscode",
+            "IsValidForForm": true,
+            "IsRequiredForForm": false,
+            "IsValidForGrid": true,
+            "SchemaName": "StatusCode",
+            "ExternalName": null,
+            "IsLogical": false,
+            "IsDataSourceSecret": false,
+            "InheritsFrom": null,
+            "CreatedOn": "1900-01-01T00:00:00Z",
+            "ModifiedOn": "1900-01-01T00:00:00Z",
+            "SourceType": null,
+            "AutoNumberFormat": null,
+            "MetadataId": "a247349a-78ab-4729-8528-515fc2719b67",
+            "HasChanged": null,
+            "AttributeTypeName": {
+                "Value": "StatusType"
+            },
+            "Description": {
+                "LocalizedLabels": [
+                    {
+                        "Label": "Select the contact's status.",
+                        "LanguageCode": 1033,
+                        "IsManaged": true,
+                        "MetadataId": "89cee1dc-2241-db11-898a-0007e9e17ebd",
+                        "HasChanged": null
+                    },
+                    {
+                        "Label": "انتخاب وضعیت شخص",
+                        "LanguageCode": 1065,
+                        "IsManaged": true,
+                        "MetadataId": "257c8ca8-3b5d-4fb7-9900-8640855184cd",
+                        "HasChanged": null
+                    }
+                ],
+                "UserLocalizedLabel": {
+                    "Label": "Select the contact's status.",
+                    "LanguageCode": 1033,
+                    "IsManaged": true,
+                    "MetadataId": "89cee1dc-2241-db11-898a-0007e9e17ebd",
+                    "HasChanged": null
+                }
+            },
+            "DisplayName": {
+                "LocalizedLabels": [
+                    {
+                        "Label": "Status Reason",
+                        "LanguageCode": 1033,
+                        "IsManaged": true,
+                        "MetadataId": "88cee1dc-2241-db11-898a-0007e9e17ebd",
+                        "HasChanged": null
+                    },
+                    {
+                        "Label": "دلیل وضعیت",
+                        "LanguageCode": 1065,
+                        "IsManaged": true,
+                        "MetadataId": "36eec020-acb2-44d9-a9e8-35927d30501a",
+                        "HasChanged": null
+                    }
+                ],
+                "UserLocalizedLabel": {
+                    "Label": "Status Reason",
+                    "LanguageCode": 1033,
+                    "IsManaged": true,
+                    "MetadataId": "88cee1dc-2241-db11-898a-0007e9e17ebd",
+                    "HasChanged": null
+                }
+            },
+            "IsAuditEnabled": {
+                "Value": true,
+                "CanBeChanged": true,
+                "ManagedPropertyLogicalName": "canmodifyauditsettings"
+            },
+            "IsGlobalFilterEnabled": {
+                "Value": false,
+                "CanBeChanged": true,
+                "ManagedPropertyLogicalName": "canmodifyglobalfiltersettings"
+            },
+            "IsSortableEnabled": {
+                "Value": false,
+                "CanBeChanged": true,
+                "ManagedPropertyLogicalName": "canmodifyissortablesettings"
+            },
+            "IsCustomizable": {
+                "Value": true,
+                "CanBeChanged": false,
+                "ManagedPropertyLogicalName": "iscustomizable"
+            },
+            "IsRenameable": {
+                "Value": true,
+                "CanBeChanged": false,
+                "ManagedPropertyLogicalName": "isrenameable"
+            },
+            "IsValidForAdvancedFind": {
+                "Value": true,
+                "CanBeChanged": true,
+                "ManagedPropertyLogicalName": "canmodifysearchsettings"
+            },
+            "RequiredLevel": {
+                "Value": "None",
+                "CanBeChanged": true,
+                "ManagedPropertyLogicalName": "canmodifyrequirementlevelsettings"
+            },
+            "CanModifyAdditionalSettings": {
+                "Value": true,
+                "CanBeChanged": false,
+                "ManagedPropertyLogicalName": "canmodifyadditionalsettings"
+            }
+        }
+    ]
+} 

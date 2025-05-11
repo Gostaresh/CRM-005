@@ -1,0 +1,37 @@
+{
+  "systemUsers": [
+    {
+      "@odata.etag": "W/\"1234567\"",
+      "systemuserid": "00000000-0000-0000-0000-000000000002",
+      "firstname": "حمید",
+      "lastname": "مهدی پور",
+      "fullname": "حمید مهدی پور",
+      "internalemailaddress": "hamid.mehdipour@example.com",
+      "accessmode": 0,
+      "isdisabled": false,
+      "isintegrationuser": false,
+      "isemailaddressapprovedbyo365admin": true,
+      "islicensesexceeded": false,
+      "issyncwithdirectory": true,
+      "mobilephone": "+989123456789",
+      "preferredaddresscode": 1,
+      "preferredemailcode": 1,
+      "preferredphonecode": 1,
+      "setupuser": false,
+      "sharepointemailaddress": null,
+      "systemuserid": "00000000-0000-0000-0000-000000000002",
+      "title": "مدیر سیستم",
+      "userlicensetype": 0,
+      "utcconversiontimezonecode": null,
+      "versionnumber": 1,
+      "yammeremailaddress": null,
+      "yammeruserid": null,
+      "yominame": "حمید مهدی پور",
+      "accessmode@OData.Community.Display.V1.FormattedValue": "Read-Write",
+      "preferredaddresscode@OData.Community.Display.V1.FormattedValue": "Mailing Address",
+      "preferredemailcode@OData.Community.Display.V1.FormattedValue": "Default Value",
+      "preferredphonecode@OData.Community.Display.V1.FormattedValue": "Main Phone",
+      "userlicensetype@OData.Community.Display.V1.FormattedValue": "Full"
+    }
+  ]
+} 

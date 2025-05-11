@@ -139,8 +139,10 @@ class CalendarManager {
         document.getElementById("editTaskId").value = event.id;
         document.getElementById("editTaskSubject").value = event.title;
         document.getElementById("editTaskDescription").value = event.extendedProps.description || '';
-        document.getElementById("editTaskStartDate").value = event.start.toISOString().slice(0, 16);
-        document.getElementById("editTaskDueDate").value = event.end.toISOString().slice(0, 16);
+        document.getElementById("editTaskStartDate_display").value = event.extendedProps.scheduledstart_jalali || "";
+        document.getElementById("editTaskStartDate").value = event.extendedProps.scheduledstart_jalali || "";
+        document.getElementById("editTaskDueDate_display").value = event.extendedProps.scheduledend_jalali || "";
+        document.getElementById("editTaskDueDate").value = event.extendedProps.scheduledend_jalali || "";
         document.getElementById("editTaskPriority").value = event.extendedProps.priority || '1';
         
         const editTaskModal = new bootstrap.Modal(document.getElementById("editTaskModal"));
@@ -248,17 +250,21 @@ class CalendarManager {
       const data = await response.json();
 
       if (data.value && data.value.length > 0) {
-        this.addActivitiesToCalendar(data.value);
-        this.nextLink = data.nextLink;
-        this.hasMoreActivities = !!data.nextLink;
+        // Use Gregorian fields for calendar event timing
+        const activities = data.value;
+        this.addActivitiesToCalendar(activities);
+        
+        // Update nextLink for pagination
+        this.nextLink = data['@odata.nextLink'];
+        this.hasMoreActivities = !!this.nextLink;
+        
+        // Show/hide load more button
+        const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+        if (loadMoreBtn) {
+          loadMoreBtn.style.display = this.hasMoreActivities ? 'block' : 'none';
+        }
       } else {
         this.hasMoreActivities = false;
-      }
-
-      // Update load more button visibility
-      const loadMoreBtn = document.getElementById("loadMoreActivitiesBtn");
-      if (loadMoreBtn) {
-        loadMoreBtn.style.display = this.hasMoreActivities ? "block" : "none";
       }
 
     } catch (error) {
@@ -321,6 +327,8 @@ class CalendarManager {
         priority: activity.prioritycode,
         owner: activity._ownerid_value,
         regarding: activity._regardingobjectid_value,
+        scheduledstart_jalali: activity.scheduledstart_jalali,
+        scheduledend_jalali: activity.scheduledend_jalali,
       },
     }));
 
@@ -344,35 +352,28 @@ class CalendarManager {
   }
 
   showActivityDetails(event) {
-    this.currentTaskData = event.extendedProps;
-    this.currentTaskData.activityid = event.id;
-    this.currentTaskData.subject = event.title;
-    this.currentTaskData.scheduledstart = event.start;
-    this.currentTaskData.scheduledend = event.end;
+    if (!this.activityDetailsModal) return;
 
-    // Format dates for display
-    const formatDate = (date) => {
-      return moment(date).tz("Asia/Tehran").format("YYYY/MM/DD HH:mm");
+    const activity = event.extendedProps;
+    document.getElementById("activitySubject").textContent = event.title;
+    document.getElementById("activityDescription").textContent = activity.description || '';
+    document.getElementById("activityStartDate").textContent = activity.scheduledstart_jalali || event.start;
+    document.getElementById("activityDueDate").textContent = activity.scheduledend_jalali || event.end;
+    document.getElementById("activityPriority").textContent = this.getPriorityText(activity.priority);
+
+    // Store current activity data for edit form
+    this.currentTaskData = {
+      id: event.id,
+      subject: event.title,
+      description: activity.description,
+      startDate: event.start,
+      endDate: event.end,
+      priority: activity.priority,
+      status: activity.status,
+      owner: activity.owner
     };
 
-    // Update modal content
-    document.getElementById("activitySubject").textContent = event.title;
-    document.getElementById("activityDescription").textContent =
-      event.extendedProps.description || "بدون توضیحات";
-    document.getElementById("activityStartDate").textContent = formatDate(
-      event.start
-    );
-    document.getElementById("activityDueDate").textContent = formatDate(
-      event.end
-    );
-    document.getElementById("activityPriority").textContent =
-      this.getPriorityText(event.extendedProps.priority);
-
-    // Show modal
-    const modal = new bootstrap.Modal(
-      document.getElementById("activityDetailsModal")
-    );
-    modal.show();
+    this.activityDetailsModal.show();
   }
 
   getPriorityText(priority) {
@@ -412,3 +413,93 @@ const convertToGregorian = (jalaliDate) => {
   if (!jalaliDate) return null;
   return moment(jalaliDate, "jYYYY/jMM/jDD HH:mm").format("YYYY-MM-DDTHH:mm");
 };
+
+// Utility: Convert Persian/Arabic numerals to Latin
+function convertPersianDigitsToEnglish(str) {
+  var persian = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+  var english = ['0','1','2','3','4','5','6','7','8','9'];
+  for (var i=0; i<persian.length; i++) {
+    str = str.replace(new RegExp(persian[i], 'g'), english[i]);
+  }
+  return str;
+}
+
+function syncJalaliToGregorian(displayId, hiddenId) {
+  var persian = $('#' + displayId).val();
+  if (persian) {
+    persian = convertPersianDigitsToEnglish(persian);
+    // Validate format: YYYY/MM/DD HH:mm:ss
+    var regex = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
+    if (!regex.test(persian)) {
+      $('#' + hiddenId).val('');
+      // Optionally show an error to the user
+      // alert('فرمت تاریخ باید YYYY/MM/DD HH:mm:ss باشد');
+      return;
+    }
+    var pDate = new persianDate(persian);
+    if (pDate.isValid()) {
+      var gregorian = pDate.toCalendar('gregorian').format('YYYY/MM/DD HH:mm:ss');
+      $('#' + hiddenId).val(gregorian);
+    } else {
+      $('#' + hiddenId).val('');
+      // Optionally show an error to the user
+      // alert('تاریخ وارد شده معتبر نیست');
+    }
+  } else {
+    $('#' + hiddenId).val('');
+  }
+}
+
+// Initialize calendar when document is ready
+document.addEventListener('DOMContentLoaded', () => {
+  window.calendarManager = new CalendarManager();
+  window.calendarManager.initializeCalendar();
+
+  // Patch all jalali datepickers to use Latin digits and robust sync
+  $(function () {
+    $(".jalali-datepicker").persianDatepicker({
+      format: "YYYY/MM/DD HH:mm:ss",
+      timePicker: { enabled: true, meridian: { enabled: false } },
+      initialValue: false,
+      autoClose: true,
+      calendar: { persian: { leapYearMode: 'astronomical' } },
+      onSelect: function(unix) {
+        var $input = $(this);
+        var pDate = new persianDate(unix);
+        var persian = pDate.format('YYYY/MM/DD HH:mm:ss'); // Jalali for display
+        var gregorian = pDate.toCalendar('gregorian').format('YYYY/MM/DD HH:mm:ss');
+        gregorian = convertPersianDigitsToEnglish(gregorian); // To Latin
+        $input.val(persian); // visible input (Jalali)
+        var inputId = $input.attr('id');
+        if (inputId && inputId.endsWith('_display')) {
+          var hiddenId = inputId.replace('_display', '');
+          $('#' + hiddenId).val(gregorian); // hidden input (Gregorian, Latin digits)
+        }
+      }
+    });
+
+    // Robust sync: on change/blur of *_display, update hidden field
+    $('#editTaskStartDate_display').on('change blur', function() {
+      syncJalaliToGregorian('editTaskStartDate_display', 'editTaskStartDate');
+    });
+    $('#editTaskDueDate_display').on('change blur', function() {
+      syncJalaliToGregorian('editTaskDueDate_display', 'editTaskDueDate');
+    });
+    $('#taskStartDate_display').on('change blur', function() {
+      syncJalaliToGregorian('taskStartDate_display', 'taskStartDate');
+    });
+    $('#taskDueDate_display').on('change blur', function() {
+      syncJalaliToGregorian('taskDueDate_display', 'taskDueDate');
+    });
+  });
+
+  // Fallback: sync before form submit
+  document.getElementById('editTaskForm').addEventListener('submit', function(e) {
+    syncJalaliToGregorian('editTaskStartDate_display', 'editTaskStartDate');
+    syncJalaliToGregorian('editTaskDueDate_display', 'editTaskDueDate');
+  });
+  document.getElementById('createTaskForm').addEventListener('submit', function(e) {
+    syncJalaliToGregorian('taskStartDate_display', 'taskStartDate');
+    syncJalaliToGregorian('taskDueDate_display', 'taskDueDate');
+  });
+});

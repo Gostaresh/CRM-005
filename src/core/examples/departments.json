@@ -1,0 +1,22 @@
+{
+  "departments": [
+    {
+      "@odata.etag": "W/\"1234567\"",
+      "new_departmentid": "00000000-0000-0000-0000-000000000003",
+      "new_name": "فروش",
+      "new_code": "SALES001",
+      "new_description": "بخش فروش و خدمات مشتریان",
+      "new_parentdepartmentid": null,
+      "createdon": "2025-05-11T11:22:40Z",
+      "modifiedon": "2025-05-11T11:22:40Z",
+      "statecode": 0,
+      "statuscode": 1,
+      "versionnumber": 1,
+      "new_parentdepartmentid@OData.Community.Display.V1.FormattedValue": null,
+      "statecode@OData.Community.Display.V1.FormattedValue": "Active",
+      "statuscode@OData.Community.Display.V1.FormattedValue": "Active",
+      "new_parentdepartmentid@Microsoft.Dynamics.CRM.associatednavigationproperty": "new_department_new_parentdepartment",
+      "new_parentdepartmentid@Microsoft.Dynamics.CRM.lookuplogicalname": "new_department"
+    }
+  ]
+} 

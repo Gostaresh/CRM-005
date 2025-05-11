@@ -8,7 +8,6 @@ const config = require("./config/config");
 const MetadataLoader = require("./core/metadata/MetadataLoader");
 const FormGenerator = require("./core/metadata/FormGenerator");
 const DynamicsService = require("./core/services/DynamicsService");
-const ActivityController = require("./controllers/activityController");
 
 const app = express();
 
@@ -57,16 +56,15 @@ app.use((req, res, next) => {
 
 app.use(express.static("src/public"));
 
-// Initialize dependencies for activity routes
-const metadataLoader = new MetadataLoader(config.metadataPaths);
-metadataLoader.load();
+// Initialize dependencies
+// const metadataLoader = new MetadataLoader(config.metadataPaths);
+// metadataLoader.load();
 
 const dynamicsService = new DynamicsService(config.apiBaseUrl);
-const formGenerator = new FormGenerator(metadataLoader, dynamicsService);
-const activityController = new ActivityController(formGenerator);
+// const formGenerator = new FormGenerator(metadataLoader, dynamicsService);
 
-// Mount routes with activityController
-const routes = routesFactory(activityController);
+// Mount routes
+const routes = routesFactory();
 app.use("/", routes);
 
 app.use(errorMiddleware);

@@ -1,0 +1,25 @@
+{
+  "contacts": [
+    {
+      "@odata.etag": "W/\"1234567\"",
+      "contactid": "00000000-0000-0000-0000-000000000004",
+      "firstname": "علی",
+      "lastname": "محمدی",
+      "fullname": "علی محمدی",
+      "emailaddress1": "ali.mohammadi@example.com",
+      "mobilephone": "+989123456789",
+      "jobtitle": "مدیر فروش",
+      "new_departmentid": "00000000-0000-0000-0000-000000000003",
+      "new_departmentid@OData.Community.Display.V1.FormattedValue": "فروش",
+      "new_departmentid@Microsoft.Dynamics.CRM.associatednavigationproperty": "new_department_contacts",
+      "new_departmentid@Microsoft.Dynamics.CRM.lookuplogicalname": "new_department",
+      "createdon": "2025-05-11T11:22:40Z",
+      "modifiedon": "2025-05-11T11:22:40Z",
+      "statecode": 0,
+      "statuscode": 1,
+      "versionnumber": 1,
+      "statecode@OData.Community.Display.V1.FormattedValue": "Active",
+      "statuscode@OData.Community.Display.V1.FormattedValue": "Active"
+    }
+  ]
+} 

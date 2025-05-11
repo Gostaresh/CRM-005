@@ -2,6 +2,8 @@ const httpntlm = require("httpntlm");
 const env = require("../config/env");
 const logger = require("../utils/logger");
 const { decrypt } = require("../utils/crypto");
+const { ActivityPointer, SystemUser } = require("../core/resources");
+const DateTimeService = require("../core/services/DateTimeService");
 
 class CrmService {
   constructor() {
@@ -63,17 +65,16 @@ class CrmService {
     customFilter = null
   ) {
     try {
-      const select =
-        "subject,scheduledstart,scheduledend,activitytypecode,ownerid,activityid,description,prioritycode,_regardingobjectid_value";
+      const select = Object.values(ActivityPointer.properties).join(',');
       let filter = "";
       
       if (customFilter) {
         filter = customFilter;
       } else if (userId) {
-        filter = `_ownerid_value eq '${userId}'`;
+        filter = `${ActivityPointer.properties.ownerId} eq '${userId}'`;
       }
 
-      const orderby = "scheduledstart desc";
+      const orderby = `${ActivityPointer.properties.scheduledStart} desc`;
       const query = nextLink
         ? { nextLink }
         : {
@@ -81,16 +82,15 @@ class CrmService {
             filter,
             orderby,
             top: pageSize,
-            expand: "ownerid",
             headers: {
               Prefer: `odata.maxpagesize=${pageSize}`,
             },
           };
 
-      const data = await this.fetchEntity("activitypointers", query, credentials);
-      logger.info(
-        `Raw fetchActivities response: ${JSON.stringify(data, null, 2)}`
-      );
+      const data = await this.fetchEntity(ActivityPointer.type, query, credentials);
+      // logger.info(
+      //   `Raw fetchActivities response: ${JSON.stringify(data, null, 2)}`
+      // );
 
       if (!data || !data.value) {
         logger.error('Invalid response format from CRM');
@@ -98,18 +98,37 @@ class CrmService {
       }
 
       // For a list of activities
-      for (const activity of data.value) {
-        if (
-          activity.ownerid &&
-          activity.ownerid.ownerid &&
-          !activity.ownerid.name
-        ) {
-          activity.ownerid.name = await this.fetchOwnerName(
-            activity.ownerid.ownerid,
-            credentials
-          );
-        }
-      }
+      // for (const activity of data.value) {
+      //   // Convert dates to Jalali format using DateTimeService
+      //   if (activity.scheduledstart) {
+      //     activity.scheduledstart_jalali = DateTimeService.toJalali(activity.scheduledstart);
+      //   }
+      //   if (activity.scheduledend) {
+      //     activity.scheduledend_jalali = DateTimeService.toJalali(activity.scheduledend);
+      //   }
+      //   if (activity.actualstart) {
+      //     activity.actualstart_jalali = DateTimeService.toJalali(activity.actualstart);
+      //   }
+      //   if (activity.actualend) {
+      //     activity.actualend_jalali = DateTimeService.toJalali(activity.actualend);
+      //   }
+      //   if (activity.createdon) {
+      //     activity.createdon_jalali = DateTimeService.toJalali(activity.createdon);
+      //   }
+      //   if (activity.modifiedon) {
+      //     activity.modifiedon_jalali = DateTimeService.toJalali(activity.modifiedon);
+      //   }
+
+      //   if (activity.ownerid) {
+      //     // Map the owner data using the formatted value
+      //     activity.owner = {
+      //       id: activity._ownerid_value,
+      //       name: activity['ownerid@OData.Community.Display.V1.FormattedValue'] || '-'
+      //     };
+      //     // Remove the raw ownerid data
+      //     delete activity.ownerid;
+      //   }
+      // }
 
       return {
         value: data.value || [],
@@ -123,26 +142,26 @@ class CrmService {
 
   async fetchActivityDetails(activityId, credentials) {
     const query = {
-      select: "subject,description,scheduledstart,scheduledend,activitytypecode,prioritycode,_ownerid_value,activityid",
-      expand: "ownerid($select=fullname,ownerid)"
+      select: Object.values(ActivityPointer.properties).join(','),
+      expand: ActivityPointer.expand.owner
     };
     
     const data = await this.fetchEntity(
-      `activitypointers(${activityId})`,
+      `${ActivityPointer.type}(${activityId})`,
       query,
       credentials
     );
 
     // Get owner name
     let ownerName = "-";
-    if (data._ownerid_value) {
+    if (data[ActivityPointer.properties.ownerId]) {
       try {
         const ownerData = await this.fetchEntity(
-          `systemusers(${data._ownerid_value})`,
-          { select: "fullname" },
+          `${SystemUser.type}(${data[ActivityPointer.properties.ownerId]})`,
+          { select: SystemUser.properties.fullName },
           credentials
         );
-        ownerName = ownerData.fullname || "-";
+        ownerName = ownerData[SystemUser.properties.fullName] || "-";
       } catch (err) {
         logger.error(`Error fetching owner name: ${err.message}`);
       }
@@ -151,7 +170,7 @@ class CrmService {
     return {
       ...data,
       owner: { 
-        id: data._ownerid_value,
+        id: data[ActivityPointer.properties.ownerId],
         name: ownerName 
       }
     };
