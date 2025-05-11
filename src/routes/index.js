@@ -31,7 +31,12 @@ module.exports = () => {
       title: "داشبورد CRM",
       user: req.session.user,
       includeFullCalendar: true,
-      pageScripts: ["/js/dashboard.js", "/js/calendar.js", "/js/accounts.js"],
+      pageScripts: [
+        "/js/dashboard.js",
+        "/js/calendar.js",
+        "/js/accounts.js",
+        "/js/regardingDropdown.js"
+      ],
       content: undefined,
     });
   });

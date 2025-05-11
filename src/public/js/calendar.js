@@ -31,39 +31,51 @@ class CalendarManager {
     const editTaskForm = document.getElementById("editTaskForm");
     if (editTaskForm) {
       editTaskForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const activityId = document.getElementById("editTaskId").value;
-        const formData = {
-          subject: document.getElementById("editTaskSubject").value,
-          description: document.getElementById("editTaskDescription").value,
-          scheduledstart: document.getElementById("editTaskStartDate").value,
-          scheduledend: document.getElementById("editTaskDueDate").value,
-          prioritycode: document.getElementById("editTaskPriority").value
-        };
-
-        try {
-          const response = await fetch(`/api/crm/activities/${activityId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData)
-          });
-
-          const data = await response.json();
-          if (response.ok) {
-            Utils.showSuccessToast("وظیفه با موفقیت به‌روزرسانی شد");
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById("editTaskModal"));
-            modal.hide();
-            // Refresh calendar
-            this.fetchActivities(false, this.currentActivityView);
-          } else {
-            Utils.showErrorToast(data.error || "خطا در به‌روزرسانی وظیفه");
+          e.preventDefault();
+          const activityId = document.getElementById("editTaskId").value;
+          const startDate = document.getElementById("editTaskStartDate").value;
+          const dueDate = document.getElementById("editTaskDueDate").value;
+  
+          const dateRegex = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
+          if (!startDate || !dueDate || !dateRegex.test(startDate) || !dateRegex.test(dueDate)) {
+              Utils.showErrorToast('تاریخ شروع و پایان باید در فرمت YYYY/MM/DD HH:mm:ss با ارقام لاتین باشد');
+              return;
           }
-        } catch (err) {
-          Utils.showErrorToast("خطا در ارتباط با سرور");
-        }
+  
+          const formData = {
+              subject: document.getElementById("editTaskSubject").value,
+              description: document.getElementById("editTaskDescription").value,
+              scheduledstart: startDate,
+              scheduledend: dueDate,
+              prioritycode: document.getElementById("editTaskPriority").value,
+              statecode: document.getElementById("editTaskStatus").value
+          };
+  
+          console.log('Form Data:', JSON.stringify(formData, null, 2));
+  
+          try {
+              const response = await fetch(`/api/crm/activities/${activityId}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(formData)
+              });
+  
+              const data = await response.json();
+              if (response.ok) {
+                  Utils.showSuccessToast("وظیفه با موفقیت به‌روزرسانی شد");
+                  const modal = bootstrap.Modal.getInstance(document.getElementById("editTaskModal"));
+                  modal.hide();
+                  this.fetchActivities(false, this.currentActivityView);
+              } else {
+                  console.error('Server Response:', data);
+                  Utils.showErrorToast(data.error || "خطا در به‌روزرسانی وظیفه");
+              }
+          } catch (err) {
+              console.error('Fetch Error:', err);
+              Utils.showErrorToast("خطا در ارتباط با سرور");
+          }
       });
-    }
+  }
 
     this.calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: "timeGridDay",
@@ -98,8 +110,8 @@ class CalendarManager {
         week: "هفته",
         day: "روز",
       },
-      slotMinTime: "08:00:00",
-      slotMaxTime: "20:00:00",
+      slotMinTime: "00:00:00",
+      slotMaxTime: "24:00:00",
       slotDuration: "00:30:00",
       slotLabelInterval: "01:00",
       allDaySlot: true,
@@ -136,18 +148,31 @@ class CalendarManager {
       },
       eventClick: (info) => {
         const event = info.event;
+        console.log('Event Data:', {
+            id: event.id,
+            title: event.title,
+            start: event.start,
+            end: event.end,
+            extendedProps: event.extendedProps
+        });
         document.getElementById("editTaskId").value = event.id;
         document.getElementById("editTaskSubject").value = event.title;
         document.getElementById("editTaskDescription").value = event.extendedProps.description || '';
-        document.getElementById("editTaskStartDate_display").value = event.extendedProps.scheduledstart_jalali || "";
-        document.getElementById("editTaskStartDate").value = event.extendedProps.scheduledstart_jalali || "";
-        document.getElementById("editTaskDueDate_display").value = event.extendedProps.scheduledend_jalali || "";
-        document.getElementById("editTaskDueDate").value = event.extendedProps.scheduledend_jalali || "";
+        // Set Jalali dates for display
+        let startJalali = event.extendedProps.scheduledstart_jalali || (event.start ? moment(event.start).format('jYYYY/jMM/jDD HH:mm:ss') : '');
+        let endJalali = event.extendedProps.scheduledend_jalali || (event.end ? moment(event.end).format('jYYYY/jMM/jDD HH:mm:ss') : '');
+        startJalali = convertPersianDigitsToEnglish(startJalali); // Ensure Latin numerals
+        endJalali = convertPersianDigitsToEnglish(endJalali);
+        document.getElementById("editTaskStartDate_display").value = startJalali;
+        document.getElementById("editTaskDueDate_display").value = endJalali;
+        // Set Gregorian dates for hidden inputs
+        document.getElementById("editTaskStartDate").value = event.start ? moment(event.start).format('YYYY/MM/DD HH:mm:ss') : '';
+        document.getElementById("editTaskDueDate").value = event.end ? moment(event.end).format('YYYY/MM/DD HH:mm:ss') : '';
         document.getElementById("editTaskPriority").value = event.extendedProps.priority || '1';
         
         const editTaskModal = new bootstrap.Modal(document.getElementById("editTaskModal"));
         editTaskModal.show();
-      },
+    },
       eventDrop: async (info) => {
         const event = info.event;
         const activityId = event.id;
@@ -426,29 +451,46 @@ function convertPersianDigitsToEnglish(str) {
 
 function syncJalaliToGregorian(displayId, hiddenId) {
   var persian = $('#' + displayId).val();
+  console.log(`Syncing ${displayId}: Persian Input = ${persian}`);
   if (persian) {
-    persian = convertPersianDigitsToEnglish(persian);
-    // Validate format: YYYY/MM/DD HH:mm:ss
-    var regex = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
-    if (!regex.test(persian)) {
-      $('#' + hiddenId).val('');
-      // Optionally show an error to the user
-      // alert('فرمت تاریخ باید YYYY/MM/DD HH:mm:ss باشد');
-      return;
-    }
-    var pDate = new persianDate(persian);
-    if (pDate.isValid()) {
-      var gregorian = pDate.toCalendar('gregorian').format('YYYY/MM/DD HH:mm:ss');
-      $('#' + hiddenId).val(gregorian);
-    } else {
-      $('#' + hiddenId).val('');
-      // Optionally show an error to the user
-      // alert('تاریخ وارد شده معتبر نیست');
-    }
+      // Convert Persian numerals to Latin
+      persian = convertPersianDigitsToEnglish(persian);
+      console.log(`After Persian numeral conversion: ${persian}`);
+      // Validate format: YYYY/MM/DD HH:mm:ss (Jalali)
+      var regex = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
+      if (!regex.test(persian)) {
+          console.warn(`Invalid format for ${displayId}: ${persian}`);
+          $('#' + hiddenId).val('');
+          Utils.showErrorToast('فرمت تاریخ باید YYYY/MM/DD HH:mm:ss باشد');
+          return;
+      }
+      // Parse as Jalali date
+      var m = moment(persian, 'jYYYY/jMM/jDD HH:mm:ss');
+      if (m.isValid()) {
+          // Convert to Gregorian with Latin numerals
+          var gregorian = m.format('YYYY/MM/DD HH:mm:ss');
+          console.log(`Converted ${displayId} to Gregorian: ${gregorian}`);
+          // Validate Gregorian format
+          if (!dateRegex.test(gregorian)) {
+              console.warn(`Invalid Gregorian format for ${displayId}: ${gregorian}`);
+              $('#' + hiddenId).val('');
+              Utils.showErrorToast('تبدیل به تاریخ میلادی ناموفق بود');
+              return;
+          }
+          $('#' + hiddenId).val(gregorian);
+      } else {
+          console.warn(`Invalid Jalali date for ${displayId}: ${persian}`);
+          $('#' + hiddenId).val('');
+          Utils.showErrorToast('تاریخ جلالی وارد شده معتبر نیست');
+      }
   } else {
-    $('#' + hiddenId).val('');
+      console.warn(`Empty input for ${displayId}`);
+      $('#' + hiddenId).val('');
+      Utils.showErrorToast('لطفاً تاریخ را وارد کنید');
   }
 }
+
+const dateRegex = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
 
 // Initialize calendar when document is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -458,40 +500,41 @@ document.addEventListener('DOMContentLoaded', () => {
   // Patch all jalali datepickers to use Latin digits and robust sync
   $(function () {
     $(".jalali-datepicker").persianDatepicker({
-      format: "YYYY/MM/DD HH:mm:ss",
-      timePicker: { enabled: true, meridian: { enabled: false } },
-      initialValue: false,
-      autoClose: true,
-      calendar: { persian: { leapYearMode: 'astronomical' } },
-      onSelect: function(unix) {
-        var $input = $(this);
-        var pDate = new persianDate(unix);
-        var persian = pDate.format('YYYY/MM/DD HH:mm:ss'); // Jalali for display
-        var gregorian = pDate.toCalendar('gregorian').format('YYYY/MM/DD HH:mm:ss');
-        gregorian = convertPersianDigitsToEnglish(gregorian); // To Latin
-        $input.val(persian); // visible input (Jalali)
-        var inputId = $input.attr('id');
-        if (inputId && inputId.endsWith('_display')) {
-          var hiddenId = inputId.replace('_display', '');
-          $('#' + hiddenId).val(gregorian); // hidden input (Gregorian, Latin digits)
+        format: "YYYY/MM/DD HH:mm:ss",
+        timePicker: { enabled: true, meridian: { enabled: false } },
+        initialValue: false,
+        autoClose: true,
+        calendar: { persian: { leapYearMode: 'astronomical' } },
+        onSelect: function(unix) {
+            var $input = $(this);
+            var m = moment(unix);
+            var persian = m.format('jYYYY/jMM/jDD HH:mm:ss'); // Jalali for display
+            var gregorian = m.format('YYYY/MM/DD HH:mm:ss'); // Gregorian with Latin numerals
+            console.log(`Datepicker onSelect: Persian=${persian}, Gregorian=${gregorian}`);
+            $input.val(persian);
+            var inputId = $input.attr('id');
+            if (inputId && inputId.endsWith('_display')) {
+                var hiddenId = inputId.replace('_display', '');
+                $('#' + hiddenId).val(gregorian);
+                console.log(`Set ${hiddenId} to: ${gregorian}`);
+            }
         }
-      }
     });
 
-    // Robust sync: on change/blur of *_display, update hidden field
+    // Sync on change/blur
     $('#editTaskStartDate_display').on('change blur', function() {
-      syncJalaliToGregorian('editTaskStartDate_display', 'editTaskStartDate');
+        syncJalaliToGregorian('editTaskStartDate_display', 'editTaskStartDate');
     });
     $('#editTaskDueDate_display').on('change blur', function() {
-      syncJalaliToGregorian('editTaskDueDate_display', 'editTaskDueDate');
+        syncJalaliToGregorian('editTaskDueDate_display', 'editTaskDueDate');
     });
     $('#taskStartDate_display').on('change blur', function() {
-      syncJalaliToGregorian('taskStartDate_display', 'taskStartDate');
+        syncJalaliToGregorian('taskStartDate_display', 'taskStartDate');
     });
     $('#taskDueDate_display').on('change blur', function() {
-      syncJalaliToGregorian('taskDueDate_display', 'taskDueDate');
+        syncJalaliToGregorian('taskDueDate_display', 'taskDueDate');
     });
-  });
+});
 
   // Fallback: sync before form submit
   document.getElementById('editTaskForm').addEventListener('submit', function(e) {

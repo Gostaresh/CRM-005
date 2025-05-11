@@ -35,8 +35,9 @@ const convertActivityDates = (activityOrArray) => {
 function isValidCrmDate(dateStr) {
     if (!dateStr) return false;
     // Accepts YYYY-MM-DD HH:mm:ss or YYYY/MM/DD HH:mm:ss
+    const normalizedDateStr = dateStr.replace(/\//g, '-');
     const minDate = new Date('1753-01-01T00:00:00Z');
-    let d = new Date(dateStr.replace(/\//g, '-'));
+    const d = new Date(normalizedDateStr);
     return d instanceof Date && !isNaN(d) && d >= minDate;
 }
 
@@ -124,6 +125,7 @@ const createActivity = async (req, res) => {
         scheduledend,
         prioritycode,
         regardingobjectid,
+        regardingtype,
         customworkflowid,
     } = req.body;
     const credentials = {
@@ -154,12 +156,17 @@ const createActivity = async (req, res) => {
         [ActivityPointer.properties.activityTypeCode]: "task",
     };
 
-    if (customworkflowid) {
-        activityData.customworkflowid = customworkflowid;
+    // Bind regarding entity
+    if (regardingobjectid && regardingtype) {
+        if (regardingtype === 'account') {
+            activityData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
+        } else if (regardingtype === 'contact') {
+            activityData["regardingobjectid_contact@odata.bind"] = `/contacts(${regardingobjectid})`;
+        }
     }
 
-    if (regardingobjectid) {
-        activityData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
+    if (customworkflowid) {
+        activityData.customworkflowid = customworkflowid;
     }
 
     logger.info(
@@ -215,6 +222,17 @@ const updateTaskDates = async (req, res) => {
     }
 };
 
+// Helper function to convert Persian numerals to Latin
+function convertPersianDigitsToEnglish(str) {
+    if (!str) return str;
+    const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    for (let i = 0; i < persian.length; i++) {
+        str = str.replace(new RegExp(persian[i], 'g'), english[i]);
+    }
+    return str;
+}
+
 const updateTask = async (req, res) => {
     const { activityId } = req.params;
     const {
@@ -224,6 +242,7 @@ const updateTask = async (req, res) => {
         scheduledend,
         prioritycode,
         regardingobjectid,
+        regardingtype,
         statuscode,
         ownerid,
         new_seen,
@@ -233,32 +252,104 @@ const updateTask = async (req, res) => {
         password: decrypt(req.session.encryptedPassword),
     };
 
-    // Convert Jalali dates to UTC for CRM
-    const utcStartDate = moment.from(scheduledstart, 'fa', 'YYYY/MM/DD HH:mm:ss').format('YYYY-M-D HH:mm:ss');
-    const utcEndDate = moment.from(scheduledend, 'fa', 'YYYY/MM/DD HH:mm:ss').format('YYYY-M-D HH:mm:ss');
+    // Convert Persian numerals to Latin for dates
+    const normalizedStart = scheduledstart ? convertPersianDigitsToEnglish(scheduledstart) : null;
+    const normalizedEnd = scheduledend ? convertPersianDigitsToEnglish(scheduledend) : null;
+    logger.info(`Normalized dates: start=${normalizedStart}, end=${normalizedEnd}`);
 
-    // Backend validation for CRM date
-    if ((utcStartDate && !isValidCrmDate(utcStartDate)) || !isValidCrmDate(utcEndDate)) {
-        return res.status(400).json({ error: "تاریخ وارد شده معتبر نیست یا کمتر از حد مجاز است" });
+    // Validate date format
+    const dateRegex = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
+    if ((normalizedStart && !dateRegex.test(normalizedStart)) || (normalizedEnd && !dateRegex.test(normalizedEnd))) {
+        logger.error(`Invalid date format: scheduledstart=${normalizedStart}, scheduledend=${normalizedEnd}`);
+        return res.status(400).json({ error: "فرمت تاریخ ورودی نامعتبر است (انتظار: YYYY/MM/DD HH:mm:ss با ارقام لاتین)" });
     }
 
+    // Convert Gregorian dates to UTC
+    const utcStartDate = normalizedStart ? DateTimeService.toUTC(normalizedStart, 'YYYY/MM/DD HH:mm:ss') : null;
+    const utcEndDate = normalizedEnd ? DateTimeService.toUTC(normalizedEnd, 'YYYY/MM/DD HH:mm:ss') : null;
+
+    // Check for null dates
+    if (scheduledstart && !utcStartDate) {
+        logger.error(`Failed to parse scheduledstart: ${normalizedStart}`);
+        return res.status(400).json({ error: "نمی‌توان تاریخ شروع را解析 کرد. لطفاً تاریخ معتبر وارد کنید" });
+    }
     if (scheduledend && !utcEndDate) {
-        return res.status(400).json({ error: "فرمت تاریخ سررسید نامعتبر است" });
+        logger.error(`Failed to parse scheduledend: ${normalizedEnd}`);
+        return res.status(400).json({ error: "نمی‌توان تاریخ پایان را解析 کرد. لطفاً تاریخ معتبر وارد کنید" });
+    }
+
+    // Validate CRM dates
+    if ((utcStartDate && !isValidCrmDate(utcStartDate.toISOString())) || (utcEndDate && !isValidCrmDate(utcEndDate.toISOString()))) {
+        logger.error(`Invalid CRM date: utcStartDate=${utcStartDate}, utcEndDate=${utcEndDate}`);
+        return res.status(400).json({ error: "تاریخ وارد شده معتبر نیست یا کمتر از حد مجاز (1753/01/01) است" });
     }
 
     const updateData = {
         subject,
         description,
-        scheduledstart: utcStartDate,
-        scheduledend: utcEndDate,
+        scheduledstart: utcStartDate ? utcStartDate.toISOString() : undefined,
+        scheduledend: utcEndDate ? utcEndDate.toISOString() : undefined,
         prioritycode: prioritycode ? parseInt(prioritycode) : undefined,
     };
     logger.info(`updateData: ${JSON.stringify(updateData)}`);
-    if (regardingobjectid) {
+    if (regardingobjectid && regardingtype) {
+        if (regardingtype === 'account') {
+            updateData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
+        } else if (regardingtype === 'contact') {
+            updateData["regardingobjectid_contact@odata.bind"] = `/contacts(${regardingobjectid})`;
+        }
+    }
+    if (regardingobjectid && regardingtype === undefined) {
+        // fallback: try account
         updateData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
     }
-    if (statuscode !== undefined) {
-        updateData.statuscode = parseInt(statuscode);
+    if (regardingobjectid && regardingtype === null) {
+        // fallback: try account
+        updateData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === '') {
+        // fallback: try account
+        updateData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
+    }
+    if (regardingobjectid && !regardingtype) {
+        // fallback: try account
+        updateData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'lead') {
+        updateData["regardingobjectid_lead@odata.bind"] = `/leads(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'opportunity') {
+        updateData["regardingobjectid_opportunity@odata.bind"] = `/opportunities(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'incident') {
+        updateData["regardingobjectid_incident@odata.bind"] = `/incidents(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'new_proformainvoice') {
+        updateData["regardingobjectid_new_proformainvoice@odata.bind"] = `/new_proformainvoices(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'systemuser') {
+        updateData["regardingobjectid_systemuser@odata.bind"] = `/systemusers(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'contact') {
+        updateData["regardingobjectid_contact@odata.bind"] = `/contacts(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'account') {
+        updateData["regardingobjectid_account@odata.bind"] = `/accounts(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'opportunity') {
+        updateData["regardingobjectid_opportunity@odata.bind"] = `/opportunities(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'incident') {
+        updateData["regardingobjectid_incident@odata.bind"] = `/incidents(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'lead') {
+        updateData["regardingobjectid_lead@odata.bind"] = `/leads(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'new_proformainvoice') {
+        updateData["regardingobjectid_new_proformainvoice@odata.bind"] = `/new_proformainvoices(${regardingobjectid})`;
+    }
+    if (regardingobjectid && regardingtype === 'systemuser') {
+        updateData["regardingobjectid_systemuser@odata.bind"] = `/systemusers(${regardingobjectid})`;
     }
     if (ownerid) {
         updateData["ownerid@odata.bind"] = `/systemusers(${ownerid})`;
@@ -330,6 +421,31 @@ const fetchActivitiesByOwners = async (req, res) => {
     }
 };
 
+// Fetch regarding options (accounts + contacts)
+const getRegardingOptions = async (req, res) => {
+    try {
+        const credentials = {
+            username: req.session.user.username.split("\\")[1],
+            password: decrypt(req.session.encryptedPassword),
+        };
+        const accounts = await CrmService.fetchAccounts(credentials);
+        const contacts = await CrmService.fetchContacts(credentials);
+        // Merge and sort flat list
+        const regardingOptions = [
+            ...accounts
+                .filter(a => a.name && a.name.trim() !== '')
+                .map(a => ({ id: a.accountid, name: a.name, type: 'account' })),
+            ...contacts
+                .filter(c => c.fullname && c.fullname.trim() !== '')
+                .map(c => ({ id: c.contactid, name: c.fullname, type: 'contact' }))
+        ].sort((a, b) => a.name.localeCompare(b.name));
+        logger.info(regardingOptions);
+        res.json({ value: regardingOptions });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     fetchAllActivities,
     fetchMyActivities,
@@ -337,5 +453,6 @@ module.exports = {
     createActivity,
     updateTaskDates,
     updateTask,
-    fetchActivitiesByOwners
+    fetchActivitiesByOwners,
+    getRegardingOptions
 }; 

@@ -12,6 +12,8 @@
       href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css"
       rel="stylesheet"
     />
+    <!-- Update Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <style>
       body {
         background-color: #f8f9fa;
@@ -20,6 +22,45 @@
       #calendar {
         max-width: 1100px;
         margin: 40px auto;
+      }
+      /* Add Select2 RTL styles */
+      .select2-container--default .select2-selection--single {
+        height: 38px;
+        padding: 6px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        background-color: #fff;
+      }
+      .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 24px;
+        padding-right: 12px;
+        padding-left: 30px;
+        text-align: right;
+      }
+      .select2-container--default .select2-selection--single .select2-selection__arrow {
+        left: 1px;
+        right: auto;
+      }
+      .select2-container--default .select2-results__option {
+        text-align: right;
+        padding: 6px 12px;
+      }
+      .select2-dropdown {
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .select2-container--default .select2-search--dropdown .select2-search__field {
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        padding: 6px 12px;
+        text-align: right;
+      }
+      .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #007bff;
+      }
+      .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #e9ecef;
       }
     </style>
   </head>
@@ -215,6 +256,14 @@
                   <option value="1">تکمیل</option>
                 </select>
               </div>
+              <div class="mb-3">
+                <label for="editTaskRegarding" class="form-label">مربوط به</label>
+                <select id="editTaskRegarding" class="form-select" required>
+                  <option value="">-- انتخاب کنید --</option>
+                </select>
+                <input type="hidden" id="editRegardingType" name="regardingType">
+                <input type="hidden" id="editRegardingId" name="regardingId">
+              </div>
             </form>
           </div>
           <div class="modal-footer">
@@ -280,6 +329,14 @@
                   <option value="3">فوری</option>
                 </select>
               </div>
+              <div class="mb-3">
+                <label for="taskRegarding" class="form-label">مربوط به</label>
+                <select id="taskRegarding" class="form-select" required>
+                  <option value="">-- انتخاب کنید --</option>
+                </select>
+                <input type="hidden" id="regardingType" name="regardingType">
+                <input type="hidden" id="regardingId" name="regardingId">
+              </div>
             </form>
           </div>
           <div class="modal-footer">
@@ -313,14 +370,19 @@
     </div>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Update Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/i18n/fa.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
     <script src="/src/public/js/dateUtils.js"></script>
+    <script src="/js/regardingDropdown.js"></script>
     <script src="/js/calendar.js"></script>
+    <script src="/js/dashboard.js"></script>
 
     <script>
     function convertPersianDigitsToEnglish(str) {
@@ -415,6 +477,13 @@
                 prioritycode: document.getElementById('taskPriority').value
             };
 
+            // Get regarding values from the RegardingDropdown class
+            const regardingValues = regardingDropdown.getSelectedValues('taskRegarding');
+            if (regardingValues) {
+                formData.regardingobjectid = regardingValues.id;
+                formData.regardingtype = regardingValues.type;
+            }
+
             try {
                 const response = await fetch('/api/crm/activities', {
                     method: 'POST',
@@ -449,6 +518,13 @@
                 prioritycode: document.getElementById('editTaskPriority').value,
                 statecode: document.getElementById('editTaskStatus').value
             };
+
+            // Get regarding values from the RegardingDropdown class
+            const regardingValues = regardingDropdown.getSelectedValues('editTaskRegarding');
+            if (regardingValues) {
+                formData.regardingobjectid = regardingValues.id;
+                formData.regardingtype = regardingValues.type;
+            }
 
             try {
                 const response = await fetch(`/api/crm/activities/${activityId}`, {

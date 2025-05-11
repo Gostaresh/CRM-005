@@ -68,6 +68,9 @@ class DashboardManager {
     
     // Set owner fields
     this.setOwnerFields();
+
+    // Initialize regarding dropdowns
+    this.initializeRegardingDropdowns();
   }
 
   initializeOwnerFilter() {
@@ -355,6 +358,43 @@ class DashboardManager {
         console.error("Error updating task:", err);
         Utils.showErrorToast("خطا در ارتباط با سرور");
       }
+    });
+  }
+
+  initializeRegardingDropdowns() {
+    // Initialize regarding dropdowns when modals open
+    $('#createTaskModal').on('show.bs.modal', () => {
+      regardingDropdown.populateDropdown('taskRegarding');
+    });
+
+    $('#editTaskModal').on('show.bs.modal', (event) => {
+      const button = $(event.relatedTarget);
+      const taskId = button.data('task-id');
+      const regardingId = button.data('regarding-id');
+      const regardingType = button.data('regarding-type');
+      
+      regardingDropdown.populateDropdown('editTaskRegarding', regardingId, regardingType);
+    });
+
+    // Handle form submissions
+    $('#createTaskForm').on('submit', (e) => {
+      e.preventDefault();
+      const regardingValues = regardingDropdown.getSelectedValues('taskRegarding');
+      if (regardingValues) {
+        $('#regardingType').val(regardingValues.type);
+        $('#regardingId').val(regardingValues.id);
+      }
+      // ... rest of your form submission code ...
+    });
+
+    $('#editTaskForm').on('submit', (e) => {
+      e.preventDefault();
+      const regardingValues = regardingDropdown.getSelectedValues('editTaskRegarding');
+      if (regardingValues) {
+        $('#editRegardingType').val(regardingValues.type);
+        $('#editRegardingId').val(regardingValues.id);
+      }
+      // ... rest of your form submission code ...
     });
   }
 }

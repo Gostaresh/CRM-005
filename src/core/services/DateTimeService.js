@@ -6,6 +6,16 @@
 
 const moment = require('moment-jalaali');
 
+function convertPersianDigitsToEnglish(str) {
+    if (!str) return str;
+    const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    for (let i = 0; i < persian.length; i++) {
+        str = str.replace(new RegExp(persian[i], 'g'), english[i]);
+    }
+    return str;
+}
+
 class DateTimeService {
     /**
      * Convert UTC date to Jalali date string
@@ -31,10 +41,27 @@ class DateTimeService {
      */
     static toUTC(jalaliDate, format = 'YYYY/MM/DD HH:mm:ss') {
         try {
-            const m = moment(jalaliDate, format);
-            return m.toDate();
+            if (!jalaliDate) {
+                console.error('Empty date in toUTC');
+                return null;
+            }
+            // Convert Persian numerals to Latin
+            const normalizedDate = convertPersianDigitsToEnglish(jalaliDate);
+            console.info(`toUTC: Input=${jalaliDate}, Normalized=${normalizedDate}`);
+            if (!normalizedDate) {
+                console.error('Failed to normalize date in toUTC');
+                return null;
+            }
+            const m = moment(normalizedDate, format);
+            if (!m.isValid()) {
+                console.error(`Invalid date in toUTC: ${normalizedDate}, format: ${format}`);
+                return null;
+            }
+            const utcDate = m.toDate();
+            console.info(`toUTC: Output=${utcDate.toISOString()}`);
+            return utcDate;
         } catch (error) {
-            console.error('Error converting to UTC:', error);
+            console.error(`Error converting to UTC: ${error.message}`);
             return null;
         }
     }

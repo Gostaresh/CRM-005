@@ -99,6 +99,9 @@ const ActivityPointer = {
         ownerId: '_ownerid_value',
         createdOn: 'createdon',
         modifiedOn: 'modifiedon'
+    },
+    expand: {
+        ownerId: 'ownerid($select=systemuserid,fullname)'
     }
 };
 

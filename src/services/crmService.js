@@ -143,7 +143,7 @@ class CrmService {
   async fetchActivityDetails(activityId, credentials) {
     const query = {
       select: Object.values(ActivityPointer.properties).join(','),
-      expand: ActivityPointer.expand.owner
+      expand: ActivityPointer.expand.ownerId
     };
     
     const data = await this.fetchEntity(
@@ -152,19 +152,10 @@ class CrmService {
       credentials
     );
 
-    // Get owner name
+    // Get owner name from expanded data
     let ownerName = "-";
-    if (data[ActivityPointer.properties.ownerId]) {
-      try {
-        const ownerData = await this.fetchEntity(
-          `${SystemUser.type}(${data[ActivityPointer.properties.ownerId]})`,
-          { select: SystemUser.properties.fullName },
-          credentials
-        );
-        ownerName = ownerData[SystemUser.properties.fullName] || "-";
-      } catch (err) {
-        logger.error(`Error fetching owner name: ${err.message}`);
-      }
+    if (data.ownerid) {
+      ownerName = data.ownerid.fullname || "-";
     }
 
     return {
@@ -372,6 +363,32 @@ class CrmService {
     }
 
     return "-";
+  }
+
+  async fetchAccounts(credentials) {
+    const query = {
+      select: "accountid,name",
+      top: 2000,
+      orderby: "name asc",
+      headers: {
+        "Prefer": "odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\""
+      }
+    };
+    const data = await this.fetchEntity("accounts", query, credentials);
+    return data.value || [];
+  }
+
+  async fetchContacts(credentials) {
+    const query = {
+      select: "contactid,fullname,mobilephone",
+      top: 2000,
+      orderby: "fullname asc",
+      headers: {
+        "Prefer": "odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\""
+      }
+    };
+    const data = await this.fetchEntity("contacts", query, credentials);
+    return data.value || [];
   }
 }
 
