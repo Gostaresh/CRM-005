@@ -303,7 +303,7 @@ class DashboardManager {
       users.map(u => `<option value="${u.systemuserid}">${u.fullname}</option>`).join("");
     assignedToSelect.value = data.ownerid || "";
 
-    // Ensure the dropdown is populated with all options
+    // Ensure the dropdown is populated with all options and the selected value is set
     const editRegardingSelect = document.getElementById('editTaskRegarding');
     if (editRegardingSelect) {
       // Clear existing options
@@ -332,6 +332,10 @@ class DashboardManager {
         editRegardingSelect.add(tempOption);
       }
     }
+
+    // Log regarding options in a readable format
+    // console.info('Accounts:', JSON.stringify(this.accounts, null, 2));
+    // console.info('Contacts:', JSON.stringify(this.contacts, null, 2));
   }
 
   setupEditTaskButton() {
