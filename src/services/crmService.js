@@ -65,9 +65,9 @@ class CrmService {
     customFilter = null
   ) {
     try {
-      const select = Object.values(ActivityPointer.properties).join(',');
+      const select = Object.values(ActivityPointer.properties).join(",");
       let filter = "";
-      
+
       if (customFilter) {
         filter = customFilter;
       } else if (userId) {
@@ -87,14 +87,18 @@ class CrmService {
             },
           };
 
-      const data = await this.fetchEntity(ActivityPointer.type, query, credentials);
+      const data = await this.fetchEntity(
+        ActivityPointer.type,
+        query,
+        credentials
+      );
       // logger.info(
       //   `Raw fetchActivities response: ${JSON.stringify(data, null, 2)}`
       // );
 
       if (!data || !data.value) {
-        logger.error('Invalid response format from CRM');
-        throw new Error('Invalid response format from CRM');
+        logger.error("Invalid response format from CRM");
+        throw new Error("Invalid response format from CRM");
       }
 
       // For a list of activities
@@ -132,7 +136,7 @@ class CrmService {
 
       return {
         value: data.value || [],
-        nextLink: data["@odata.nextLink"] || null
+        nextLink: data["@odata.nextLink"] || null,
       };
     } catch (error) {
       logger.error(`Error in fetchActivities: ${error.message}`);
@@ -142,10 +146,10 @@ class CrmService {
 
   async fetchActivityDetails(activityId, credentials) {
     const query = {
-      select: Object.values(ActivityPointer.properties).join(','),
-      expand: ActivityPointer.expand.ownerId
+      select: Object.values(ActivityPointer.properties).join(","),
+      expand: ActivityPointer.expand.ownerId,
     };
-    
+
     const data = await this.fetchEntity(
       `${ActivityPointer.type}(${activityId})`,
       query,
@@ -160,10 +164,10 @@ class CrmService {
 
     return {
       ...data,
-      owner: { 
+      owner: {
         id: data[ActivityPointer.properties.ownerId],
-        name: ownerName 
-      }
+        name: ownerName,
+      },
     };
   }
 
@@ -261,9 +265,12 @@ class CrmService {
 
   async updateTaskDates(activityId, dates, credentials) {
     const url = `${this.baseUrl}/tasks(${activityId})`;
+    // Commenting on date conversion logic in the updateTaskDates method
     logger.info(
       `Updating task dates at: ${url}, data: ${JSON.stringify(dates)}`
     );
+    // The 'dates' object likely contains date fields that are being sent to the CRM system.
+    // Ensure that these dates are converted to UTC format before sending them.
     const res = await new Promise((resolve, reject) => {
       httpntlm.patch(
         {
@@ -371,8 +378,9 @@ class CrmService {
       top: 2000,
       orderby: "name asc",
       headers: {
-        "Prefer": "odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\""
-      }
+        Prefer:
+          'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+      },
     };
     const data = await this.fetchEntity("accounts", query, credentials);
     return data.value || [];
@@ -384,8 +392,9 @@ class CrmService {
       top: 2000,
       orderby: "fullname asc",
       headers: {
-        "Prefer": "odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\""
-      }
+        Prefer:
+          'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+      },
     };
     const data = await this.fetchEntity("contacts", query, credentials);
     return data.value || [];
