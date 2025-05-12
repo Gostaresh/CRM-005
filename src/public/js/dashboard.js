@@ -469,4 +469,34 @@ document.addEventListener("DOMContentLoaded", () => {
       autoClose: true,
     });
   });
+  // Initialize Persian Date Picker for all date input fields
+  $(function () {
+    $(".persian-datepicker").MdPersianDateTimePicker({
+      targetTextSelector: "#editTaskStartDate",
+      targetDateSelector: "#editTaskStartDate",
+      enableTimePicker: true,
+      textFormat: "yyyy/MM/dd HH:mm",
+      isGregorian: false,
+      placement: "auto",
+    });
+
+    $(".persian-datepicker").MdPersianDateTimePicker({
+      targetTextSelector: "#editTaskDueDate",
+      targetDateSelector: "#editTaskDueDate",
+      enableTimePicker: true,
+      textFormat: "yyyy/MM/dd HH:mm",
+      isGregorian: false,
+      placement: "auto",
+    });
+  });
+
+  // Convert UTC dates to local Jalali dates for display
+  function convertToJalali(utcDate) {
+    return moment(utcDate).tz(moment.tz.guess()).locale('fa').format('jYYYY/jMM/jDD HH:mm');
+  }
+
+  // Example usage: Convert and display dates in Jalali format
+  const startDate = document.getElementById("editTaskStartDate").value;
+  const jalaliStartDate = convertToJalali(startDate);
+  console.log("Jalali Start Date:", jalaliStartDate);
 });
