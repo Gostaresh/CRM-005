@@ -15,12 +15,10 @@
     />
     <% } %>
     <link href="/css/styles.css" rel="stylesheet" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css"
-    />
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Include MD.BootstrapPersianDateTimePicker -->
+    <link rel="stylesheet" href="/src/public/MD.BootstrapPersianDateTimePicker-master-bs5/src/mds.bs.datetimepicker.style.css">
   </head>
   <body class="bg-light">
     <%- include('../partials/navbar', { user: user }) %> <%- content %>
@@ -33,10 +31,14 @@
     <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.5.43/builds/moment-timezone-with-data.min.js"></script>
     <% } %>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Include Moment.js, Moment-Jalaali, and Moment-Timezone -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-jalaali/0.9.2/moment-jalaali.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.47/moment-timezone-with-data.min.js"></script>
+    <!-- Include MD.BootstrapPersianDateTimePicker -->
+    <script src="/MD.BootstrapPersianDateTimePicker-master-bs5/dist/mds.bs.datetimepicker.js"></script>
     <%- include('../partials/scripts', { pageScripts: pageScripts }) %>
   </body>
 </html>

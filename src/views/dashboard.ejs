@@ -218,7 +218,7 @@
                 <label for="editTaskStartDate" class="form-label">تاریخ شروع</label>
                 <div class="input-group">
                   <input type="text" 
-                         class="form-control jalali-datepicker" 
+                         class="form-control" 
                          id="editTaskStartDate_display" 
                          placeholder="YYYY/MM/DD HH:mm:ss"
                          autocomplete="off"
@@ -232,7 +232,7 @@
                 <label for="editTaskDueDate" class="form-label">تاریخ پایان</label>
                 <div class="input-group">
                   <input type="text" 
-                         class="form-control jalali-datepicker" 
+                         class="form-control" 
                          id="editTaskDueDate_display" 
                          placeholder="YYYY/MM/DD HH:mm:ss"
                          autocomplete="off"
@@ -298,7 +298,7 @@
                 <label for="taskStartDate" class="form-label">تاریخ شروع</label>
                 <div class="input-group">
                   <input type="text" 
-                         class="form-control jalali-datepicker" 
+                         class="form-control" 
                          id="taskStartDate_display" 
                          placeholder="YYYY/MM/DD HH:mm:ss"
                          autocomplete="off"
@@ -312,7 +312,7 @@
                 <label for="taskDueDate" class="form-label">تاریخ پایان</label>
                 <div class="input-group">
                   <input type="text" 
-                         class="form-control jalali-datepicker" 
+                         class="form-control" 
                          id="taskDueDate_display" 
                          placeholder="YYYY/MM/DD HH:mm:ss"
                          autocomplete="off"
@@ -386,7 +386,7 @@
     <script src="/js/calendar.js"></script>
     <script src="/js/dashboard.js"></script>
     <!-- Include MD.BootstrapPersianDateTimePicker scripts -->
-    <script src="/src/public/MD.BootstrapPersianDateTimePicker-master-bs5/dist/mds.bs.datetimepicker.js"></script>
+    <script src="/MD.BootstrapPersianDateTimePicker-master-bs5/dist/mds.bs.datetimepicker.js"></script>
     <!-- Include Moment.js and Moment-Jalaali -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-jalaali/0.9.2/moment-jalaali.min.js"></script>
@@ -554,6 +554,10 @@
                 Utils.showErrorToast('خطا در ارتباط با سرور');
             }
         });
+
+        // Initialize MD.BootstrapPersianDateTimePicker for date input fields
+        dateUtils.initializePersianDateTimePicker('#taskStartDate_display');
+        dateUtils.initializePersianDateTimePicker('#taskDueDate_display');
     });
     </script>
 

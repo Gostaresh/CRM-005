@@ -17,7 +17,7 @@
       <label for="scheduledstart" class="form-label">تاریخ شروع</label>
       <div class="input-group">
         <input type="text" 
-               class="form-control jalali-datepicker" 
+               class="form-control" 
                id="scheduledstart_display" 
                placeholder="YYYY/MM/DD HH:mm:ss"
                autocomplete="off"
@@ -32,7 +32,7 @@
       <label for="scheduledend" class="form-label">تاریخ پایان</label>
       <div class="input-group">
         <input type="text" 
-               class="form-control jalali-datepicker" 
+               class="form-control" 
                id="scheduledend_display" 
                placeholder="YYYY/MM/DD HH:mm:ss"
                autocomplete="off"
@@ -58,60 +58,13 @@
   <a href="/crm/create-activity" class="btn btn-secondary mt-3">بازگشت به انتخاب فعالیت</a>
 </div>
 
-<!-- Add required CSS -->
-<link rel="stylesheet" href="https://unpkg.com/persian-datepicker@latest/dist/css/persian-datepicker.min.css">
-
-<!-- Add required scripts -->
-<script src="https://unpkg.com/persian-date@latest/dist/persian-date.min.js"></script>
-<script src="https://unpkg.com/persian-datepicker@latest/dist/js/persian-datepicker.min.js"></script>
-<script src="/src/public/js/dateUtils.js"></script>
+<%- include('partials/scripts') %>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Jalali date pickers
-    $('.jalali-datepicker').persianDatepicker({
-        format: 'YYYY/MM/DD HH:mm:ss',
-        initialValue: false,
-        autoClose: true,
-        timePicker: {
-            enabled: true,
-            meridian: {
-                enabled: false
-            }
-        },
-        onSelect: function(unix) {
-            const input = this.$inputElement[0];
-            const hiddenInput = document.getElementById(input.id.replace('_display', ''));
-            if (hiddenInput) {
-                const date = new persianDate(unix);
-                hiddenInput.value = date.toCalendar('gregorian').toISOString();
-            }
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize MD.BootstrapPersianDateTimePicker for date input fields
+        dateUtils.initializePersianDateTimePicker('#scheduledstart_display');
+        dateUtils.initializePersianDateTimePicker('#scheduledend_display');
     });
-
-    // Form submission handling
-    document.getElementById('activityForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Validate required date fields
-        const dateInputs = document.querySelectorAll('.jalali-datepicker[required]');
-        let isValid = true;
-        
-        dateInputs.forEach(input => {
-            const hiddenInput = document.getElementById(input.id.replace('_display', ''));
-            if (!hiddenInput.value) {
-                isValid = false;
-                input.classList.add('is-invalid');
-            } else {
-                input.classList.remove('is-invalid');
-            }
-        });
-
-        if (isValid) {
-            this.submit();
-        }
-    });
-});
 </script>
-
-<%- include('partials/scripts') %>
+<script src="/MD.BootstrapPersianDateTimePicker-master-bs5/dist/mds.bs.datetimepicker.js"></script>

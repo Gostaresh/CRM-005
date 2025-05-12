@@ -281,9 +281,8 @@ class DashboardManager {
     document.getElementById("editTaskId").value = data.activityid;
     document.getElementById("editTaskSubject").value = data.subject || "";
     document.getElementById("editTaskDescription").value = data.description || "";
-    // Use Jalali fields from backend for display
-    document.getElementById("editTaskStartDate").value = data.scheduledstart_jalali || data.scheduledstart || "";
-    document.getElementById("editTaskDueDate").value = data.scheduledend_jalali || data.scheduledend || "";
+    document.getElementById("editTaskStartDate").value = data.scheduledstart || "";
+    document.getElementById("editTaskDueDate").value = data.scheduledend || "";
     document.getElementById("editTaskPriority").value = data.prioritycode || "1";
     document.getElementById("editTaskRegarding").value = data._regardingobjectid_value || "";
 
@@ -359,14 +358,11 @@ class DashboardManager {
     document.getElementById("editTaskForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const activityId = document.getElementById("editTaskId").value;
-      // Send Jalali dates as-is to backend
-      const jalaliStart = document.getElementById("editTaskStartDate").value;
-      const jalaliEnd = document.getElementById("editTaskDueDate").value;
       const payload = {
         subject: document.getElementById("editTaskSubject").value,
         description: document.getElementById("editTaskDescription").value,
-        scheduledstart: jalaliStart,
-        scheduledend: jalaliEnd,
+        scheduledstart: document.getElementById("editTaskStartDate").value,
+        scheduledend: document.getElementById("editTaskDueDate").value,
         prioritycode: document.getElementById("editTaskPriority").value,
         regardingobjectid: document.getElementById("editTaskRegarding").value,
         statuscode: document.getElementById("editTaskStatus").value,
@@ -457,46 +453,4 @@ class DashboardManager {
 document.addEventListener("DOMContentLoaded", () => {
   window.dashboardManager = new DashboardManager();
   window.dashboardManager.initialize();
-  // Initialize babakhani Persian Datepicker for all date fields
-  $(function () {
-    $(".persian-datepicker").persianDatepicker({
-      format: "YYYY/MM/DD HH:mm",
-      timePicker: {
-        enabled: true,
-        meridiem: { enabled: false },
-      },
-      initialValue: false,
-      autoClose: true,
-    });
-  });
-  // Initialize Persian Date Picker for all date input fields
-  $(function () {
-    $(".persian-datepicker").MdPersianDateTimePicker({
-      targetTextSelector: "#editTaskStartDate",
-      targetDateSelector: "#editTaskStartDate",
-      enableTimePicker: true,
-      textFormat: "yyyy/MM/dd HH:mm",
-      isGregorian: false,
-      placement: "auto",
-    });
-
-    $(".persian-datepicker").MdPersianDateTimePicker({
-      targetTextSelector: "#editTaskDueDate",
-      targetDateSelector: "#editTaskDueDate",
-      enableTimePicker: true,
-      textFormat: "yyyy/MM/dd HH:mm",
-      isGregorian: false,
-      placement: "auto",
-    });
-  });
-
-  // Convert UTC dates to local Jalali dates for display
-  function convertToJalali(utcDate) {
-    return moment(utcDate).tz(moment.tz.guess()).locale('fa').format('jYYYY/jMM/jDD HH:mm');
-  }
-
-  // Example usage: Convert and display dates in Jalali format
-  const startDate = document.getElementById("editTaskStartDate").value;
-  const jalaliStartDate = convertToJalali(startDate);
-  console.log("Jalali Start Date:", jalaliStartDate);
 });
