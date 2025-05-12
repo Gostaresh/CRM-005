@@ -1,3 +1,5 @@
+import { regardingDropdown } from './regardingDropdown';
+
 class DashboardManager {
   constructor() {
     this.calendarManager = new CalendarManager();
