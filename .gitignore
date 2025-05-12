@@ -5,3 +5,4 @@ info.log
 tools/.venv
 *.zip
 .DS_Store
+*.log
