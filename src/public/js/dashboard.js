@@ -320,7 +320,8 @@ class DashboardManager {
         editRegardingSelect.add(option);
       });
 
-      // Set the selected value
+      // Add a 5-second delay before finding the selected option
+      await new Promise(resolve => setTimeout(resolve, 5000));
       const selectedOption = Array.from(editRegardingSelect.options).find(
         (option) => option.value === data._regardingobjectid_value
       );
