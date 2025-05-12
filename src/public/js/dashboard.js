@@ -380,6 +380,18 @@ class DashboardManager {
       if (editRegardingSelect) {
         editRegardingSelect.value = regardingId || '';
       }
+
+      // Ensure the selected value is visible in the dropdown
+      const selectedOption = Array.from(editRegardingSelect.options).find(
+        (option) => option.value === regardingId
+      );
+      if (selectedOption) {
+        selectedOption.selected = true;
+      } else {
+        // If the value is not in the dropdown, add it as a temporary option
+        const tempOption = new Option('Selected Regarding', regardingId, true, true);
+        editRegardingSelect.add(tempOption);
+      }
     });
 
     // Handle form submissions
