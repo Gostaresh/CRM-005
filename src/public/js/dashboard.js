@@ -447,6 +447,37 @@ class DashboardManager {
       }
       // ... rest of your form submission code ...
     });
+
+    // Ensure proper initialization of modals
+    $('#createTaskModal').on('show.bs.modal', function () {
+      console.log('Create Task Modal is opening');
+      regardingDropdown.populateDropdown('taskRegarding');
+    });
+
+    $('#editTaskModal').on('show.bs.modal', function (event) {
+      console.log('Edit Task Modal is opening');
+      const button = $(event.relatedTarget);
+      const taskId = button.data('task-id');
+      const regardingId = button.data('regarding-id');
+      const regardingType = button.data('regarding-type');
+
+      regardingDropdown.populateDropdown('editTaskRegarding', regardingId, regardingType);
+
+      const editRegardingSelect = document.getElementById('editTaskRegarding');
+      if (editRegardingSelect) {
+          editRegardingSelect.value = regardingId || '';
+      }
+
+      const selectedOption = Array.from(editRegardingSelect.options).find(
+          (option) => option.value === regardingId
+      );
+      if (selectedOption) {
+          selectedOption.selected = true;
+      } else {
+          const tempOption = new Option('Selected Regarding', regardingId, true, true);
+          editRegardingSelect.add(tempOption);
+      }
+    });
   }
 }
 
