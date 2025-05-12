@@ -321,7 +321,9 @@ class DashboardManager {
       });
 
       // Add a 5-second delay before finding the selected option
+      console.info("Waiting for 5 seconds to ensure dropdown is populated...");
       await new Promise(resolve => setTimeout(resolve, 5000));
+      console.info("5 seconds passed, proceeding to find selected option...");
       const selectedOption = Array.from(editRegardingSelect.options).find(
         (option) => option.value === data._regardingobjectid_value
       );
