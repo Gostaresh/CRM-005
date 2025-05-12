@@ -1,0 +1,47 @@
+{
+  "name": "md.bootstrappersiandatetimepicker",
+  "version": "4.4.0",
+  "description": "Persian Date Time Picker with Bootstrap 5+",
+  "license": "MIT",
+  "moduleResolution": "node",
+  "scripts": {
+    "compile": "tsc",
+    "webpack": "rimraf dist && webpack",
+    "webpackserver": "webpack serve --mode development --env development",
+    "dev": "start npm run webpack && start npm run webpackserver",
+    "start": "npx http-server"
+  },
+  "author": {
+    "name": "Mohammad Dayyan",
+    "email": "mds_soft@yahoo.com",
+    "social": "@mds1401",
+    "url": "https://github.com/Mds92/MD.BootstrapPersianDateTimePicker"
+  },
+  "repository": {
+    "type": "public",
+    "url": "https://github.com/Mds92/MD.BootstrapPersianDateTimePicker"
+  },
+  "homepage": "https://github.com/Mds92/MD.BootstrapPersianDateTimePicker",
+  "dependencies": {
+    "bootstrap": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/bootstrap": "^5.2.10",
+    "@types/jquery": "^3.5.32",
+    "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^7.0.2",
+    "expose-loader": "^5.0.1",
+    "jshint": "^2.13.6",
+    "jshint-loader": "^0.8.4",
+    "mini-css-extract-plugin": "^2.9.2",
+    "rimraf": "^6.0.1",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.2",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.1",
+    "webpack-merge": "^6.0.1",
+    "webpack-remove-empty-scripts": "^1.0.4"
+  }
+}

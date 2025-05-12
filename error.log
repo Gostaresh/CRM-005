@@ -1,0 +1,4 @@
+[2025-05-12 12:17:40] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-12 12:17:40] ERROR: Update task error: CRM update request failed: 400
+[2025-05-12 12:17:55] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-12 12:17:55] ERROR: Update task error: CRM update request failed: 400
