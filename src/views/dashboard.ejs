@@ -568,5 +568,15 @@
         fullname: "<%= user.fullname %>",
       };
     </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize MD.BootstrapPersianDateTimePicker for create and edit modals
+        dateUtils.initializePersianDateTimePicker('#taskStartDate_display');
+        dateUtils.initializePersianDateTimePicker('#taskDueDate_display');
+        dateUtils.initializePersianDateTimePicker('#editTaskStartDate_display');
+        dateUtils.initializePersianDateTimePicker('#editTaskDueDate_display');
+    });
+    </script>
   </body>
 </html>
