@@ -145,5 +145,5 @@ class RegardingDropdown {
     }
 }
 
-// Create a global instance
-const regardingDropdown = new RegardingDropdown(); 
+// Ensure regardingDropdown is properly exported and used
+export const regardingDropdown = new RegardingDropdown();
