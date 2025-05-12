@@ -302,6 +302,36 @@ class DashboardManager {
     assignedToSelect.innerHTML = '<option value="">انتخاب کنید...</option>' +
       users.map(u => `<option value="${u.systemuserid}">${u.fullname}</option>`).join("");
     assignedToSelect.value = data.ownerid || "";
+
+    // Ensure the dropdown is populated with all options
+    const editRegardingSelect = document.getElementById('editTaskRegarding');
+    if (editRegardingSelect) {
+      // Clear existing options
+      editRegardingSelect.innerHTML = '<option value="">انتخاب کنید...</option>';
+
+      // Add all available regarding options
+      this.accounts.forEach((account) => {
+        const option = new Option(account.name, account.accountid);
+        editRegardingSelect.add(option);
+      });
+
+      this.contacts.forEach((contact) => {
+        const option = new Option(contact.fullname, contact.contactid);
+        editRegardingSelect.add(option);
+      });
+
+      // Set the selected value
+      const selectedOption = Array.from(editRegardingSelect.options).find(
+        (option) => option.value === data._regardingobjectid_value
+      );
+      if (selectedOption) {
+        selectedOption.selected = true;
+      } else if (data._regardingobjectid_value) {
+        // Add a temporary option if the value is not in the dropdown
+        const tempOption = new Option('Selected Regarding', data._regardingobjectid_value, true, true);
+        editRegardingSelect.add(tempOption);
+      }
+    }
   }
 
   setupEditTaskButton() {
