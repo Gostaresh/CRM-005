@@ -516,7 +516,7 @@ const getRegardingOptions = async (req, res) => {
         .filter((c) => c.fullname && c.fullname.trim() !== "")
         .map((c) => ({ id: c.contactid, name: c.fullname, type: "contact" })),
     ].sort((a, b) => a.name.localeCompare(b.name));
-    logger.info(regardingOptions);
+    // logger.info(regardingOptions);
     res.json({ value: regardingOptions });
   } catch (err) {
     res.status(500).json({ error: err.message });

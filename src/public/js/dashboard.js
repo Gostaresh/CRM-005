@@ -374,6 +374,12 @@ class DashboardManager {
       const regardingType = button.data('regarding-type');
       
       regardingDropdown.populateDropdown('editTaskRegarding', regardingId, regardingType);
+
+      // Ensure the selected value is set in the form
+      const editRegardingSelect = document.getElementById('editTaskRegarding');
+      if (editRegardingSelect) {
+        editRegardingSelect.value = regardingId || '';
+      }
     });
 
     // Handle form submissions
