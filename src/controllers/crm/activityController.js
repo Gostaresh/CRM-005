@@ -2,44 +2,6 @@ const CrmService = require("../../services/crmService");
 const logger = require("../../utils/logger");
 const { decrypt } = require("../../utils/crypto");
 const { ActivityPointer, SystemUser } = require("../../core/resources");
-const DateTimeService = require("../../core/services/DateTimeService");
-const moment = require("jalali-moment");
-// Helper function to add Jalali date fields to activity data
-const convertActivityDates = (activityOrArray) => {
-  const dateFields = [
-    "scheduledstart",
-    "scheduledend",
-    "actualstart",
-    "actualend",
-    "createdon",
-    "modifiedon",
-  ];
-  function addJalaliToOne(activity) {
-    if (!activity || typeof activity !== "object") return activity;
-    const result = { ...activity };
-    dateFields.forEach((field) => {
-      if (result[field]) {
-        result[`${field}_jalali`] = DateTimeService.toJalali(result[field]);
-      }
-    });
-    return result;
-  }
-  if (Array.isArray(activityOrArray)) {
-    return activityOrArray.map(addJalaliToOne);
-  } else {
-    return addJalaliToOne(activityOrArray);
-  }
-};
-
-// Helper: Validate CRM date
-function isValidCrmDate(dateStr) {
-  if (!dateStr) return false;
-  // Accepts YYYY-MM-DD HH:mm:ss or YYYY/MM/DD HH:mm:ss
-  const normalizedDateStr = dateStr.replace(/\//g, "-");
-  const minDate = new Date("1753-01-01T00:00:00Z");
-  const d = new Date(normalizedDateStr);
-  return d instanceof Date && !isNaN(d) && d >= minDate;
-}
 
 const fetchAllActivities = async (req, res) => {
   try {
@@ -125,10 +87,7 @@ const fetchActivityDetails = async (req, res) => {
   );
   const data = await CrmService.fetchActivityDetails(activityId, credentials);
 
-  // Convert dates in the response
-  // const convertedData = convertActivityDates(data);
-
-  res.status(200).json(date);
+  res.status(200).json(data);
 };
 
 const createActivity = async (req, res) => {
@@ -152,39 +111,34 @@ const createActivity = async (req, res) => {
     return res.status(400).json({ error: "موضوع و تاریخ سررسید الزامی است" });
   }
 
-  // Convert Jalali dates to UTC for CRM
-  const utcStartDate = scheduledstart
-    ? DateTimeService.toUTC(scheduledstart)
-    : null;
-  const utcEndDate = DateTimeService.toUTC(scheduledend);
-
-  if (!utcEndDate) {
-    return res.status(400).json({ error: "فرمت تاریخ سررسید نامعتبر است" });
-  }
+  const utcStartDate = scheduledstart || null;
+  const utcEndDate = scheduledend;
 
   const activityData = {
     [ActivityPointer.properties.subject]: subject,
     [ActivityPointer.properties.description]: description || "",
-    [ActivityPointer.properties.scheduledStart]: utcStartDate
-      ? utcStartDate.toISOString()
-      : null,
-    [ActivityPointer.properties.scheduledEnd]: utcEndDate.toISOString(),
+    [ActivityPointer.properties.scheduledStart]: utcStartDate,
+    [ActivityPointer.properties.scheduledEnd]: utcEndDate,
     [ActivityPointer.properties.priorityCode]: parseInt(prioritycode) || 1,
     "ownerid@odata.bind": `/${SystemUser.type}(${userId})`,
     [ActivityPointer.properties.activityTypeCode]: "task",
   };
 
-  // Bind regarding entity
-  if (regardingobjectid && regardingtype) {
-    if (regardingtype === "account") {
-      activityData[
-        "regardingobjectid_account@odata.bind"
-      ] = `/accounts(${regardingobjectid})`;
-    } else if (regardingtype === "contact") {
-      activityData[
-        "regardingobjectid_contact@odata.bind"
-      ] = `/contacts(${regardingobjectid})`;
-    }
+  const entityMap = {
+    account: "accounts",
+    contact: "contacts",
+    lead: "leads",
+    opportunity: "opportunities",
+    incident: "incidents",
+    new_proformainvoice: "new_proformainvoices",
+    systemuser: "systemusers",
+  };
+
+  const type = regardingtype || "account";
+  if (regardingobjectid && entityMap[type]) {
+    activityData[
+      `regardingobjectid_${type}@odata.bind`
+    ] = `/${entityMap[type]}(${regardingobjectid})`;
   }
 
   if (customworkflowid) {
@@ -224,19 +178,10 @@ const updateTaskDates = async (req, res) => {
     return res.status(400).json({ error: "تاریخ سررسید الزامی است" });
   }
 
-  // Convert Jalali dates to UTC for CRM
-  // const utcStartDate = scheduledstart ? DateTimeService.toUTC(scheduledstart) : null;
-  // const utcEndDate = DateTimeService.toUTC(scheduledend);
-
-  // // Backend validation for CRM date
-  // if ((utcStartDate && !isValidCrmDate(utcStartDate)) || !isValidCrmDate(utcEndDate)) {
-  //     return res.status(400).json({ error: "تاریخ وارد شده معتبر نیست یا کمتر از حد مجاز است" });
-  // }
-
-  // const updateData = {
-  //     scheduledstart: utcStartDate,
-  //     scheduledend: utcEndDate
-  // };
+  const updateData = {
+    scheduledstart,
+    scheduledend,
+  };
 
   logger.info(
     `Updating task dates for activityId: ${activityId}, user: ${
@@ -253,17 +198,6 @@ const updateTaskDates = async (req, res) => {
     throw err;
   }
 };
-
-// Helper function to convert Persian numerals to Latin
-function convertPersianDigitsToEnglish(str) {
-  if (!str) return str;
-  const persian = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-  const english = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-  for (let i = 0; i < persian.length; i++) {
-    str = str.replace(new RegExp(persian[i], "g"), english[i]);
-  }
-  return str;
-}
 
 const updateTask = async (req, res) => {
   const { activityId } = req.params;
@@ -325,101 +259,23 @@ const updateTask = async (req, res) => {
   };
   logger.info(`updateData: ${JSON.stringify(updateData)}`);
 
-  if (regardingobjectid && regardingtype) {
-    if (regardingtype === "account") {
-      updateData[
-        "regardingobjectid_account@odata.bind"
-      ] = `/accounts(${regardingobjectid})`;
-    } else if (regardingtype === "contact") {
-      updateData[
-        "regardingobjectid_contact@odata.bind"
-      ] = `/contacts(${regardingobjectid})`;
-    }
-  }
-  if (regardingobjectid && regardingtype === undefined) {
-    // fallback: try account
+  const entityMap = {
+    account: "accounts",
+    contact: "contacts",
+    lead: "leads",
+    opportunity: "opportunities",
+    incident: "incidents",
+    new_proformainvoice: "new_proformainvoices",
+    systemuser: "systemusers",
+  };
+
+  const type = regardingtype || "account";
+  if (regardingobjectid && entityMap[type]) {
     updateData[
-      "regardingobjectid_account@odata.bind"
-    ] = `/accounts(${regardingobjectid})`;
+      `regardingobjectid_${type}@odata.bind`
+    ] = `/${entityMap[type]}(${regardingobjectid})`;
   }
-  if (regardingobjectid && regardingtype === null) {
-    // fallback: try account
-    updateData[
-      "regardingobjectid_account@odata.bind"
-    ] = `/accounts(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "") {
-    // fallback: try account
-    updateData[
-      "regardingobjectid_account@odata.bind"
-    ] = `/accounts(${regardingobjectid})`;
-  }
-  if (regardingobjectid && !regardingtype) {
-    // fallback: try account
-    updateData[
-      "regardingobjectid_account@odata.bind"
-    ] = `/accounts(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "lead") {
-    updateData[
-      "regardingobjectid_lead@odata.bind"
-    ] = `/leads(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "opportunity") {
-    updateData[
-      "regardingobjectid_opportunity@odata.bind"
-    ] = `/opportunities(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "incident") {
-    updateData[
-      "regardingobjectid_incident@odata.bind"
-    ] = `/incidents(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "new_proformainvoice") {
-    updateData[
-      "regardingobjectid_new_proformainvoice@odata.bind"
-    ] = `/new_proformainvoices(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "systemuser") {
-    updateData[
-      "regardingobjectid_systemuser@odata.bind"
-    ] = `/systemusers(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "contact") {
-    updateData[
-      "regardingobjectid_contact@odata.bind"
-    ] = `/contacts(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "account") {
-    updateData[
-      "regardingobjectid_account@odata.bind"
-    ] = `/accounts(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "opportunity") {
-    updateData[
-      "regardingobjectid_opportunity@odata.bind"
-    ] = `/opportunities(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "incident") {
-    updateData[
-      "regardingobjectid_incident@odata.bind"
-    ] = `/incidents(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "lead") {
-    updateData[
-      "regardingobjectid_lead@odata.bind"
-    ] = `/leads(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "new_proformainvoice") {
-    updateData[
-      "regardingobjectid_new_proformainvoice@odata.bind"
-    ] = `/new_proformainvoices(${regardingobjectid})`;
-  }
-  if (regardingobjectid && regardingtype === "systemuser") {
-    updateData[
-      "regardingobjectid_systemuser@odata.bind"
-    ] = `/systemusers(${regardingobjectid})`;
-  }
+
   if (ownerid) {
     updateData["ownerid@odata.bind"] = `/systemusers(${ownerid})`;
   }

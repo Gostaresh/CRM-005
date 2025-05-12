@@ -2,3 +2,21 @@
 [2025-05-12 12:17:40] ERROR: Update task error: CRM update request failed: 400
 [2025-05-12 12:17:55] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
 [2025-05-12 12:17:55] ERROR: Update task error: CRM update request failed: 400
+[2025-05-12 19:52:34] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-12 19:52:34] ERROR: Update task dates error: CRM update request failed: 400
+[2025-05-12 19:52:34] ERROR: Error: CRM update request failed: 400, Stack: Error: CRM update request failed: 400
+    at CrmService.updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:302:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crm/activityController.js:192:5)
+[2025-05-12 19:52:53] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-12 19:52:53] ERROR: Update task dates error: CRM update request failed: 400
+[2025-05-12 19:52:53] ERROR: Error: CRM update request failed: 400, Stack: Error: CRM update request failed: 400
+    at CrmService.updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:302:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crm/activityController.js:192:5)
+[2025-05-12 19:59:12] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-12 19:59:12] ERROR: Update task dates error: CRM update request failed: 400
+[2025-05-12 19:59:12] ERROR: Error: CRM update request failed: 400, Stack: Error: CRM update request failed: 400
+    at CrmService.updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:302:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crm/activityController.js:192:5)

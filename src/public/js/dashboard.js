@@ -1,4 +1,3 @@
-import { regardingDropdown } from './regardingDropdown';
 
 class DashboardManager {
   constructor() {
@@ -64,6 +63,8 @@ class DashboardManager {
     
     // Set up event listeners
     this.setupEventListeners();
+    // Set up create task form submit
+    this.setupCreateTaskFormSubmit();
     
     // Fetch accounts for dropdowns
     await this.fetchAccounts();
@@ -167,7 +168,7 @@ class DashboardManager {
       this.specificMode = false;
       this.ownerFilterContainer.style.display = "none";
       this.calendarManager.clearCalendar();
-      this.calendarManager.addAllActivities();
+      this.calendarManager.fetchActivities(false, "all");
       this.updateTabStyles(this.allActivitiesTab);
     });
 
@@ -175,7 +176,7 @@ class DashboardManager {
       this.specificMode = false;
       this.ownerFilterContainer.style.display = "none";
       this.calendarManager.clearCalendar();
-      this.calendarManager.addMyActivities();
+      this.calendarManager.fetchActivities(false, "my");
       this.updateTabStyles(this.myActivitiesTab);
     });
 
@@ -183,6 +184,9 @@ class DashboardManager {
       this.specificMode = true;
       this.ownerFilterContainer.style.display = "block";
       this.calendarManager.clearCalendar();
+      // Add selected owners activities
+      const selected = this.ownerFilter.val();
+      this.calendarManager.addActivitiesForOwners(selected);
       this.updateTabStyles(this.specificActivitiesTab);
     });
 
@@ -283,8 +287,14 @@ class DashboardManager {
     document.getElementById("editTaskId").value = data.activityid;
     document.getElementById("editTaskSubject").value = data.subject || "";
     document.getElementById("editTaskDescription").value = data.description || "";
-    document.getElementById("editTaskStartDate").value = data.scheduledstart || "";
-    document.getElementById("editTaskDueDate").value = data.scheduledend || "";
+    // Convert UTC to Jalali before displaying to user
+    // Reminder: Use moment.utc(...).format('jYYYY/jMM/jDD HH:mm:ss') for Jalali
+    document.getElementById("editTaskStartDate").value = data.scheduledstart
+      ? moment.utc(data.scheduledstart).format('jYYYY/jMM/jDD HH:mm:ss')
+      : "";
+    document.getElementById("editTaskDueDate").value = data.scheduledend
+      ? moment.utc(data.scheduledend).format('jYYYY/jMM/jDD HH:mm:ss')
+      : "";
     document.getElementById("editTaskPriority").value = data.prioritycode || "1";
     document.getElementById("editTaskRegarding").value = data._regardingobjectid_value || "";
 
@@ -304,27 +314,10 @@ class DashboardManager {
       users.map(u => `<option value="${u.systemuserid}">${u.fullname}</option>`).join("");
     assignedToSelect.value = data.ownerid || "";
 
-    // Ensure the dropdown is populated with all options and the selected value is set
+    // Populate the regarding dropdown and select the correct option
+    await regardingDropdown.populateDropdown('editTaskRegarding', data._regardingobjectid_value, data.regardingtype);
     const editRegardingSelect = document.getElementById('editTaskRegarding');
     if (editRegardingSelect) {
-      // Clear existing options
-      editRegardingSelect.innerHTML = '<option value="">انتخاب کنید...</option>';
-
-      // Add all available regarding options
-      this.accounts.forEach((account) => {
-        const option = new Option(`${account.name} (account)`, account.accountid);
-        editRegardingSelect.add(option);
-      });
-
-      this.contacts.forEach((contact) => {
-        const option = new Option(`${contact.fullname} (contact)`, contact.contactid);
-        editRegardingSelect.add(option);
-      });
-
-      // Add a 5-second delay before finding the selected option
-      console.log("Waiting for 5 seconds to ensure dropdown is populated...");
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      console.log("5 seconds passed, proceeding to find selected option...");
       const selectedOption = Array.from(editRegardingSelect.options).find(
         (option) => option.value === data._regardingobjectid_value
       );
@@ -360,11 +353,16 @@ class DashboardManager {
     document.getElementById("editTaskForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const activityId = document.getElementById("editTaskId").value;
+      // Convert Jalali date inputs to UTC ISO strings before sending
+      const scheduledstartJalali = document.getElementById("editTaskStartDate").value;
+      const scheduledendJalali = document.getElementById("editTaskDueDate").value;
+      const scheduledstart = moment(scheduledstartJalali, "jYYYY/jMM/jDD HH:mm:ss").format();
+      const scheduledend = moment(scheduledendJalali, "jYYYY/jMM/jDD HH:mm:ss").format();
       const payload = {
         subject: document.getElementById("editTaskSubject").value,
         description: document.getElementById("editTaskDescription").value,
-        scheduledstart: document.getElementById("editTaskStartDate").value,
-        scheduledend: document.getElementById("editTaskDueDate").value,
+        scheduledstart,
+        scheduledend,
         prioritycode: document.getElementById("editTaskPriority").value,
         regardingobjectid: document.getElementById("editTaskRegarding").value,
         statuscode: document.getElementById("editTaskStatus").value,
@@ -487,3 +485,58 @@ document.addEventListener("DOMContentLoaded", () => {
   window.dashboardManager = new DashboardManager();
   window.dashboardManager.initialize();
 });
+
+
+// Moved setupCreateTaskFormSubmit inside DashboardManager class:
+
+// --- MOVE START ---
+// Place this method inside the DashboardManager class above (at the same indentation level as other methods)
+
+//   setupCreateTaskFormSubmit() {
+//     const form = document.getElementById("createTaskForm");
+//     if (!form) return;
+//     form.addEventListener("submit", async (e) => {
+//       e.preventDefault();
+//       try {
+//         // Convert Jalali date inputs to UTC ISO strings before sending
+//         const scheduledstartJalali = document.getElementById("taskStartDate").value;
+//         const scheduledendJalali = document.getElementById("taskDueDate").value;
+//         const scheduledstart = moment(scheduledstartJalali, "jYYYY/jMM/jDD HH:mm:ss").format();
+//         const scheduledend = moment(scheduledendJalali, "jYYYY/jMM/jDD HH:mm:ss").format();
+//         // Build payload
+//         const payload = {
+//           subject: document.getElementById("taskSubject").value,
+//           description: document.getElementById("taskDescription").value,
+//           scheduledstart,
+//           scheduledend,
+//           prioritycode: document.getElementById("taskPriority").value,
+//           regardingobjectid: document.getElementById("taskRegarding").value,
+//           ownerid: document.getElementById("taskOwner").value
+//         };
+//         Utils.showLoader();
+//         const response = await fetch("/api/crm/activities", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify(payload),
+//         });
+//         const result = await response.json();
+//         if (response.ok) {
+//           // Success: close modal, refresh calendar, show toast
+//           const createModal = bootstrap.Modal.getInstance(document.getElementById("createTaskModal"));
+//           if (createModal) {
+//             createModal.hide();
+//           }
+//           window.CalendarManager.fetchActivities(false); // reload events
+//           Utils.showSuccessToast("وظیفه با موفقیت ایجاد شد");
+//         } else {
+//           Utils.showErrorToast(result.error || "خطا در ایجاد وظیفه");
+//         }
+//       } catch (err) {
+//         console.error("Error creating task:", err);
+//         Utils.showErrorToast("خطا در ارتباط با سرور");
+//       } finally {
+//         Utils.hideLoader();
+//       }
+//     });
+//   }
+// --- MOVE END ---

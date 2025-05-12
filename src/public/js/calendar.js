@@ -32,12 +32,14 @@ class CalendarManager {
     if (editTaskForm) {
       editTaskForm.addEventListener("submit", async (e) => {
           e.preventDefault();
+          const startDateJalali = document.getElementById("editTaskStartDate").value;
+          const dueDateJalali = document.getElementById("editTaskDueDate").value;
+          const startDate = moment(startDateJalali, "jYYYY/jMM/jDD HH:mm:ss").format();
+          const dueDate = moment(dueDateJalali, "jYYYY/jMM/jDD HH:mm:ss").format();
           const activityId = document.getElementById("editTaskId").value;
-          const startDate = document.getElementById("editTaskStartDate").value;
-          const dueDate = document.getElementById("editTaskDueDate").value;
   
           const dateRegex = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
-          if (!startDate || !dueDate || !dateRegex.test(startDate) || !dateRegex.test(dueDate)) {
+          if (!startDateJalali || !dueDateJalali || !dateRegex.test(startDateJalali) || !dateRegex.test(dueDateJalali)) {
               Utils.showErrorToast('تاریخ شروع و پایان باید در فرمت YYYY/MM/DD HH:mm:ss با ارقام لاتین باشد');
               return;
           }
@@ -133,16 +135,16 @@ class CalendarManager {
       selectMirror: true,
       select: (info) => {
         const createTaskModal = new bootstrap.Modal(document.getElementById("createTaskModal"));
-        document.getElementById("taskStartDate").value = moment(info.start).tz('UTC').format('YYYY-MM-DDTHH:mm:ss');
-        document.getElementById("taskDueDate").value = moment(info.end).tz('UTC').format('YYYY-MM-DDTHH:mm:ss');
+        document.getElementById("taskStartDate").value = moment.utc(info.start).format("jYYYY/jMM/jDD HH:mm:ss");
+        document.getElementById("taskDueDate").value = moment.utc(info.end).format("jYYYY/jMM/jDD HH:mm:ss");
         createTaskModal.show();
       },
       dateClick: (info) => {
         if (info.allDay) {
           const createTaskModal = new bootstrap.Modal(document.getElementById("createTaskModal"));
           const clickedDate = moment(info.date).startOf('day').add(9, 'hours');
-          document.getElementById("taskStartDate").value = clickedDate.tz('UTC').format('YYYY-MM-DDTHH:mm:ss');
-          document.getElementById("taskDueDate").value = moment(clickedDate).add(1, 'hour').tz('UTC').format('YYYY-MM-DDTHH:mm:ss');
+          document.getElementById("taskStartDate").value = moment.utc(clickedDate).format("jYYYY/jMM/jDD HH:mm:ss");
+          document.getElementById("taskDueDate").value = moment.utc(clickedDate).add(1, 'hour').format("jYYYY/jMM/jDD HH:mm:ss");
           createTaskModal.show();
         }
       },
@@ -159,8 +161,8 @@ class CalendarManager {
         document.getElementById("editTaskSubject").value = event.title;
         document.getElementById("editTaskDescription").value = event.extendedProps.description || '';
         // Set Gregorian dates for hidden inputs
-        document.getElementById("editTaskStartDate").value = moment(event.start).tz('UTC').format('YYYY-MM-DDTHH:mm:ss');
-        document.getElementById("editTaskDueDate").value = moment(event.end).tz('UTC').format('YYYY-MM-DDTHH:mm:ss');
+        document.getElementById("editTaskStartDate").value = moment.utc(event.start).format("jYYYY/jMM/jDD HH:mm:ss");
+        document.getElementById("editTaskDueDate").value = moment.utc(event.end).format("jYYYY/jMM/jDD HH:mm:ss");
         document.getElementById("editTaskPriority").value = event.extendedProps.priority || '1';
         
         const editTaskModal = new bootstrap.Modal(document.getElementById("editTaskModal"));
@@ -350,6 +352,10 @@ class CalendarManager {
       },
     }));
 
+    // Ensure the calendar view includes today's date before rendering events
+    this.calendar.gotoDate(new Date());
+    // Add debug log before rendering events
+    console.log("Rendering events:", events);
     this.calendar.addEventSource(events);
   }
 

@@ -29,76 +29,81 @@ class RegardingDropdown {
     }
 
     async populateDropdown(dropdownId, selectedId = null, selectedType = null) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) {
-            console.error(`Dropdown element with id '${dropdownId}' not found`);
-            return;
-        }
+        return new Promise(async (resolve) => {
+            const dropdown = document.getElementById(dropdownId);
+            if (!dropdown) {
+                console.error(`Dropdown element with id '${dropdownId}' not found`);
+                resolve();
+                return;
+            }
 
-        // Show loading state
-        dropdown.innerHTML = '<option value="">در حال بارگذاری...</option>';
+            // Show loading state
+            dropdown.innerHTML = '<option value="">در حال بارگذاری...</option>';
 
-        try {
-            const options = await this.fetchRegardingOptions();
-            
-            // Clear loading state and add default option
-            dropdown.innerHTML = '<option value="">-- انتخاب کنید --</option>';
-
-            // Add options to dropdown
-            options.forEach(option => {
-                if (!option || !option.id || !option.type || !option.name) {
-                    console.warn('Invalid option:', option);
-                    return;
-                }
-                const optionElement = document.createElement('option');
-                const value = `${option.type}|${option.id}`;
-                optionElement.value = value;
-                optionElement.textContent = `(${option.type}) ${option.name}`;
+            try {
+                const options = await this.fetchRegardingOptions();
                 
-                // Set selected if this is the current value
-                if (selectedId && selectedType && 
-                    option.id === selectedId && 
-                    option.type === selectedType) {
-                    optionElement.selected = true;
-                }
-                
-                dropdown.appendChild(optionElement);
-            });
+                // Clear loading state and add default option
+                dropdown.innerHTML = '<option value="">-- انتخاب کنید --</option>';
 
-            // Initialize or reinitialize Select2
-            if (typeof $.fn.select2 !== 'undefined') {
-                // Destroy existing instance if it exists
-                if (this.initializedDropdowns.has(dropdownId)) {
-                    $(dropdown).select2('destroy');
-                }
-
-                // Initialize Select2 with Persian language
-                $(dropdown).select2({
-                    theme: 'default',
-                    width: '100%',
-                    dir: 'rtl',
-                    language: 'fa',
-                    placeholder: 'انتخاب کنید',
-                    allowClear: true,
-                    dropdownAutoWidth: true,
-                    dropdownParent: $(dropdown).closest('.modal-body'),
-                    templateResult: this.formatOption,
-                    templateSelection: this.formatOption
+                // Add options to dropdown
+                options.forEach(option => {
+                    if (!option || !option.id || !option.type || !option.name) {
+                        console.warn('Invalid option:', option);
+                        return;
+                    }
+                    const optionElement = document.createElement('option');
+                    const value = `${option.type}|${option.id}`;
+                    optionElement.value = value;
+                    optionElement.textContent = `(${option.type}) ${option.name}`;
+                    
+                    // Set selected if this is the current value
+                    if (selectedId && selectedType && 
+                        option.id === selectedId && 
+                        option.type === selectedType) {
+                        optionElement.selected = true;
+                    }
+                    
+                    dropdown.appendChild(optionElement);
                 });
 
-                // Store the initialized dropdown
-                this.initializedDropdowns.add(dropdownId);
+                // Initialize or reinitialize Select2
+                if (typeof $.fn.select2 !== 'undefined') {
+                    // Destroy existing instance if it exists
+                    if (this.initializedDropdowns.has(dropdownId)) {
+                        $(dropdown).select2('destroy');
+                    }
 
-                // Trigger change event to ensure proper initialization
-                $(dropdown).trigger('change');
-            } else {
-                console.warn('Select2 is not loaded. Dropdown will be basic HTML select.');
+                    // Initialize Select2 with Persian language
+                    $(dropdown).select2({
+                        theme: 'default',
+                        width: '100%',
+                        dir: 'rtl',
+                        language: 'fa',
+                        placeholder: 'انتخاب کنید',
+                        allowClear: true,
+                        dropdownAutoWidth: true,
+                        dropdownParent: $(dropdown).closest('.modal-body'),
+                        templateResult: this.formatOption,
+                        templateSelection: this.formatOption
+                    });
+
+                    // Store the initialized dropdown
+                    this.initializedDropdowns.add(dropdownId);
+
+                    // Trigger change event to ensure proper initialization
+                    $(dropdown).trigger('change');
+                } else {
+                    console.warn('Select2 is not loaded. Dropdown will be basic HTML select.');
+                }
+                resolve();
+            } catch (error) {
+                console.error('Error populating dropdown:', error);
+                dropdown.innerHTML = '<option value="">خطا در بارگذاری</option>';
+                Utils.showErrorToast('خطا در بارگذاری لیست مربوط به');
+                resolve();
             }
-        } catch (error) {
-            console.error('Error populating dropdown:', error);
-            dropdown.innerHTML = '<option value="">خطا در بارگذاری</option>';
-            Utils.showErrorToast('خطا در بارگذاری لیست مربوط به');
-        }
+        });
     }
 
     formatOption(option) {
@@ -145,5 +150,5 @@ class RegardingDropdown {
     }
 }
 
-// Ensure regardingDropdown is properly exported and used
-export const regardingDropdown = new RegardingDropdown();
+// Attach regardingDropdown to the window object for global access
+window.regardingDropdown = new RegardingDropdown();

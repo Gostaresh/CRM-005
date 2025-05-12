@@ -22,6 +22,20 @@ class Utils {
       alert(message);
     }
   }
+
+  static showLoader() {
+    const loader = document.getElementById("globalLoader");
+    if (loader) {
+      loader.style.display = "flex";
+    }
+  }
+
+  static hideLoader() {
+    const loader = document.getElementById("globalLoader");
+    if (loader) {
+      loader.style.display = "none";
+    }
+  }
 }
 
 window.Utils = Utils;

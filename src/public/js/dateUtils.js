@@ -19,7 +19,7 @@ function convertJalaliToUTC(jalaliDate) {
 
 // Initialize MD.BootstrapPersianDateTimePicker for input fields
 function initializePersianDateTimePicker(selector) {
-    $(selector).MdPersianDateTimePicker({
+    new mds.MdsPersianDateTimePicker(document.querySelector(selector), {
         targetTextSelector: selector,
         enableTimePicker: true,
         textFormat: 'jYYYY/jMM/jDD HH:mm:ss',

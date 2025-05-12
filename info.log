@@ -41,3 +41,159 @@
 [2025-05-12 12:18:08] INFO: CRM response status: 200
 [2025-05-12 12:18:08] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/contacts?$select=contactid,fullname,mobilephone&$orderby=fullname asc&$top=2000
 [2025-05-12 12:18:09] INFO: CRM response status: 200
+[2025-05-12 18:00:17] INFO: Server running on port 3000
+[2025-05-12 18:00:36] INFO: Request: POST /api/auth/login
+[2025-05-12 18:00:36] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 18:35:15] INFO: Server running on port 3000
+[2025-05-12 18:36:19] INFO: Server running on port 3000
+[2025-05-12 18:39:00] INFO: Server running on port 3000
+[2025-05-12 18:43:42] INFO: Server running on port 3000
+[2025-05-12 18:44:32] INFO: Server running on port 3000
+[2025-05-12 18:54:54] INFO: Server running on port 3000
+[2025-05-12 18:56:11] INFO: Server running on port 3000
+[2025-05-12 18:58:32] INFO: Server running on port 3000
+[2025-05-12 18:58:36] INFO: Server running on port 3000
+[2025-05-12 18:58:40] INFO: Request: POST /api/auth/login
+[2025-05-12 18:58:40] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 18:59:45] INFO: Server running on port 3000
+[2025-05-12 18:59:51] INFO: Request: POST /api/auth/login
+[2025-05-12 18:59:51] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:08:18] INFO: Server running on port 3000
+[2025-05-12 19:08:55] INFO: Server running on port 3000
+[2025-05-12 19:09:03] INFO: Request: POST /api/auth/login
+[2025-05-12 19:09:03] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:09:20] INFO: Server running on port 3000
+[2025-05-12 19:09:26] INFO: Request: POST /api/auth/login
+[2025-05-12 19:09:26] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:12:22] INFO: Request: POST /api/auth/login
+[2025-05-12 19:12:22] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:12:32] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:12:32] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:12:32] INFO: CRM response status: 200
+[2025-05-12 19:12:32] INFO: My activities fetched successfully
+[2025-05-12 19:15:45] INFO: Server running on port 3000
+[2025-05-12 19:15:47] INFO: Server running on port 3000
+[2025-05-12 19:15:56] INFO: Request: POST /api/auth/login
+[2025-05-12 19:15:56] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:19:20] INFO: Server running on port 3000
+[2025-05-12 19:19:29] INFO: Request: POST /api/auth/login
+[2025-05-12 19:19:29] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:24:19] INFO: Server running on port 3000
+[2025-05-12 19:25:41] INFO: Server running on port 3000
+[2025-05-12 19:27:14] INFO: Server running on port 3000
+[2025-05-12 19:28:10] INFO: Server running on port 3000
+[2025-05-12 19:28:54] INFO: Server running on port 3000
+[2025-05-12 19:28:57] INFO: Server running on port 3000
+[2025-05-12 19:29:02] INFO: Request: POST /api/auth/login
+[2025-05-12 19:29:02] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:29:32] INFO: Request: POST /api/auth/login
+[2025-05-12 19:29:33] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:30:56] INFO: Server running on port 3000
+[2025-05-12 19:31:13] INFO: Server running on port 3000
+[2025-05-12 19:31:26] INFO: Server running on port 3000
+[2025-05-12 19:32:40] INFO: Server running on port 3000
+[2025-05-12 19:32:42] INFO: Server running on port 3000
+[2025-05-12 19:36:42] INFO: Server running on port 3000
+[2025-05-12 19:38:05] INFO: Server running on port 3000
+[2025-05-12 19:38:07] INFO: Server running on port 3000
+[2025-05-12 19:38:09] INFO: Request: POST /api/auth/login
+[2025-05-12 19:38:09] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:45:23] INFO: Server running on port 3000
+[2025-05-12 19:45:42] INFO: Server running on port 3000
+[2025-05-12 19:48:43] INFO: Request: POST /api/auth/login
+[2025-05-12 19:48:43] INFO: Login success for GOSTARESH\ehsntb
+[2025-05-12 19:48:44] INFO: Fetching system users for dropdown: user: ehsntb
+[2025-05-12 19:48:44] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/systemusers?$select=systemuserid,fullname&$top=500
+[2025-05-12 19:48:44] INFO: CRM response status: 200
+[2025-05-12 19:48:47] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:48:47] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:48:47] INFO: CRM response status: 200
+[2025-05-12 19:48:47] INFO: My activities fetched successfully
+[2025-05-12 19:52:34] INFO: Updating task dates for activityId: 8e9c4480-b429-f011-ac55-000c299c9756, user: ehsntb, data: {"scheduledstart":"2025-05-04T17:46:33Z","scheduledend":"Invalid date"}
+[2025-05-12 19:52:34] INFO: Updating task dates at: http://192.168.1.6/gostaresh/api/data/v9.1/tasks(8e9c4480-b429-f011-ac55-000c299c9756), data: {"scheduledstart":"2025-05-04T17:46:33Z","scheduledend":"Invalid date"}
+[2025-05-12 19:52:34] INFO: CRM update response status: 400
+[2025-05-12 19:52:34] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-12 19:52:34] ERROR: Update task dates error: CRM update request failed: 400
+[2025-05-12 19:52:34] ERROR: Error: CRM update request failed: 400, Stack: Error: CRM update request failed: 400
+    at CrmService.updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:302:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crm/activityController.js:192:5)
+[2025-05-12 19:52:53] INFO: Updating task dates for activityId: 8e9c4480-b429-f011-ac55-000c299c9756, user: ehsntb, data: {"scheduledstart":"2025-05-04T17:46:33Z","scheduledend":"Invalid date"}
+[2025-05-12 19:52:53] INFO: Updating task dates at: http://192.168.1.6/gostaresh/api/data/v9.1/tasks(8e9c4480-b429-f011-ac55-000c299c9756), data: {"scheduledstart":"2025-05-04T17:46:33Z","scheduledend":"Invalid date"}
+[2025-05-12 19:52:53] INFO: CRM update response status: 400
+[2025-05-12 19:52:53] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-12 19:52:53] ERROR: Update task dates error: CRM update request failed: 400
+[2025-05-12 19:52:53] ERROR: Error: CRM update request failed: 400, Stack: Error: CRM update request failed: 400
+    at CrmService.updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:302:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crm/activityController.js:192:5)
+[2025-05-12 19:53:07] INFO: Updating task dates for activityId: d9b4a318-942d-f011-ac56-000c299c9756, user: ehsntb, data: {"scheduledstart":"2025-05-12T15:37:51Z","scheduledend":"2025-05-12T18:37:51Z"}
+[2025-05-12 19:53:07] INFO: Updating task dates at: http://192.168.1.6/gostaresh/api/data/v9.1/tasks(d9b4a318-942d-f011-ac56-000c299c9756), data: {"scheduledstart":"2025-05-12T15:37:51Z","scheduledend":"2025-05-12T18:37:51Z"}
+[2025-05-12 19:53:08] INFO: CRM update response status: 204
+[2025-05-12 19:53:08] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:53:08] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:53:08] INFO: CRM response status: 200
+[2025-05-12 19:53:08] INFO: My activities fetched successfully
+[2025-05-12 19:54:03] INFO: Fetching system users for dropdown: user: ehsntb
+[2025-05-12 19:54:03] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/systemusers?$select=systemuserid,fullname&$top=500
+[2025-05-12 19:54:03] INFO: CRM response status: 200
+[2025-05-12 19:54:07] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:54:07] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:54:07] INFO: CRM response status: 200
+[2025-05-12 19:54:07] INFO: My activities fetched successfully
+[2025-05-12 19:54:36] INFO: Fetching system users for dropdown: user: ehsntb
+[2025-05-12 19:54:36] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/systemusers?$select=systemuserid,fullname&$top=500
+[2025-05-12 19:54:36] INFO: CRM response status: 200
+[2025-05-12 19:54:42] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:54:42] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:54:42] INFO: CRM response status: 200
+[2025-05-12 19:54:42] INFO: My activities fetched successfully
+[2025-05-12 19:55:05] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:55:05] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:55:05] INFO: CRM response status: 200
+[2025-05-12 19:55:05] INFO: My activities fetched successfully
+[2025-05-12 19:55:55] INFO: Fetching system users for dropdown: user: ehsntb
+[2025-05-12 19:55:55] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/systemusers?$select=systemuserid,fullname&$top=500
+[2025-05-12 19:55:55] INFO: CRM response status: 200
+[2025-05-12 19:56:00] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:56:00] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:56:00] INFO: CRM response status: 200
+[2025-05-12 19:56:00] INFO: My activities fetched successfully
+[2025-05-12 19:56:04] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:56:04] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:56:04] INFO: CRM response status: 200
+[2025-05-12 19:56:04] INFO: My activities fetched successfully
+[2025-05-12 19:56:25] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:56:25] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:56:25] INFO: CRM response status: 200
+[2025-05-12 19:56:25] INFO: My activities fetched successfully
+[2025-05-12 19:57:44] INFO: Fetching system users for dropdown: user: ehsntb
+[2025-05-12 19:57:44] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/systemusers?$select=systemuserid,fullname&$top=500
+[2025-05-12 19:57:45] INFO: CRM response status: 200
+[2025-05-12 19:57:46] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:57:46] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:57:46] INFO: CRM response status: 200
+[2025-05-12 19:57:46] INFO: My activities fetched successfully
+[2025-05-12 19:59:03] INFO: Updating task dates for activityId: f7a12a6f-702d-f011-ac56-000c299c9756, user: ehsntb, data: {"scheduledstart":"2025-05-14T10:00:00Z","scheduledend":"2025-05-14T15:00:00Z"}
+[2025-05-12 19:59:03] INFO: Updating task dates at: http://192.168.1.6/gostaresh/api/data/v9.1/tasks(f7a12a6f-702d-f011-ac56-000c299c9756), data: {"scheduledstart":"2025-05-14T10:00:00Z","scheduledend":"2025-05-14T15:00:00Z"}
+[2025-05-12 19:59:03] INFO: CRM update response status: 204
+[2025-05-12 19:59:03] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:59:03] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:59:03] INFO: CRM response status: 200
+[2025-05-12 19:59:03] INFO: My activities fetched successfully
+[2025-05-12 19:59:04] INFO: Fetching system users for dropdown: user: ehsntb
+[2025-05-12 19:59:04] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/systemusers?$select=systemuserid,fullname&$top=500
+[2025-05-12 19:59:04] INFO: CRM response status: 200
+[2025-05-12 19:59:08] INFO: Fetching my activities for user: ehsntb, userId: 84d96231-c217-f011-ac52-000c299c9756, nextLink: none
+[2025-05-12 19:59:08] INFO: Fetching entity: http://192.168.1.6/gostaresh/api/data/v9.1/activitypointers?$select=activityid,activitytypecode,subject,description,scheduledstart,scheduledend,actualstart,actualend,prioritycode,statecode,statuscode,_ownerid_value,createdon,modifiedon&$filter=_ownerid_value eq '84d96231-c217-f011-ac52-000c299c9756'&$orderby=scheduledstart desc&$top=50
+[2025-05-12 19:59:08] INFO: CRM response status: 200
+[2025-05-12 19:59:08] INFO: My activities fetched successfully
+[2025-05-12 19:59:12] INFO: Updating task dates for activityId: 8e9c4480-b429-f011-ac55-000c299c9756, user: ehsntb, data: {"scheduledstart":"2025-05-11T13:46:33Z","scheduledend":"Invalid date"}
+[2025-05-12 19:59:12] INFO: Updating task dates at: http://192.168.1.6/gostaresh/api/data/v9.1/tasks(8e9c4480-b429-f011-ac55-000c299c9756), data: {"scheduledstart":"2025-05-11T13:46:33Z","scheduledend":"Invalid date"}
+[2025-05-12 19:59:12] INFO: CRM update response status: 400
+[2025-05-12 19:59:12] ERROR: CRM update request failed with status: 400, body: {"error":{"code":"0x80040239","message":"DateTime is less than minumum value supported by CrmDateTime. Actual value: 01/01/0001 00:00:00, Minimum value supported: 01/01/1753 00:00:00"}}
+[2025-05-12 19:59:12] ERROR: Update task dates error: CRM update request failed: 400
+[2025-05-12 19:59:12] ERROR: Error: CRM update request failed: 400, Stack: Error: CRM update request failed: 400
+    at CrmService.updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/services/crmService.js:302:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateTaskDates (/Users/ehsntb/Documents/MyProjects/Gostaresh/CRM-005/src/controllers/crm/activityController.js:192:5)
