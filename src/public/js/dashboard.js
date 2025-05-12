@@ -311,12 +311,12 @@ class DashboardManager {
 
       // Add all available regarding options
       this.accounts.forEach((account) => {
-        const option = new Option(account.name, account.accountid);
+        const option = new Option(`${account.name} (account)`, account.accountid);
         editRegardingSelect.add(option);
       });
 
       this.contacts.forEach((contact) => {
-        const option = new Option(contact.fullname, contact.contactid);
+        const option = new Option(`${contact.fullname} (contact)`, contact.contactid);
         editRegardingSelect.add(option);
       });
 
@@ -333,9 +333,9 @@ class DashboardManager {
       }
     }
 
-    // Log regarding options in a readable format
-    // console.info('Accounts:', JSON.stringify(this.accounts, null, 2));
-    // console.info('Contacts:', JSON.stringify(this.contacts, null, 2));
+    // Re-enable debugging logs
+    console.info('Accounts:', JSON.stringify(this.accounts, null, 2));
+    console.info('Contacts:', JSON.stringify(this.contacts, null, 2));
   }
 
   setupEditTaskButton() {
