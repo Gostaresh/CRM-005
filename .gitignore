@@ -1,8 +1,7 @@
 node_modules/
-debug.log
-error.log
-info.log
-tools/.venv
+
 *.zip
 .DS_Store
 *.log
+error.log
+info.log
