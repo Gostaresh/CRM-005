@@ -6,4 +6,5 @@ module.exports = {
   domain: process.env.DOMAIN || "GOSTARESH",
   sessionSecret:
     process.env.SESSION_SECRET || "your-secret-key-32-bytes-long!!", // Must be 32 bytes
+  vue: process.env.VUE,
 };

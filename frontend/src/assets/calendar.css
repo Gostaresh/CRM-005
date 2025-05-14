@@ -1,0 +1,4 @@
+/* in src/assets/calendar.css or in style tag */
+#calendar {
+  min-height: 70vh;
+}

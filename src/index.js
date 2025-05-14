@@ -1,5 +1,6 @@
 const express = require("express");
 const session = require("express-session");
+const cors = require("cors");
 const env = require("./config/env");
 const logger = require("./utils/logger");
 const routesFactory = require("./routes");
@@ -8,6 +9,7 @@ const config = require("./config/config");
 const MetadataLoader = require("./core/metadata/MetadataLoader");
 const FormGenerator = require("./core/metadata/FormGenerator");
 const DynamicsService = require("./core/services/DynamicsService");
+const expressLayouts = require("express-ejs-layouts");
 
 const app = express();
 
@@ -22,7 +24,15 @@ app.use(
     cookie: { secure: process.env.NODE_ENV === "production" },
   })
 );
+app.use(expressLayouts);
+app.use(
+  cors({
+    origin: env.vue,
+    credentials: true,
+  })
+);
 
+console.log(env.vue);
 // Debug middleware to log session information (after session middleware)
 app.use((req, res, next) => {
   logger.debug(

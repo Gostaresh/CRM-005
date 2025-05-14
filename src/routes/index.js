@@ -35,9 +35,15 @@ module.exports = () => {
         "/js/dashboard.js",
         "/js/calendar.js",
         "/js/accounts.js",
-        "/js/regardingDropdown.js"
+        "/js/regardingDropdown.js",
       ],
       content: undefined,
+    });
+  });
+
+  router.get("/logout", (req, res) => {
+    req.session.destroy(() => {
+      res.redirect("/");
     });
   });
 
