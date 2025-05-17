@@ -25,7 +25,7 @@
 
 <script setup>
 import { NMessageProvider } from 'naive-ui'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import FullCalendar from '@fullcalendar/vue3'

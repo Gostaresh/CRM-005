@@ -1,18 +1,26 @@
-import { fileURLToPath, URL } from 'node:url'
-
+// frontend/vite.config.js
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
+  plugins: [vue(), vueDevTools()],
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+    alias: { '@': '/src' },
+  },
+  build: {
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@fullcalendar')) return 'fullcalendar'
+            if (id.includes('naive-ui')) return 'naive'
+            if (id.includes('moment')) return 'moment'
+            return 'vendor'
+          }
+        },
+      },
     },
   },
 })
