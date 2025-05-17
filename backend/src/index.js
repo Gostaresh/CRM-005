@@ -63,8 +63,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.set("view engine", "ejs");
-app.set("views", "src/views");
+// app.set("view engine", "ejs");
+// app.set("views", "src/views");
+
+app.set("views", "/var/www/crm-005-views");
 
 // Custom layout rendering
 app.use((req, res, next) => {
