@@ -1,0 +1,14 @@
+{
+  "account": { "set": "accounts", "display": "name", "id": "accountid" },
+  "contact": { "set": "contacts", "display": "fullname", "id": "contactid" },
+  "lead": { "set": "leads", "display": "subject", "id": "leadid" },
+  "opportunity": {
+    "set": "opportunities",
+    "display": "name",
+    "id": "opportunityid"
+  },
+  "invoice": { "set": "invoices", "display": "name", "id": "invoiceid" },
+  "order": { "set": "salesorders", "display": "name", "id": "salesorderid" },
+  "quote": { "set": "quotes", "display": "name", "id": "quoteid" },
+  "case": { "set": "incidents", "display": "title", "id": "incidentid" }
+}

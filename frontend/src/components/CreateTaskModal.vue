@@ -58,7 +58,7 @@
     </div>
 
     <div class="mb-3">
-      <n-input v-model="form.description" type="textarea" rows="3" placeholder="توضیحات" />
+      <n-input v-model:value="form.description" type="textarea" rows="3" placeholder="توضیحات" />
     </div>
 
     <template #footer>
@@ -133,13 +133,22 @@ const searching = ref(false)
 const regardingOptions = ref([])
 async function searchRegarding(query) {
   if (!query || query.length < 2) return
+
+  const pluralMap = {
+    account: 'accounts',
+    contact: 'contacts',
+    lead: 'leads',
+    opportunity: 'opportunities',
+  }
+  const entityPath = pluralMap[form.regardingType] || 'accounts'
+
   searching.value = true
   try {
     const res = await fetch(
-      `${baseUrl}/api/crm/${form.regardingType}s/search?q=${encodeURIComponent(query)}`,
+      `${baseUrl}/api/crm/${entityPath}/search?q=${encodeURIComponent(query)}`,
       { credentials: 'include' },
     )
-    const data = await res.json() // expecting [{id,name}]
+    const data = await res.json() // expecting [{ id, name }]
     regardingOptions.value = data.map((item) => ({
       label: item.name,
       value: item.id,
@@ -196,19 +205,6 @@ const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || import.meta.env.VITE_AP
 async function save() {
   await nextTick() // ensure v-model updates are flushed
 
-  // DEBUG log form values
-  console.log('DEBUG – form values:', {
-    subject: form.subject,
-    subjectLen: String(form.subject).trim().length,
-    startMoment: form.startMoment,
-    endMoment: form.endMoment,
-    startIso: form.startIso,
-    endIso: form.endIso,
-    priority: form.priority,
-    regardingType: form.regardingType,
-    regardingObjectId: form.regardingObjectId,
-  })
-
   const subjectOk =
     form.subject !== null && form.subject !== undefined && String(form.subject).trim().length > 0
 
@@ -232,9 +228,6 @@ async function save() {
       regardingobjectid: form.regardingObjectId || undefined,
       regardingtype: form.regardingType || undefined,
     }
-
-    // DEBUG log payload
-    console.log('DEBUG – payload to backend:', payload)
 
     const res = await fetch(`${baseUrl}/api/crm/activities`, {
       method: 'POST',
