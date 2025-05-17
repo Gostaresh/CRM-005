@@ -31,10 +31,24 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(
   cors({
-    origin: env.vue_,
+    origin: env.vue_preview,
     credentials: true,
+  })
+);
+
+app.set("trust proxy", 1); // respect X-Forwarded-Proto
+app.use(
+  session({
+    secret: env.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    },
   })
 );
 
