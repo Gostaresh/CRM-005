@@ -89,10 +89,12 @@ const calendarOptions = ref({
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
   initialView: 'timeGridWeek',
   locale: 'fa',
+  firstDay: 6, // Saturday
   timeZone: 'local',
   editable: true, // allow drag & resize
   eventStartEditable: true,
   eventDurationEditable: true,
+  direction: 'rtl',
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
@@ -121,16 +123,31 @@ const calendarOptions = ref({
       failureCallback(error)
     }
   },
-  eventClick: function (info) {
-    const event = info.event
-    selectedTask.value = {
-      activityid: event.id,
-      subject: event.title,
-      description: event.extendedProps.description || '',
-      scheduledstart: event.start.toISOString(),
-      scheduledend: event.end ? event.end.toISOString() : event.start.toISOString(),
+  eventClick: async function (info) {
+    const id = info.event.id
+    try {
+      const res = await fetch(`${baseUrl}/api/crm/activities/${id}`, {
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const task = await res.json()
+
+      selectedTask.value = task // pass full record to the modal
+      isEditModalVisible.value = true
+    } catch (err) {
+      console.error('❌ Failed to fetch activity details:', err)
+      // fallback: open modal with slim props
+      selectedTask.value = {
+        activityid: id,
+        subject: info.event.title,
+        description: info.event.extendedProps.description || '',
+        scheduledstart: info.event.start.toISOString(),
+        scheduledend: info.event.end
+          ? info.event.end.toISOString()
+          : info.event.start.toISOString(),
+      }
+      isEditModalVisible.value = true
     }
-    isEditModalVisible.value = true
   },
   eventDrop: async function (info) {
     console.log('🟡 eventDrop fired', info.event)

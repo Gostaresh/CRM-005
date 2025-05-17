@@ -11,10 +11,10 @@
       <n-input v-model:value.trim="form.subject" placeholder="موضوع فعالیت *" />
     </div>
 
-    <!-- Priority ------------------------------------------------------------ -->
     <div class="mb-3">
-      <n-select v-model:value="form.priority" :options="priorityOptions" placeholder="اولویت" />
+      <n-input v-model:value="form.description" type="textarea" rows="3" placeholder="توضیحات" />
     </div>
+    <hr />
 
     <!-- Regarding type ------------------------------------------------------- -->
     <div class="mb-3">
@@ -31,12 +31,18 @@
         v-model:value="form.regardingObjectLabel"
         :options="regardingOptions"
         :loading="searching"
+        :filter="false"
         placeholder="جستجوی موجودیت مرتبط"
-        @search="searchRegarding"
+        @update:value="searchRegarding"
         @select="onRegardingSelect"
       />
     </div>
 
+    <!-- Priority ------------------------------------------------------------ -->
+    <div class="mb-3">
+      <n-select v-model:value="form.priority" :options="priorityOptions" placeholder="اولویت" />
+    </div>
+    <hr />
     <div class="mb-3">
       <DatePicker
         v-model="form.startMoment"
@@ -57,10 +63,6 @@
       />
     </div>
 
-    <div class="mb-3">
-      <n-input v-model:value="form.description" type="textarea" rows="3" placeholder="توضیحات" />
-    </div>
-
     <template #footer>
       <n-space justify="end">
         <n-button tertiary @click="close">انصراف</n-button>
@@ -72,9 +74,11 @@
   </n-modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { nextTick } from 'vue'
 import { NModal, NInput, NButton, NSpace, NSelect, NAutoComplete } from 'naive-ui'
+import { getRegardingTypeOptions } from '@/composables/useEntityMap'
+import { searchEntity, createTask } from '@/api/crm'
 /* ---------------------------------------------------------------- *\
   Create‑task modal
   – Uses Naive‑UI & vue3-persian-datetime-picker
@@ -122,33 +126,22 @@ const priorityOptions = [
   { label: 'زیاد', value: 2 },
 ]
 
-const regardingTypeOptions = [
-  { label: 'حساب (Account)', value: 'account' },
-  { label: 'مخاطب (Contact)', value: 'contact' },
-  { label: 'سرنخ (Lead)', value: 'lead' },
-  { label: 'فرصت (Opportunity)', value: 'opportunity' },
-]
+const regardingTypeOptions = getRegardingTypeOptions()
 
 const searching = ref(false)
 const regardingOptions = ref([])
-async function searchRegarding(query) {
-  if (!query || query.length < 2) return
-
-  const pluralMap = {
-    account: 'accounts',
-    contact: 'contacts',
-    lead: 'leads',
-    opportunity: 'opportunities',
+async function searchRegarding(query: string) {
+  if (!form.regardingType || !query || query.length < 2) {
+    regardingOptions.value = []
+    return
   }
-  const entityPath = pluralMap[form.regardingType] || 'accounts'
 
   searching.value = true
   try {
-    const res = await fetch(
-      `${baseUrl}/api/crm/${entityPath}/search?q=${encodeURIComponent(query)}`,
-      { credentials: 'include' },
-    )
-    const data = await res.json() // expecting [{ id, name }]
+    const { ok, data } = await searchEntity(form.regardingType, query)
+    if (!ok) throw new Error('Search failed')
+
+    // value carries GUID, label is the Persian name shown in the input
     regardingOptions.value = data.map((item) => ({
       label: item.name,
       value: item.id,
@@ -160,9 +153,10 @@ async function searchRegarding(query) {
   }
 }
 
-function onRegardingSelect(value, option) {
-  form.regardingObjectId = value
-  form.regardingObjectLabel = option.label
+function onRegardingSelect(value: string) {
+  form.regardingObjectId = value // GUID
+  const match = regardingOptions.value.find((o) => o.value === value)
+  form.regardingObjectLabel = match ? match.label : ''
 }
 
 watch(
@@ -175,6 +169,15 @@ watch(
   () => form.endMoment,
   (val) => {
     form.endIso = jalaliToIso(val)
+  },
+)
+watch(
+  () => form.regardingType,
+  () => {
+    // Reset related fields when entity type changes
+    form.regardingObjectId = ''
+    form.regardingObjectLabel = ''
+    regardingOptions.value = []
   },
 )
 
@@ -200,7 +203,6 @@ function close() {
   Save handler
 \* ---------------------------------------------------------------- */
 const loading = ref(false)
-const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || import.meta.env.VITE_API_BASE_URL || ''
 
 async function save() {
   await nextTick() // ensure v-model updates are flushed
@@ -229,15 +231,8 @@ async function save() {
       regardingtype: form.regardingType || undefined,
     }
 
-    const res = await fetch(`${baseUrl}/api/crm/activities`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const { ok, data } = await createTask(payload)
+    if (!ok) throw new Error('HTTP error creating task')
 
     message.success('فعالیت با موفقیت ایجاد شد')
     emit('created', data)

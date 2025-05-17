@@ -146,8 +146,14 @@ class CrmService {
 
   async fetchActivityDetails(activityId, credentials) {
     const query = {
-      select: Object.values(ActivityPointer.properties).join(","),
-      expand: ActivityPointer.expand.ownerId,
+      select: [
+        ...Object.values(ActivityPointer.properties),
+        "_regardingobjectid_value",
+      ].join(","),
+      // Ask Web API to include all annotations (formatted value, lookuplogicalname, etc.)
+      headers: {
+        Prefer: 'odata.include-annotations="*"',
+      },
     };
 
     const data = await this.fetchEntity(
@@ -156,11 +162,28 @@ class CrmService {
       credentials
     );
 
-    // Get owner name from expanded data
-    let ownerName = "-";
-    if (data.ownerid) {
-      ownerName = data.ownerid.fullname || "-";
-    }
+    // Extract regarding lookup fields
+    const regardingId = data._regardingobjectid_value || null;
+    const regardingName =
+      data[
+        "_regardingobjectid_value@OData.Community.Display.V1.FormattedValue"
+      ] || "";
+    // Some orgs expose the logical name on the polymorphic field without underscore
+    const regardingType =
+      data["regardingobjectid@Microsoft.Dynamics.CRM.lookuplogicalname"] ||
+      data[
+        "_regardingobjectid_value@Microsoft.Dynamics.CRM.lookuplogicalname"
+      ] ||
+      "";
+
+    // Attach for frontend
+    data.regardingobjectid = regardingId;
+    data.regardingname = regardingName;
+    data.regardingtype = regardingType;
+
+    // Get owner name from formatted-value annotation
+    const ownerName =
+      data["_ownerid_value@OData.Community.Display.V1.FormattedValue"] || "-";
 
     return {
       ...data,

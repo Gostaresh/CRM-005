@@ -14,9 +14,12 @@ auth.fetchUser() // preload session
 
 <style>
 /* Override the default Vite scaffold that centers #app at 1280 px */
+html,
+body,
 #app {
   max-width: none;
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 </style>
