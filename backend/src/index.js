@@ -63,7 +63,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// app.set("view engine", "ejs");
+app.set("view engine", "ejs");
 // app.set("views", "src/views");
 
 app.set("views", "/var/www/crm-005-views");
