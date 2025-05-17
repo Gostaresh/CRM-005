@@ -5,3 +5,4 @@ frontend/build
 .DS_Store
 *.log
 tools/.venv
+node_modules
