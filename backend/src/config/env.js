@@ -7,4 +7,5 @@ module.exports = {
   sessionSecret:
     process.env.SESSION_SECRET || "your-secret-key-32-bytes-long!!", // Must be 32 bytes
   vue: process.env.VUE,
+  vue_preview: process.env.VUE_preview,
 };

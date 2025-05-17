@@ -31,6 +31,12 @@ app.use(
     credentials: true,
   })
 );
+app.use(
+  cors({
+    origin: env.vue_,
+    credentials: true,
+  })
+);
 
 console.log(env.vue);
 // Debug middleware to log session information (after session middleware)
