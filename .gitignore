@@ -1,8 +1,7 @@
-node_modules/
-
+backend/node_modules
+frontend/node_modules
+frontend/build
 *.zip
 .DS_Store
 *.log
-error.log
-info.log
 tools/.venv
