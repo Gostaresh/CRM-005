@@ -17,8 +17,12 @@
     "test": "npm run test --workspace backend"
   },
   "devDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.40.2",
     "concurrently": "^8.0.1",
     "eslint": "^9.0.0",
     "eslint-plugin-vue": "^9.18.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.6.1"
   }
 }
