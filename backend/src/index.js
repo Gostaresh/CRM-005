@@ -16,14 +16,24 @@ const app = express();
 // Essential middleware that must come first
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.set("trust proxy", 1); // respect X-Forwarded-Proto
+// Decide if session cookies must be "secure"
+const cookieSecure =
+  process.env.COOKIE_SECURE === "true" ||
+  (process.env.NODE_ENV === "production" && process.env.FORCE_HTTPS === "true");
 app.use(
   session({
     secret: env.sessionSecret,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === "production" },
+    cookie: {
+      secure: cookieSecure,
+      sameSite: "lax",
+    },
   })
 );
+
 app.use(expressLayouts);
 app.use(
   cors({
@@ -36,19 +46,6 @@ app.use(
   cors({
     origin: env.vue_preview,
     credentials: true,
-  })
-);
-
-app.set("trust proxy", 1); // respect X-Forwarded-Proto
-app.use(
-  session({
-    secret: env.sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    },
   })
 );
 
