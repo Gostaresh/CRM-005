@@ -61,7 +61,7 @@ class CrmService {
     credentials,
     userId = null,
     nextLink = null,
-    pageSize = 50,
+    pageSize = 200,
     customFilter = null
   ) {
     try {
@@ -149,15 +149,19 @@ class CrmService {
       select: [
         ...Object.values(ActivityPointer.properties),
         "_regardingobjectid_value",
+        "new_seen", // two‑options field
+        "_new_lastowner_value", // lookup GUID (shadow column)
       ].join(","),
+      // no expand – lookup doesn't expose a navigation property
       // Ask Web API to include all annotations (formatted value, lookuplogicalname, etc.)
       headers: {
         Prefer: 'odata.include-annotations="*"',
       },
     };
 
+    // Use the task entity set to access task‑specific custom columns
     const data = await this.fetchEntity(
-      `${ActivityPointer.type}(${activityId})`,
+      `tasks(${activityId})`,
       query,
       credentials
     );
@@ -185,8 +189,14 @@ class CrmService {
     const ownerName =
       data["_ownerid_value@OData.Community.Display.V1.FormattedValue"] || "-";
 
+    // Last‑owner display name (annotation on the shadow column)
+    const lastOwnerName =
+      data["_new_lastowner_value@OData.Community.Display.V1.FormattedValue"] ||
+      "";
+
     return {
       ...data,
+      lastownername: lastOwnerName,
       owner: {
         id: data[ActivityPointer.properties.ownerId],
         name: ownerName,
@@ -258,29 +268,41 @@ class CrmService {
       activityId = location ? location.split("(")[1].split(")")[0] : null;
       logger.info(`Created activity with ID: ${activityId}`);
     } else {
-      // 204 No Content case: Fetch the task ID by querying with unique fields
-      const ownerId = data["ownerid@odata.bind"]?.match(
-        /systemusers\(([^)]+)\)/
-      )?.[1];
-      if (!ownerId || !data.subject) {
-        throw new Error(
-          "Cannot fetch created task: missing ownerid or subject"
-        );
-      }
+      // 204 No Content case — first try to read the entity ID from headers.
+      const entityHeader =
+        res.headers["odata-entityid"] || res.headers["location"];
+      if (entityHeader) {
+        activityId = entityHeader.split("(")[1].split(")")[0];
+        logger.info(`Created entity ID from header: ${activityId}`);
+      } else {
+        // Fallback: query by subject + ownerid (works for tasks, not for annotations)
+        const ownerId = data["ownerid@odata.bind"]?.match(
+          /systemusers\(([^)]+)\)/
+        )?.[1];
 
-      const query = {
-        select: "activityid",
-        filter: `subject eq '${data.subject}' and _ownerid_value eq ${ownerId}`,
-        orderby: "createdon desc",
-        top: 1,
-      };
-      logger.info(`Fetching created task with query: ${JSON.stringify(query)}`);
-      const result = await this.fetchEntity("tasks", query, credentials);
-      if (!result.value || result.value.length === 0) {
-        throw new Error("Failed to fetch created task ID");
+        if (!ownerId || !data.subject) {
+          logger.warn(
+            "204 response without OData-EntityId header; returning without ID"
+          );
+          return {}; // caller can ignore if ID is not needed
+        }
+
+        const query = {
+          select: "activityid",
+          filter: `subject eq '${data.subject}' and _ownerid_value eq '${ownerId}'`,
+          orderby: "createdon desc",
+          top: 1,
+        };
+        logger.info(
+          `Fetching created task with query: ${JSON.stringify(query)}`
+        );
+        const result = await this.fetchEntity("tasks", query, credentials);
+        if (!result.value || result.value.length === 0) {
+          throw new Error("Failed to fetch created task ID");
+        }
+        activityId = result.value[0].activityid;
+        logger.info(`Retrieved activity ID from query: ${activityId}`);
       }
-      activityId = result.value[0].activityid;
-      logger.info(`Retrieved activity ID from query: ${activityId}`);
     }
 
     return { activityid: activityId };
@@ -421,6 +443,59 @@ class CrmService {
     };
     const data = await this.fetchEntity("contacts", query, credentials);
     return data.value || [];
+  }
+
+  /**
+   * Return all annotations linked to a task.
+   */
+  async fetchNotes(taskId, credentials) {
+    const query = {
+      select: "annotationid,subject,notetext,filename,mimetype,createdon",
+      filter: `_objectid_value eq '${taskId}'`,
+      orderby: "createdon asc",
+    };
+    const data = await this.fetchEntity("annotations", query, credentials);
+    return data.value || [];
+  }
+
+  /**
+   * Fetch a single note with its documentbody for download.
+   */
+  async fetchNoteAttachment(noteId, credentials) {
+    // annotations set – single record
+    const data = await this.fetchEntity(
+      `annotations(${noteId})`,
+      {
+        select: "annotationid,filename,mimetype,documentbody",
+      },
+      credentials
+    );
+    return data;
+  }
+
+  /**
+   * Create a new note (annotation) for a task.
+   * noteData = { subject, notetext, filename, mimetype, documentbody }
+   */
+  async createNote(taskId, noteData, credentials) {
+    const payload = {
+      subject:
+        (noteData.subject && noteData.subject.trim()) ||
+        (noteData.filename
+          ? noteData.filename
+          : (noteData.notetext || "").slice(0, 50) || "Note"),
+      notetext: noteData.notetext || "",
+      [`objectid_task@odata.bind`]: `/tasks(${taskId})`,
+    };
+
+    if (noteData.documentbody) {
+      payload.documentbody = noteData.documentbody;
+      payload.filename = noteData.filename || "Attachment";
+      if (noteData.mimetype) payload.mimetype = noteData.mimetype;
+    }
+
+    const result = await this.createEntity("annotations", payload, credentials);
+    return result;
   }
 }
 

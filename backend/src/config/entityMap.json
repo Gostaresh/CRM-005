@@ -10,5 +10,20 @@
   "invoice": { "set": "invoices", "display": "name", "id": "invoiceid" },
   "order": { "set": "salesorders", "display": "name", "id": "salesorderid" },
   "quote": { "set": "quotes", "display": "name", "id": "quoteid" },
-  "case": { "set": "incidents", "display": "title", "id": "incidentid" }
+  "case": { "set": "incidents", "display": "title", "id": "incidentid" },
+  "systemuser": {
+    "set": "systemusers",
+    "display": "fullname",
+    "id": "systemuserid"
+  },
+  "new_seen": {
+    "set": "new_seens",
+    "display": "new_name",
+    "id": "new_seenid"
+  },
+  "new_lastowner": {
+    "set": "new_lastowners",
+    "display": "new_name",
+    "id": "new_lastownerid"
+  }
 }

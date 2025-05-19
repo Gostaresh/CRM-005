@@ -42,7 +42,7 @@ const fetchAllActivities = async (req, res) => {
 const fetchMyActivities = async (req, res) => {
   try {
     const nextLink = req.query.nextLink || null;
-    const pageSize = parseInt(req.query.pageSize) || 50;
+    const pageSize = parseInt(req.query.pageSize) || 200;
     const credentials = {
       username: req.session.user.username.split("\\")[1],
       password: decrypt(req.session.encryptedPassword),
@@ -101,6 +101,11 @@ const createActivity = async (req, res) => {
     regardingtype,
     customworkflowid,
   } = req.body;
+  // Extract and validate optional ownerid
+  const guidRegex = /^[0-9a-fA-F-]{36}$/;
+  const ownerid = guidRegex.test(req.body.ownerid || "")
+    ? req.body.ownerid
+    : null;
   const credentials = {
     username: req.session.user.username.split("\\")[1],
     password: decrypt(req.session.encryptedPassword),
@@ -120,7 +125,7 @@ const createActivity = async (req, res) => {
     [ActivityPointer.properties.scheduledStart]: utcStartDate,
     [ActivityPointer.properties.scheduledEnd]: utcEndDate,
     [ActivityPointer.properties.priorityCode]: parseInt(prioritycode) || 1,
-    "ownerid@odata.bind": `/${SystemUser.type}(${userId})`,
+    "ownerid@odata.bind": `/${SystemUser.type}(${ownerid || userId})`,
     [ActivityPointer.properties.activityTypeCode]: "task",
   };
 
@@ -135,15 +140,19 @@ const createActivity = async (req, res) => {
   };
 
   const type = regardingtype || "account";
-  if (regardingobjectid && entityMap[type]) {
-    activityData[
-      `regardingobjectid_${type}@odata.bind`
-    ] = `/${entityMap[type]}(${regardingobjectid})`;
+  if (regardingobjectid && entityMap[type] && type !== "systemuser") {
+    activityData[`regardingobjectid_${type}@odata.bind`] =
+      `/${entityMap[type]}(${regardingobjectid})`;
   }
 
   if (customworkflowid) {
     activityData.customworkflowid = customworkflowid;
   }
+
+  // ─── strip empty @odata.bind keys ───────────────────────────────
+  Object.keys(activityData).forEach((k) => {
+    if (/@odata\.bind$/.test(k) && !activityData[k]) delete activityData[k];
+  });
 
   logger.info(
     `Creating task for user: ${
@@ -218,38 +227,6 @@ const updateTask = async (req, res) => {
     password: decrypt(req.session.encryptedPassword),
   };
 
-  // Convert Persian numerals to Latin for dates
-  // const normalizedStart = scheduledstart ? convertPersianDigitsToEnglish(scheduledstart) : null;
-  // const normalizedEnd = scheduledend ? convertPersianDigitsToEnglish(scheduledend) : null;
-  // logger.info(`Normalized dates: start=${normalizedStart}, end=${normalizedEnd}`);
-
-  // // Validate date format
-  // const dateRegex = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
-  // if ((normalizedStart && !dateRegex.test(normalizedStart)) || (normalizedEnd && !dateRegex.test(normalizedEnd))) {
-  //     logger.error(`Invalid date format: scheduledstart=${normalizedStart}, scheduledend=${normalizedEnd}`);
-  //     return res.status(400).json({ error: "فرمت تاریخ ورودی نامعتبر است (انتظار: YYYY/MM/DD HH:mm:ss با ارقام لاتین)" });
-  // }
-
-  // Convert Gregorian dates to UTC
-  // const utcStartDate = normalizedStart ? DateTimeService.toUTC(normalizedStart, 'YYYY/MM/DD HH:mm:ss') : null;
-  // const utcEndDate = normalizedEnd ? DateTimeService.toUTC(normalizedEnd, 'YYYY/MM/DD HH:mm:ss') : null;
-
-  // // Check for null dates
-  // if (scheduledstart && !utcStartDate) {
-  //     logger.error(`Failed to parse scheduledstart: ${normalizedStart}`);
-  //     return res.status(400).json({ error: "نمی‌توان تاریخ شروع را解析 کرد. لطفاً تاریخ معتبر وارد کنید" });
-  // }
-  // if (scheduledend && !utcEndDate) {
-  //     logger.error(`Failed to parse scheduledend: ${normalizedEnd}`);
-  //     return res.status(400).json({ error: "نمی‌توان تاریخ پایان را解析 کرد. لطفاً تاریخ معتبر وارد کنید" });
-  // }
-
-  // // Validate CRM dates
-  // if ((utcStartDate && !isValidCrmDate(utcStartDate.toISOString())) || (utcEndDate && !isValidCrmDate(utcEndDate.toISOString()))) {
-  //     logger.error(`Invalid CRM date: utcStartDate=${utcStartDate}, utcEndDate=${utcEndDate}`);
-  //     return res.status(400).json({ error: "تاریخ وارد شده معتبر نیست یا کمتر از حد مجاز (1753/01/01) است" });
-  // }
-
   const updateData = {
     subject,
     description,
@@ -266,14 +243,12 @@ const updateTask = async (req, res) => {
     opportunity: "opportunities",
     incident: "incidents",
     new_proformainvoice: "new_proformainvoices",
-    systemuser: "systemusers",
   };
 
   const type = regardingtype || "account";
-  if (regardingobjectid && entityMap[type]) {
-    updateData[
-      `regardingobjectid_${type}@odata.bind`
-    ] = `/${entityMap[type]}(${regardingobjectid})`;
+  if (regardingobjectid && entityMap[type] && type !== "systemuser") {
+    updateData[`regardingobjectid_${type}@odata.bind`] =
+      `/${entityMap[type]}(${regardingobjectid})`;
   }
 
   if (ownerid) {
@@ -282,6 +257,11 @@ const updateTask = async (req, res) => {
   if (typeof new_seen !== "undefined") {
     updateData.new_seen = !!new_seen;
   }
+
+  // ─── strip empty @odata.bind keys ───────────────────────────────
+  Object.keys(updateData).forEach((k) => {
+    if (/@odata\.bind$/.test(k) && !updateData[k]) delete updateData[k];
+  });
 
   logger.info(
     `Updating task for activityId: ${activityId}, user: ${

@@ -29,7 +29,9 @@ exports.search = async (req, res) => {
     };
 
     // Simple OData 'contains()' search on the display field
-    const filter = `contains(${meta.display}, '${q.replace(/'/g, "''")}')`;
+    // Encode non‑ASCII so the URL is valid
+    const safeQ = encodeURIComponent(q).replace(/'/g, "''");
+    const filter = `contains(${meta.display}, '${safeQ}')`;
     const query = {
       select: `${meta.id},${meta.display}`,
       filter,

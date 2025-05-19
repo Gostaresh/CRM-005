@@ -49,6 +49,13 @@ app.use(
   })
 );
 
+app.use(
+  cors({
+    origin: "http://192.168.1.22",
+    credentials: true,
+  })
+);
+
 console.log(env.vue);
 // Debug middleware to log session information (after session middleware)
 app.use((req, res, next) => {

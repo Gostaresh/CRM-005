@@ -24,24 +24,29 @@ This project provides integration with Dynamics 365 CRM, focusing on efficient d
 ## Features
 
 ### 1. Field Management
+
 - Comprehensive field definitions for common entities
 - Status and state code management
 - Support for custom fields
 - Field metadata documentation
 
 ### 2. Entity Support
+
 Currently supported entities:
+
 - Account
 - Contact
 - Department (Custom)
 - Activity Pointer
 
 ### 3. Localization
+
 - Bilingual support (English/Persian)
 - Localized field labels
 - Status and state translations
 
 ### 4. Documentation
+
 - Detailed field reference guide
 - Example queries
 - Usage notes and best practices
@@ -50,8 +55,9 @@ Currently supported entities:
 ## Quick Start
 
 ### Using Field Definitions
+
 ```javascript
-import { AccountFields, StatusCodes, getStatusLabel } from '../core/resources';
+import { AccountFields, StatusCodes, getStatusLabel } from "../core/resources";
 
 // Get field name
 const accountNameField = AccountFields.NAME;
@@ -60,10 +66,15 @@ const accountNameField = AccountFields.NAME;
 const activeStatus = StatusCodes[EntityNames.ACCOUNT].ACTIVE;
 
 // Get localized label
-const statusLabel = getStatusLabel(EntityNames.ACCOUNT, 1, LanguageCodes.PERSIAN);
+const statusLabel = getStatusLabel(
+  EntityNames.ACCOUNT,
+  1,
+  LanguageCodes.PERSIAN
+);
 ```
 
 ### Common Queries
+
 ```http
 # Get account status
 GET [Organization URL]/api/data/v9.1/accounts?$select=name,statuscode,statecode
@@ -72,13 +83,19 @@ GET [Organization URL]/api/data/v9.1/accounts?$select=name,statuscode,statecode
 GET [Organization URL]/api/data/v9.1/GlobalOptionSetDefinitions?$select=Name,MetadataId,Options
 ```
 
+```
+/home/administrator/CRM-005/deploy.sh
+```
+
 ## Documentation
 
 ### Field Reference
+
 - See `src/core/examples/README.md` for detailed field reference
 - Includes all available fields, their types, and usage notes
 
 ### Metadata Queries
+
 - See `docs/dynamics365_metadata_queries.md` for:
   - Example queries
   - Field definitions
@@ -88,12 +105,14 @@ GET [Organization URL]/api/data/v9.1/GlobalOptionSetDefinitions?$select=Name,Met
 ## Development
 
 ### Adding New Entities
+
 1. Create metadata file in `src/core/examples/`
 2. Add field definitions to `resources.js`
 3. Update documentation
 4. Add status codes if applicable
 
 ### Adding New Fields
+
 1. Update relevant entity section in `resources.js`
 2. Add field metadata to example files
 3. Update documentation
@@ -102,11 +121,13 @@ GET [Organization URL]/api/data/v9.1/GlobalOptionSetDefinitions?$select=Name,Met
 ## Best Practices
 
 1. **Field Access**
+
    - Always use field constants from `resources.js`
    - Never hardcode field names
    - Use helper functions for status/state labels
 
 2. **Localization**
+
    - Always use language codes from `resources.js`
    - Support both English and Persian
    - Use helper functions for translations

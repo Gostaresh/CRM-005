@@ -5,6 +5,7 @@ const {
   entityController,
   userController,
   searchController,
+  noteController,
 } = require("../../controllers/crm");
 const authMiddleware = require("../../middleware/authMiddleware");
 
@@ -27,6 +28,12 @@ router.patch(
   activityController.updateTaskDates
 );
 router.patch("/activities/:activityId", activityController.updateTask);
+
+// Notes routes
+router.get("/activities/:activityId/notes", noteController.fetchNotes);
+router.post("/activities/:activityId/notes", noteController.createNote);
+// Download note attachment
+router.get("/notes/:noteId/download", noteController.downloadNote);
 
 // Account routes
 router.get("/accounts", accountController.fetchPaginatedAccounts);

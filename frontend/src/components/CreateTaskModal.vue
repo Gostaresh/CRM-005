@@ -38,10 +38,40 @@
       />
     </div>
 
+    <!-- Owner / مسئول --------------------------------------------------- -->
+    <div class="mb-3">
+      <n-auto-complete
+        v-model:value="form.ownerLabel"
+        :options="ownerOptions"
+        :loading="searchingOwner"
+        placeholder="جستجوی مسئول (کاربر)"
+        @update:value="searchOwner"
+        @select="onOwnerSelect"
+      />
+    </div>
+
+    <!-- Seen ------------------------------------------------------------ -->
+    <div class="mb-3">
+      <n-select v-model:value="form.newSeen" :options="seenOptions" placeholder="دیده شده؟" />
+    </div>
+
     <!-- Priority ------------------------------------------------------------ -->
     <div class="mb-3">
       <n-select v-model:value="form.priority" :options="priorityOptions" placeholder="اولویت" />
     </div>
+
+    <!-- First note ------------------------------------------------------- -->
+    <div class="mb-3">
+      <n-input v-model:value="note.subject" placeholder="عنوان یادداشت (اختیاری)" class="mb-2" />
+      <n-input
+        v-model:value="note.text"
+        type="textarea"
+        rows="3"
+        placeholder="متن یادداشت (اختیاری)"
+      />
+      <input type="file" class="form-control form-control-sm mt-2" @change="onFileChange" />
+    </div>
+
     <hr />
     <div class="mb-3">
       <DatePicker
@@ -49,6 +79,7 @@
         type="datetime"
         format="jYYYY/jMM/jDD HH:mm"
         display-format="jYYYY/jMM/jDD HH:mm"
+        :minute-step="30"
         placeholder="تاریخ و ساعت شروع (اختیاری)"
       />
     </div>
@@ -59,6 +90,7 @@
         type="datetime"
         format="jYYYY/jMM/jDD HH:mm"
         display-format="jYYYY/jMM/jDD HH:mm"
+        :minute-step="30"
         placeholder="تاریخ و ساعت سررسید *"
       />
     </div>
@@ -78,7 +110,7 @@
 import { nextTick } from 'vue'
 import { NModal, NInput, NButton, NSpace, NSelect, NAutoComplete } from 'naive-ui'
 import { getRegardingTypeOptions } from '@/composables/useEntityMap'
-import { searchEntity, createTask } from '@/api/crm'
+import { searchEntity, createTask, searchSystemUsers, addTaskNote } from '@/api/crm'
 /* ---------------------------------------------------------------- *\
   Create‑task modal
   – Uses Naive‑UI & vue3-persian-datetime-picker
@@ -119,11 +151,19 @@ const form = reactive({
   regardingType: 'account',
   regardingObjectId: '',
   regardingObjectLabel: '',
+  ownerId: '',
+  ownerLabel: '',
+  newSeen: 0,
 })
 const priorityOptions = [
   { label: 'کم', value: 0 },
   { label: 'متوسط', value: 1 },
   { label: 'زیاد', value: 2 },
+]
+
+const seenOptions = [
+  { label: 'Yes', value: 1 },
+  { label: 'No', value: 0 },
 ]
 
 const regardingTypeOptions = getRegardingTypeOptions()
@@ -157,6 +197,29 @@ function onRegardingSelect(value: string) {
   form.regardingObjectId = value // GUID
   const match = regardingOptions.value.find((o) => o.value === value)
   form.regardingObjectLabel = match ? match.label : ''
+}
+
+/* Owner search */
+const ownerOptions = ref([])
+const searchingOwner = ref(false)
+
+async function searchOwner(q: string) {
+  if (!q || q.length < 2) return
+  searchingOwner.value = true
+  ownerOptions.value = await searchSystemUsers(q)
+  searchingOwner.value = false
+}
+function onOwnerSelect(value: string, opt?: { label: string; value: string }) {
+  if (!opt) {
+    opt = ownerOptions.value.find((o) => o.value === value)
+  }
+  if (opt) {
+    form.ownerId = opt.value
+    form.ownerLabel = opt.label
+  } else {
+    form.ownerId = value
+    form.ownerLabel = ''
+  }
 }
 
 watch(
@@ -204,6 +267,24 @@ function close() {
 \* ---------------------------------------------------------------- */
 const loading = ref(false)
 
+const note = reactive<{ subject: string; text: string; file: File | null; base64: string }>({
+  subject: '',
+  text: '',
+  file: null,
+  base64: '',
+})
+
+function onFileChange(e: Event) {
+  const target = e.target as HTMLInputElement
+  if (!target.files?.length) return
+  note.file = target.files[0]
+  const reader = new FileReader()
+  reader.onload = () => {
+    note.base64 = String(reader.result).split(',').pop() || ''
+  }
+  reader.readAsDataURL(note.file)
+}
+
 async function save() {
   await nextTick() // ensure v-model updates are flushed
 
@@ -221,18 +302,44 @@ async function save() {
   loading.value = true
 
   try {
-    const payload = {
+    const payload: any = {
       subject: form.subject,
       description: form.description,
-      scheduledstart: form.startIso || undefined, // optional
-      scheduledend: form.endIso, // required by backend
+      scheduledstart: form.startIso || undefined,
+      scheduledend: form.endIso, // required
       prioritycode: form.priority,
-      regardingobjectid: form.regardingObjectId || undefined,
-      regardingtype: form.regardingType || undefined,
+      new_seen: !!Number(form.newSeen),
+    }
+
+    // only add regarding if both pieces are present
+    if (form.regardingObjectId) {
+      payload.regardingobjectid = form.regardingObjectId
+      payload.regardingtype = form.regardingType
+    }
+
+    // only add owner if user picked one
+    if (form.ownerId) {
+      payload.ownerid = form.ownerId
     }
 
     const { ok, data } = await createTask(payload)
     if (!ok) throw new Error('HTTP error creating task')
+
+    if (ok) {
+      // If user entered a note, create it
+      if (note.text.trim() || note.base64) {
+        const notePayload: Record<string, unknown> = {
+          subject: note.subject,
+          notetext: note.text,
+        }
+        if (note.base64) {
+          notePayload.filename = note.file?.name
+          notePayload.mimetype = note.file?.type
+          notePayload.documentbody = note.base64
+        }
+        await addTaskNote(data.activityId, notePayload)
+      }
+    }
 
     message.success('فعالیت با موفقیت ایجاد شد')
     emit('created', data)
