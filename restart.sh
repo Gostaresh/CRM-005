@@ -12,10 +12,10 @@ echo "==> Switching to $REPO_DIR"
 cd "$REPO_DIR"
 
 echo "==> Fetching remote refs…"
-git fetch --prune --tags origin
+git fetch origin
 
 echo "==> Rebasing local branch on latest origin/main…"
-git pull --rebase --stat origin main   # change ‘main’ if your branch differs
+git pull origin main   # change ‘main’ if your branch differs
 
 echo "==> Restarting $PM2_APP via PM2 (with refreshed env)…"
 pm2 restart "$PM2_APP" --update-env
