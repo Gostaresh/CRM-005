@@ -18,14 +18,19 @@
         v-model:visible="isEditModalVisible"
         @update="onTaskUpdated"
       />
-      <CreateTaskModal v-model:visible="isCreateVisible" @created="onTaskCreated" />
+      <CreateTaskModal
+        v-model:visible="isCreateVisible"
+        :default-start="createStartIso"
+        :default-end="createEndIso"
+        @created="onTaskCreated"
+      />
     </div>
   </n-message-provider>
 </template>
 
 <script setup>
 import { NMessageProvider } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import FullCalendar from '@fullcalendar/vue3'
@@ -49,16 +54,22 @@ const isEditModalVisible = ref(false)
 const selectedTask = ref(null)
 const calendarRef = ref(null)
 const isCreateVisible = ref(false)
+const createStartIso = ref(null)
+const createEndIso = ref(null)
 
-const onTaskUpdated = (updatedTask) => {
-  selectedTask.value = null
-  isEditModalVisible.value = false
-  calendarRef.value?.getApi().refetchEvents()
-  alert('فعالیت با موفقیت به‌روزرسانی شد.')
-}
+watch(isCreateVisible, (v) => {
+  if (!v) {
+    createStartIso.value = null
+    createEndIso.value = null
+  }
+})
 
-const onTaskCreated = () => {
-  calendarRef.value?.getApi().refetchEvents()
+function handleCalendarSelect(selectionInfo) {
+  createStartIso.value = selectionInfo.startStr
+  createEndIso.value = selectionInfo.endStr
+  isCreateVisible.value = true
+  // FullCalendar keeps a selection highlight; clear it
+  selectionInfo.view.calendar.unselect()
 }
 
 /**
@@ -95,6 +106,10 @@ const calendarOptions = ref({
   eventStartEditable: true,
   eventDurationEditable: true,
   direction: 'rtl',
+  selectable: true,
+  selectMirror: true,
+  unselectAuto: true,
+  select: handleCalendarSelect,
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',

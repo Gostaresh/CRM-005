@@ -119,7 +119,7 @@ import { searchEntity, createTask, searchSystemUsers, addTaskNote } from '@/api/
       •   created         → the task object returned by API
 \* ---------------------------------------------------------------- */
 
-import { reactive, ref, watch, computed } from 'vue'
+import { reactive, ref, watch, computed, onMounted } from 'vue'
 import moment from 'moment-jalaali'
 import { useMessage } from 'naive-ui'
 import Vue3PersianDatetimePicker from 'vue3-persian-datetime-picker'
@@ -131,6 +131,10 @@ const DatePicker = Vue3PersianDatetimePicker
 \* ---------------------------------------------------------------- */
 const props = defineProps({
   visible: { type: Boolean, default: false },
+  /** ISO string coming from the calendar for the cell the user started dragging on */
+  defaultStart: { type: String, default: '' },
+  /** ISO string coming from the calendar for the cell the user finished dragging on */
+  defaultEnd: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:visible', 'created'])
@@ -155,6 +159,59 @@ const form = reactive({
   ownerLabel: '',
   newSeen: 0,
 })
+
+/**
+ * If the parent passes defaultStart / defaultEnd, initialise the form.
+ * Runs when the component is mounted and every time the modal is (re‑)opened.
+ */
+function initDefaults() {
+  // Reset any previous values
+  Object.assign(form, {
+    startMoment: null,
+    endMoment: null,
+    startIso: '',
+    endIso: '',
+  })
+
+  // Helper – turn anything (ISO string | Date | moment) into a valid moment‑jalaali
+  const toMoment = (val?: string | Date | moment.Moment | null) => {
+    if (!val) return null
+    if (moment.isMoment(val)) return val.clone()
+    if (val instanceof Date) return moment(val)
+    return moment(String(val))
+  }
+
+  const s = toMoment(props.defaultStart)
+  if (s?.isValid()) {
+    form.startMoment = s
+    form.startIso = s.clone().utc().toISOString()
+  }
+
+  const e = toMoment(props.defaultEnd)
+  if (e?.isValid()) {
+    form.endMoment = e
+    form.endIso = e.clone().utc().toISOString()
+  }
+
+  // wait a tick so DatePicker registers the new model values
+  nextTick()
+}
+
+onMounted(initDefaults)
+
+watch(
+  () => props.visible,
+  (v) => {
+    if (v) initDefaults()
+  },
+)
+
+watch(
+  () => [props.defaultStart, props.defaultEnd],
+  () => {
+    if (modelVisible.value) initDefaults()
+  },
+)
 const priorityOptions = [
   { label: 'کم', value: 0 },
   { label: 'متوسط', value: 1 },
@@ -356,10 +413,12 @@ async function save() {
   Minimal Jalali→ISO helper
   (can later be replaced with composable)
 \* ---------------------------------------------------------------- */
-function jalaliToIso(value) {
+function jalaliToIso(value: any) {
   if (!value) return ''
   if (moment.isMoment(value)) return value.clone().utc().toISOString()
+  if (value instanceof Date) return moment(value).utc().toISOString()
 
+  // Accept strings coming from <DatePicker>
   const m = moment(value, ['jYYYY/jMM/jDD HH:mm', 'jYYYY/jMM/jDD'], true)
   return m.isValid() ? m.utc().toISOString() : ''
 }
