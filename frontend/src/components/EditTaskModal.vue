@@ -96,11 +96,13 @@
             <div class="mb-3">
               <label for="task-start" class="form-label">Start Date</label>
               <date-picker
+                auto-submit
                 type="datetime"
                 v-model="form.startDisplay"
                 format="jYYYY/jMM/jDD HH:mm"
                 display-format="jYYYY/jMM/jDD HH:mm"
-                :minute-step="30"
+                :jump-minute="30"
+                :round-minute="true"
                 @change="updateStartTime"
                 @update:modelValue="updateStartTime"
               />
@@ -109,11 +111,14 @@
             <div class="mb-3">
               <label for="task-end" class="form-label">End Date</label>
               <date-picker
+                auto-submit
                 type="datetime"
                 v-model="form.endDisplay"
                 format="jYYYY/jMM/jDD HH:mm"
                 display-format="jYYYY/jMM/jDD HH:mm"
-                :minute-step="30"
+                :min="form.startDisplay"
+                :jump-minute="30"
+                :round-minute="true"
                 @change="updateEndTime"
                 @update:modelValue="updateEndTime"
               />
@@ -169,6 +174,9 @@ import NoteList from './NoteList.vue'
 moment.tz = momentTz.tz
 moment.loadPersian({ usePersianDigits: false })
 
+// Maximum upload size (≈ 330 KB)
+const MAX_FILE_SIZE = 330 * 1024
+
 export default {
   name: 'EditTaskModal',
   components: { DatePicker, NoteList },
@@ -208,10 +216,18 @@ export default {
     function onNewFile(e) {
       const f = e.target.files?.[0]
       if (!f) return
+      if (f && f.size > MAX_FILE_SIZE) {
+        alert('حداکثر اندازه فایل ۳۳۰ کیلوبایت است')
+        newNote.file = null
+        newNote.base64 = ''
+        e.target.value = ''
+        return
+      }
       newNote.file = f
       const r = new FileReader()
       r.onload = () => {
         newNote.base64 = String(r.result).split(',').pop() || ''
+        e.target.value = ''
       }
       r.readAsDataURL(f)
     }

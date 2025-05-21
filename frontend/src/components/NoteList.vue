@@ -1,36 +1,57 @@
 <template>
   <div class="note-list">
-    <ul class="list-group mb-3" v-if="notes && notes.length">
-      <li v-for="n in notes" :key="n.annotationid" class="list-group-item d-flex flex-column gap-1">
-        <div class="fw-bold">{{ n.subject || '(بدون عنوان)' }}</div>
-        <div class="small text-body-secondary" style="white-space: pre-line">
-          {{ n.notetext }}
-        </div>
+    <table v-if="notes && notes.length" class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th>عنوان</th>
+          <th>توضیحات</th>
+          <th>فایل</th>
+          <th>ایجاد کننده</th>
+          <th>تاریخ ایجاد</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="n in notes" :key="n.annotationid">
+          <td class="fw-bold">{{ n.subject || '(بدون عنوان)' }}</td>
+          <td style="white-space: pre-line">{{ n.notetext }}</td>
+          <td>
+            <a
+              v-if="n.filename"
+              :href="`/api/crm/notes/${n.annotationid}/download`"
+              target="_blank"
+              class="text-decoration-none"
+            >
+              📎 {{ n.filename }}
+            </a>
+          </td>
+          <td>{{ n.createdby || '-' }}</td>
+          <td>{{ formatDate(n.createdon) }}</td>
+        </tr>
+      </tbody>
+    </table>
 
-        <a
-          v-if="n.filename"
-          :href="`/api/crm/notes/${n.annotationid}/download`"
-          target="_blank"
-          class="badge text-bg-light align-self-start mt-1"
-        >
-          📎 {{ n.filename }}
-        </a>
-      </li>
-    </ul>
-    <p v-else class="text-muted small">یادداشتی وجود ندارد.</p>
+    <p v-else class="text-muted small mb-0">یادداشتی وجود ندارد.</p>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   notes: {
     annotationid: string
     subject: string | null
     notetext: string | null
     filename: string | null
     mimetype: string | null
+    createdby?: string | null
+    createdon?: string | null
   }[]
 }>()
+
+/** Convert ISO date string to readable locale date‑time (fa-IR). */
+function formatDate(value?: string | null) {
+  if (!value) return '-'
+  return new Date(value).toLocaleString('fa-IR')
+}
 </script>
 
 <style scoped>

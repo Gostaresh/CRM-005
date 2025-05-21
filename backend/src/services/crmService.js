@@ -8,6 +8,32 @@ const DateTimeService = require("../core/services/DateTimeService");
 class CrmService {
   constructor() {
     this.baseUrl = env.crmUrl;
+    // cache entity colours (logicalName → #RRGGBB)
+    this._colourCache = new Map();
+  }
+
+  /**
+   * Return Dynamics “Colour” for a given entity logical name.
+   * Look‑up is cached for the lifetime of the Node process.
+   */
+  async _getEntityColour(logicalName, credentials) {
+    if (this._colourCache.has(logicalName)) {
+      return this._colourCache.get(logicalName);
+    }
+
+    try {
+      const meta = await this.fetchEntity(
+        `EntityDefinitions(LogicalName='${logicalName}')`,
+        { select: "EntityColor" },
+        credentials
+      );
+      const colour = meta.EntityColor || "#6c757d";
+      this._colourCache.set(logicalName, colour);
+      return colour;
+    } catch (_) {
+      // fallback grey if the metadata call fails
+      return "#6c757d";
+    }
   }
 
   async fetchEntity(entity, query, credentials) {
@@ -65,7 +91,8 @@ class CrmService {
     customFilter = null
   ) {
     try {
-      const select = Object.values(ActivityPointer.properties).join(",");
+      const select =
+        Object.values(ActivityPointer.properties).join(",") + ",new_seen"; // custom two‑options field on task
       let filter = "";
 
       if (customFilter) {
@@ -87,55 +114,30 @@ class CrmService {
             },
           };
 
-      const data = await this.fetchEntity(
-        ActivityPointer.type,
-        query,
-        credentials
-      );
-      // logger.info(
-      //   `Raw fetchActivities response: ${JSON.stringify(data, null, 2)}`
-      // );
+      // use the *task* entity set so custom task fields are available
+      const data = await this.fetchEntity("tasks", query, credentials);
 
       if (!data || !data.value) {
         logger.error("Invalid response format from CRM");
         throw new Error("Invalid response format from CRM");
       }
 
-      // For a list of activities
-      // for (const activity of data.value) {
-      //   // Convert dates to Jalali format using DateTimeService
-      //   if (activity.scheduledstart) {
-      //     activity.scheduledstart_jalali = DateTimeService.toJalali(activity.scheduledstart);
-      //   }
-      //   if (activity.scheduledend) {
-      //     activity.scheduledend_jalali = DateTimeService.toJalali(activity.scheduledend);
-      //   }
-      //   if (activity.actualstart) {
-      //     activity.actualstart_jalali = DateTimeService.toJalali(activity.actualstart);
-      //   }
-      //   if (activity.actualend) {
-      //     activity.actualend_jalali = DateTimeService.toJalali(activity.actualend);
-      //   }
-      //   if (activity.createdon) {
-      //     activity.createdon_jalali = DateTimeService.toJalali(activity.createdon);
-      //   }
-      //   if (activity.modifiedon) {
-      //     activity.modifiedon_jalali = DateTimeService.toJalali(activity.modifiedon);
-      //   }
+      const withExtras = await Promise.all(
+        (data.value || []).map(async (item) => {
+          // boolean flag (undefined → false)
+          item.seen = !!item.new_seen;
 
-      //   if (activity.ownerid) {
-      //     // Map the owner data using the formatted value
-      //     activity.owner = {
-      //       id: activity._ownerid_value,
-      //       name: activity['ownerid@OData.Community.Display.V1.FormattedValue'] || '-'
-      //     };
-      //     // Remove the raw ownerid data
-      //     delete activity.ownerid;
-      //   }
-      // }
+          // colour based on activitytypecode (task, phonecall …)
+          item.colour = await this._getEntityColour(
+            item.activitytypecode,
+            credentials
+          );
+          return item;
+        })
+      );
 
       return {
-        value: data.value || [],
+        value: withExtras,
         nextLink: data["@odata.nextLink"] || null,
       };
     } catch (error) {
@@ -453,6 +455,7 @@ class CrmService {
       select: "annotationid,subject,notetext,filename,mimetype,createdon",
       filter: `_objectid_value eq '${taskId}'`,
       orderby: "createdon asc",
+      expand: "createdby($select=fullname)",
     };
     const data = await this.fetchEntity("annotations", query, credentials);
     return data.value || [];

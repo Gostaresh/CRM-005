@@ -8,6 +8,7 @@ const {
   noteController,
 } = require("../../controllers/crm");
 const authMiddleware = require("../../middleware/authMiddleware");
+const upload = require("../../middleware/upload");
 
 const router = express.Router();
 
@@ -31,7 +32,11 @@ router.patch("/activities/:activityId", activityController.updateTask);
 
 // Notes routes
 router.get("/activities/:activityId/notes", noteController.fetchNotes);
-router.post("/activities/:activityId/notes", noteController.createNote);
+router.post(
+  "/activities/:activityId/notes",
+  upload.single("file"), // accept optional attachment
+  noteController.createNote
+);
 // Download note attachment
 router.get("/notes/:noteId/download", noteController.downloadNote);
 

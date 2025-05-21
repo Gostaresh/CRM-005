@@ -75,22 +75,27 @@
     <hr />
     <div class="mb-3">
       <DatePicker
+        auto-submit
         v-model="form.startMoment"
         type="datetime"
         format="jYYYY/jMM/jDD HH:mm"
         display-format="jYYYY/jMM/jDD HH:mm"
-        :minute-step="30"
+        :jump-minute="30"
+        :round-minute="true"
         placeholder="تاریخ و ساعت شروع (اختیاری)"
       />
     </div>
 
     <div class="mb-3">
       <DatePicker
+        auto-submit
         v-model="form.endMoment"
         type="datetime"
         format="jYYYY/jMM/jDD HH:mm"
         display-format="jYYYY/jMM/jDD HH:mm"
-        :minute-step="30"
+        :min="form.startMoment"
+        :jump-minute="30"
+        :round-minute="true"
         placeholder="تاریخ و ساعت سررسید *"
       />
     </div>
@@ -123,6 +128,9 @@ import { reactive, ref, watch, computed, onMounted } from 'vue'
 import moment from 'moment-jalaali'
 import { useMessage } from 'naive-ui'
 import Vue3PersianDatetimePicker from 'vue3-persian-datetime-picker'
+
+// Maximum upload size (≈ 330 KB)
+const MAX_FILE_SIZE = 330 * 1024
 
 const DatePicker = Vue3PersianDatetimePicker
 
@@ -165,35 +173,33 @@ const form = reactive({
  * Runs when the component is mounted and every time the modal is (re‑)opened.
  */
 function initDefaults() {
-  // Reset any previous values
+  // Reset previous values
   Object.assign(form, {
-    startMoment: null,
-    endMoment: null,
+    startMoment: '',
+    endMoment: '',
     startIso: '',
     endIso: '',
   })
 
-  // Helper – turn anything (ISO string | Date | moment) into a valid moment‑jalaali
-  const toMoment = (val?: string | Date | moment.Moment | null) => {
-    if (!val) return null
-    if (moment.isMoment(val)) return val.clone()
-    if (val instanceof Date) return moment(val)
-    return moment(String(val))
+  // Helper → ISO ➜ local‑jalali string
+  const isoToJalali = (iso?: string) => {
+    if (!iso) return ''
+    const m = moment(iso).utc().local()
+    return m.isValid() ? m.format('jYYYY/jMM/jDD HH:mm') : ''
   }
 
-  const s = toMoment(props.defaultStart)
-  if (s?.isValid()) {
-    form.startMoment = s
-    form.startIso = s.clone().utc().toISOString()
+  // Apply incoming defaults
+  if (props.defaultStart) {
+    form.startMoment = isoToJalali(props.defaultStart)
+    form.startIso = moment(props.defaultStart).utc().toISOString()
   }
 
-  const e = toMoment(props.defaultEnd)
-  if (e?.isValid()) {
-    form.endMoment = e
-    form.endIso = e.clone().utc().toISOString()
+  if (props.defaultEnd) {
+    form.endMoment = isoToJalali(props.defaultEnd)
+    form.endIso = moment(props.defaultEnd).utc().toISOString()
   }
 
-  // wait a tick so DatePicker registers the new model values
+  // Wait a tick so DatePicker picks up the new strings
   nextTick()
 }
 
@@ -335,6 +341,13 @@ function onFileChange(e: Event) {
   const target = e.target as HTMLInputElement
   if (!target.files?.length) return
   note.file = target.files[0]
+  if (note.file.size > MAX_FILE_SIZE) {
+    message.error('حداکثر اندازه فایل ۳۳۰ کیلوبایت است')
+    note.file = null
+    note.base64 = ''
+    target.value = ''
+    return
+  }
   const reader = new FileReader()
   reader.onload = () => {
     note.base64 = String(reader.result).split(',').pop() || ''

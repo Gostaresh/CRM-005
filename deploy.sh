@@ -16,8 +16,13 @@ cd "$ROOT_DIR"
 install_deps () {
   local dir="$1"
   echo "📦  Installing deps in ${dir##*/}…"
+
+  # Prefer reproducible installs; gracefully fall back if lock‑file is out of sync
   if [[ -f "$dir/package-lock.json" ]]; then
-    npm ci --omit=optional --prefix "$dir"
+    if ! npm ci --omit=optional --prefix "$dir"; then
+      echo "⚠️  npm ci failed (lock‑file out of sync). Falling back to npm install…"
+      npm install --omit=optional --prefix "$dir"
+    fi
   else
     npm install --omit=optional --prefix "$dir"
   fi

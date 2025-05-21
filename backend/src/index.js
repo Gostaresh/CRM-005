@@ -12,11 +12,18 @@ const DynamicsService = require("./core/services/DynamicsService");
 const expressLayouts = require("express-ejs-layouts");
 
 const app = express();
+const BODY_LIMIT = "20mb";
+const RAW_BODY_LIMIT = "20mb";
 
 // Essential middleware that must come first
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+app.use(express.json({ limit: BODY_LIMIT }));
+app.use(express.urlencoded({ limit: BODY_LIMIT, extended: true }));
+app.use(
+  express.raw({
+    type: () => true, // accept all content-types
+    limit: RAW_BODY_LIMIT,
+  })
+);
 app.set("trust proxy", 1); // respect X-Forwarded-Proto
 // Decide if session cookies must be "secure"
 const cookieSecure =

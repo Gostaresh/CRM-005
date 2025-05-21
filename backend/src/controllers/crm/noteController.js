@@ -24,7 +24,18 @@ exports.fetchNotes = async (req, res) => {
     const { activityId } = req.params;
     const credentials = getCredentials(req);
 
-    const notes = await CrmService.fetchNotes(activityId, credentials);
+    const rawNotes = await CrmService.fetchNotes(activityId, credentials);
+
+    const notes = rawNotes.map((n) => ({
+      annotationid: n.annotationid,
+      subject: n.subject ?? null,
+      notetext: n.notetext ?? null,
+      filename: n.filename ?? null,
+      mimetype: n.mimetype ?? null,
+      createdon: n.createdon,
+      createdby: n.createdby?.fullname ?? null,
+    }));
+
     res.json(notes);
   } catch (err) {
     logger.error(`fetchNotes error: ${err.message}`);
@@ -48,10 +59,22 @@ exports.createNote = async (req, res) => {
       mimetype,
       documentbody,
     } = req.body;
+
+    // If Multer supplied a file we build attachment fields from it
+    const file = req.file;
+    let filePayload = {};
+    if (file) {
+      filePayload = {
+        filename: file.originalname,
+        mimetype: file.mimetype,
+        documentbody: file.buffer.toString("base64"),
+      };
+    }
+
     const credentials = getCredentials(req);
 
     // Basic validation
-    if (!notetext && !documentbody) {
+    if (!notetext && !documentbody && !file) {
       return res
         .status(400)
         .json({ error: "Either notetext or attachment must be provided." });
@@ -59,7 +82,16 @@ exports.createNote = async (req, res) => {
 
     const note = await CrmService.createNote(
       activityId,
-      { subject, notetext, filename, mimetype, documentbody },
+      {
+        subject,
+        notetext,
+        // from body when sent as JSON (fallback)
+        filename,
+        mimetype,
+        documentbody,
+        // from multipart when sent as file
+        ...filePayload,
+      },
       credentials
     );
 
