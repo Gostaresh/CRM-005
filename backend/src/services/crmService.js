@@ -8,17 +8,17 @@ const DateTimeService = require("../core/services/DateTimeService");
 class CrmService {
   constructor() {
     this.baseUrl = env.crmUrl;
-    // cache entity colours (logicalName → #RRGGBB)
-    this._colourCache = new Map();
+    // cache entity colors (logicalName → #RRGGBB)
+    this._colorCache = new Map();
   }
 
   /**
-   * Return Dynamics “Colour” for a given entity logical name.
+   * Return Dynamics “Color” for a given entity logical name.
    * Look‑up is cached for the lifetime of the Node process.
    */
-  async _getEntityColour(logicalName, credentials) {
-    if (this._colourCache.has(logicalName)) {
-      return this._colourCache.get(logicalName);
+  async _getEntityColor(logicalName, credentials) {
+    if (this._colorCache.has(logicalName)) {
+      return this._colorCache.get(logicalName);
     }
 
     try {
@@ -27,9 +27,9 @@ class CrmService {
         { select: "EntityColor" },
         credentials
       );
-      const colour = meta.EntityColor || "#6c757d";
-      this._colourCache.set(logicalName, colour);
-      return colour;
+      const color = meta.EntityColor || "#6c757d";
+      this._colorCache.set(logicalName, EntityColor);
+      return color;
     } catch (_) {
       // fallback grey if the metadata call fails
       return "#6c757d";
@@ -127,8 +127,8 @@ class CrmService {
           // boolean flag (undefined → false)
           item.seen = !!item.new_seen;
 
-          // colour based on activitytypecode (task, phonecall …)
-          item.colour = await this._getEntityColour(
+          // color based on activitytypecode (task, phonecall …)
+          item.color = await this._getEntityColor(
             item.activitytypecode,
             credentials
           );
