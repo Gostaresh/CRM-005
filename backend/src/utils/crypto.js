@@ -3,7 +3,9 @@ const env = require("../config/env");
 const logger = require("./logger");
 
 const algorithm = "aes-256-ctr";
-let secretKey = env.sessionSecret || "your-32-byte-secret-key!!!!!!123";
+let secretKey =
+  env.sessionSecret ||
+  `ijf3fwETb5HLVm9LoNxau12KvkRqPiJtCGxwJHEsDFLXIVI4BA1WDH8S8ByooBj4`;
 
 if (Buffer.byteLength(secretKey, "utf8") !== 32) {
   logger.warn(`SESSION_SECRET is not 32 bytes long. Generating a new key.`);

@@ -17,6 +17,62 @@ npm run dev                   # nodemon + NTLM proxy on port 3000
 The Vue SPA (`frontend/`) expects the backend on **http://localhost:3000** in development.  
 CORS for the Vite dev server is enabled via `cors()` in `src/index.js`.
 
+## NPM Scripts (`backend/package.json`)
+
+| Script    | Command                                                                         | What it does                                                                                                         |
+| --------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **dev**   | `NODE_TLS_REJECT_UNAUTHORIZED=0 nodemon --openssl-legacy-provider src/index.js` | Starts the API in watch‑mode (hot reload) and ignores self‑signed HTTPS warnings—ideal for local Dynamics endpoints. |
+| **start** | `node src/index.js`                                                             | Launches the production server (used by PM2 on the VPS).                                                             |
+| **test**  | `jest`                                                                          | Runs the backend unit test suite.                                                                                    |
+
+## Key Dependencies
+
+| Package                           | Reason we need it                                                    |
+| --------------------------------- | -------------------------------------------------------------------- |
+| **express @ 5.x**                 | Core web‑server—v5 beta brings native Promises & async middleware.   |
+| **express‑session**               | Cookie‑backed session store for NTLM credentials.                    |
+| **axios‑ntlm**                    | Sends NTLM‑auth HTTP requests to Dynamics 365 Web API.               |
+| **ldapjs**                        | Verifies Windows credentials via LDAP bind before CRM lookup.        |
+| **cors**                          | Whitelists front‑end origins during local dev & production.          |
+| **ejs** + **express‑ejs‑layouts** | Lightweight server‑rendered views for login & error pages.           |
+| **multer**                        | Handles `multipart/form-data` uploads for note attachments.          |
+| **winston**                       | Structured logging with daily rotation via `error.log` / `info.log`. |
+| **jalali‑moment**                 | Converts Gregorian datetimes to Jalali for Persian UI consistency.   |
+
+## Environment & Configuration (`src/config/env.js`, `src/config/entityMap.json`)
+
+`env.js` centralises required environment variables, validates them at startup, and converts comma‑separated CORS origins into an array.  
+It exports:
+
+```js
+module.exports = {
+  crmUrl, // Dynamics 365 Web API base
+  domain, // Windows domain for NTLM
+  port, // Express listen port (default 3000)
+  vue, // Vite dev origin
+  vue_preview, // Production preview origin
+  nodeEnv, // "development" | "production"
+};
+```
+
+`entityMap.json` powers the generic search endpoint.  
+Each logical entity maps to its CRM set name plus id & display columns, e.g.:
+
+```json
+{
+  "account": { "set": "accounts", "display": "name", "id": "accountid" }
+}
+```
+
+Controllers and services import this map to build `$select` lists and fuzzy queries.
+
+## Utility Helpers (`src/utils/crypto.js`, `src/utils/logger.js`)
+
+| File          | Purpose                                                                                                                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **crypto.js** | AES‑256‑GCM helper providing `encrypt(text)` and `decrypt(cipher)`, keyed by `SESSION_SECRET`, so passwords in the session are never stored plain.                                             |
+| **logger.js** | Winston config shared app‑wide. Logs **INFO** to `info.log`, **ERROR** to `error.log`, and in development also streams to the console with timestamps and the current username when available. |
+
 ## Server Boot Sequence (`src/index.js`)
 
 `src/index.js` is the single entry‑point that wires the Express server together.  
@@ -254,5 +310,3 @@ Add new entities by inserting one line—no code changes required.
 ---
 
 ## License
-
-MIT © Gostaresh Co.
