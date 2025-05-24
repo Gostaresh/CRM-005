@@ -477,7 +477,4 @@ function jalaliToIso(value: any) {
 .mb-3 {
   margin-bottom: 1rem;
 }
-.create-task-modal {
-  /* width handled inline on n‑modal */
-}
 </style>
