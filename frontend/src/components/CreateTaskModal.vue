@@ -5,105 +5,115 @@
     :mask-closable="false"
     title="ایجاد فعالیت"
     class="create-task-modal"
-    style="width: 500px; max-width: 95vw"
+    style="width: 60%; max-width: 60%"
   >
-    <div class="mb-3">
-      <n-input v-model:value.trim="form.subject" placeholder="موضوع فعالیت *" />
+    <div class="modal-grid">
+      <!--  LEFT 50 %  – موضوع + توضیحات + عطف -->
+      <div class="form-left">
+        <!-- موضوع -->
+        <n-input v-model:value.trim="form.subject" placeholder="موضوع *" class="mb-3" />
+
+        <!-- توضیحات -->
+        <n-input
+          v-model:value="form.description"
+          type="textarea"
+          rows="3"
+          placeholder="توضیحات"
+          class="mb-3"
+        />
+
+        <!-- نوع عطف + عطف به (33 % / 66 %) -->
+        <div class="sub-grid-33-66 mb-3">
+          <n-select
+            v-model:value="form.regardingType"
+            :options="regardingTypeOptions"
+            placeholder="نوع عطف"
+          />
+          <n-auto-complete
+            v-model:value="form.regardingObjectLabel"
+            :options="regardingOptions"
+            :loading="searching"
+            :filter="false"
+            placeholder="عطف به"
+            @update:value="searchRegarding"
+            @select="onRegardingSelect"
+          />
+        </div>
+      </div>
+
+      <!--  RIGHT 50 %  – owner / dates / priority‑seen -->
+      <div class="form-right">
+        <!-- مالک فعلی (+ hidden previous owner) -->
+        <div class="sub-grid-50-50 mb-3">
+          <n-auto-complete
+            v-model:value="form.ownerLabel"
+            :options="ownerOptions"
+            :loading="searchingOwner"
+            placeholder="مالک فعلی"
+            @update:value="searchOwner"
+            @select="onOwnerSelect"
+          />
+          <!-- previous owner hidden in Create -->
+          <div></div>
+        </div>
+
+        <!-- تاریخ شروع / پایان -->
+        <div class="sub-grid-50-50 mb-3">
+          <DatePicker
+            auto-submit
+            v-model="form.startMoment"
+            type="datetime"
+            format="jYYYY/jMM/jDD HH:mm"
+            display-format="jYYYY/jMM/jDD HH:mm"
+            :jump-minute="30"
+            :round-minute="true"
+            placeholder="تاریخ شروع *"
+          />
+          <DatePicker
+            auto-submit
+            v-model="form.endMoment"
+            type="datetime"
+            format="jYYYY/jMM/jDD HH:mm"
+            display-format="jYYYY/jMM/jDD HH:mm"
+            :min="form.startMoment"
+            :jump-minute="30"
+            :round-minute="true"
+            placeholder="تاریخ پایان *"
+          />
+        </div>
+
+        <!-- اولویت / دیده شده -->
+        <div class="sub-grid-50-50 mb-3">
+          <n-select v-model:value="form.priority" :options="priorityOptions" placeholder="اولویت" />
+          <n-select v-model:value="form.newSeen" :options="seenOptions" placeholder="دیده شده؟" />
+        </div>
+      </div>
     </div>
 
-    <div class="mb-3">
-      <n-input v-model:value="form.description" type="textarea" rows="3" placeholder="توضیحات" />
-    </div>
-    <hr />
+    <!-- یادداشت‌ها label -->
+    <h6 class="fw-bold my-2">یادداشت‌ها</h6>
 
-    <!-- Regarding type ------------------------------------------------------- -->
-    <div class="mb-3">
-      <n-select
-        v-model:value="form.regardingType"
-        :options="regardingTypeOptions"
-        placeholder="نوع موجودیت مرتبط"
-      />
+    <!-- Note subject + file row -->
+    <div class="sub-grid-50-50 mb-2">
+      <n-input v-model:value="note.subject" placeholder="موضوع" />
+      <input type="file" class="form-control form-control-sm" @change="onFileChange" />
     </div>
 
-    <!-- Regarding object (auto‑complete search) ----------------------------- -->
-    <div class="mb-3">
-      <n-auto-complete
-        v-model:value="form.regardingObjectLabel"
-        :options="regardingOptions"
-        :loading="searching"
-        :filter="false"
-        placeholder="جستجوی موجودیت مرتبط"
-        @update:value="searchRegarding"
-        @select="onRegardingSelect"
-      />
-    </div>
-
-    <!-- Owner / مسئول --------------------------------------------------- -->
-    <div class="mb-3">
-      <n-auto-complete
-        v-model:value="form.ownerLabel"
-        :options="ownerOptions"
-        :loading="searchingOwner"
-        placeholder="جستجوی مسئول (کاربر)"
-        @update:value="searchOwner"
-        @select="onOwnerSelect"
-      />
-    </div>
-
-    <!-- Seen ------------------------------------------------------------ -->
-    <div class="mb-3">
-      <n-select v-model:value="form.newSeen" :options="seenOptions" placeholder="دیده شده؟" />
-    </div>
-
-    <!-- Priority ------------------------------------------------------------ -->
-    <div class="mb-3">
-      <n-select v-model:value="form.priority" :options="priorityOptions" placeholder="اولویت" />
-    </div>
-
-    <!-- First note ------------------------------------------------------- -->
-    <div class="mb-3">
-      <n-input v-model:value="note.subject" placeholder="عنوان یادداشت (اختیاری)" class="mb-2" />
-      <n-input
-        v-model:value="note.text"
-        type="textarea"
-        rows="3"
-        placeholder="متن یادداشت (اختیاری)"
-      />
-      <input type="file" class="form-control form-control-sm mt-2" @change="onFileChange" />
-    </div>
-
-    <hr />
-    <div class="mb-3">
-      <DatePicker
-        auto-submit
-        v-model="form.startMoment"
-        type="datetime"
-        format="jYYYY/jMM/jDD HH:mm"
-        display-format="jYYYY/jMM/jDD HH:mm"
-        :jump-minute="30"
-        :round-minute="true"
-        placeholder="تاریخ و ساعت شروع (اختیاری)"
-      />
-    </div>
-
-    <div class="mb-3">
-      <DatePicker
-        auto-submit
-        v-model="form.endMoment"
-        type="datetime"
-        format="jYYYY/jMM/jDD HH:mm"
-        display-format="jYYYY/jMM/jDD HH:mm"
-        :min="form.startMoment"
-        :jump-minute="30"
-        :round-minute="true"
-        placeholder="تاریخ و ساعت سررسید *"
-      />
-    </div>
+    <!-- Note textarea -->
+    <n-input v-model:value="note.text" type="textarea" rows="3" placeholder="توضیحات" />
 
     <template #footer>
       <n-space justify="end">
-        <n-button tertiary @click="close">انصراف</n-button>
-        <n-button type="primary" :disabled="loading" :loading="loading" @click="save">
+        <n-button strong secondary type="warning" @click="resetFormFields">ریست</n-button>
+        <n-button strong secondary @click="close">انصراف</n-button>
+        <n-button
+          strong
+          secondary
+          type="primary"
+          :disabled="loading || !isValid"
+          :loading="loading"
+          @click="save"
+        >
           ذخیره
         </n-button>
       </n-space>
@@ -311,7 +321,9 @@ watch(
   Derived state
 \* ---------------------------------------------------------------- */
 // form.endMoment is immediately reactive when the user picks a date
-const isValid = computed(() => form.subject.trim().length > 0 && !!form.endMoment)
+const isValid = computed(
+  () => form.subject.trim().length > 0 && !!form.startMoment && !!form.endMoment,
+)
 
 /* ---------------------------------------------------------------- *\
   Visibility helper (sync w/ parent)
@@ -420,6 +432,30 @@ async function save() {
   } finally {
     loading.value = false
   }
+}
+
+/* ---------------------------------------------------------------- *\
+  Reset button (Create modal only)
+\* ---------------------------------------------------------------- */
+function resetFormFields() {
+  Object.assign(form, {
+    subject: '',
+    description: '',
+    startMoment: '',
+    endMoment: '',
+    startIso: '',
+    endIso: '',
+    priority: 1,
+    regardingType: 'account',
+    regardingObjectId: '',
+    regardingObjectLabel: '',
+    ownerId: '',
+    ownerLabel: '',
+    newSeen: 0,
+  })
+  Object.assign(note, { subject: '', text: '', file: null, base64: '' })
+  regardingOptions.value = []
+  ownerOptions.value = []
 }
 
 /* ---------------------------------------------------------------- *\

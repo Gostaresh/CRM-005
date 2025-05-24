@@ -47,16 +47,26 @@ const props = defineProps<{
   }[]
 }>()
 
-/** Convert ISO date string to readable locale date‑time (fa-IR). */
+/** Convert ISO date string to readable Persian locale date–time. */
 function formatDate(value?: string | null) {
   if (!value) return '-'
   return new Date(value).toLocaleString('fa-IR')
 }
 </script>
-
 <style scoped>
 .note-list {
   max-height: 500px;
   overflow-y: auto;
+  direction: rtl;
+}
+
+.note-list table {
+  width: 100%;
+}
+
+/* Use Naive‑UI theme tokens for header row */
+.note-list thead tr {
+  background-color: var(--n-success-color-hover);
+  color: var(--n-success-color-suppl);
 }
 </style>

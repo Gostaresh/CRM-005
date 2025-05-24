@@ -1,0 +1,88 @@
+/* Responsive two‑column grid for CreateTaskModal & EditTaskModal */
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 50 % | 50 % */
+  gap: 1.25rem;
+  direction: rtl; /* ensure columns flow right‑to‑left naturally */
+}
+
+/* Right column sticky layout */
+.notes-pane {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+
+.notes-list {
+  flex: 1 1 auto;
+  overflow: auto;
+  max-height: 400px;
+}
+
+.notes-list table {
+  width: 100%;
+}
+
+.note-editor {
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding-top: 0.75rem;
+}
+
+/* Left / Right column wrappers */
+.form-left,
+.form-right {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Two common sub‑grids */
+.sub-grid-33-66 {
+  display: grid;
+  grid-template-columns: 0.33fr 0.67fr;
+  gap: 1rem;
+  direction: rtl;
+}
+
+.sub-grid-50-50 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  direction: rtl;
+}
+
+.sub-grid-33-66 > *,
+.sub-grid-50-50 > * {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* RTL headings inside modals */
+.modal-grid + h6,
+.n-modal .n-card-header,
+.n-modal .n-card-title {
+  text-align: right;
+}
+
+/* Mobile breakpoint – collapse to single column */
+@media (max-width: 767px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+  .notes-list {
+    max-height: 240px;
+  }
+}
+
+/* Apply Naive‑UI border radius consistently */
+.modal-grid input,
+.modal-grid textarea,
+.modal-grid .n-input,
+.modal-grid .n-select,
+.modal-grid .n-auto-complete,
+.modal-grid .n-date-picker,
+.modal-grid .n-input__input-el {
+  border-radius: var(--n-border-radius);
+}

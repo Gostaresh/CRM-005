@@ -1,172 +1,139 @@
 <template>
-  <div
-    class="modal fade"
-    id="edit-task-modal"
-    tabindex="-1"
-    aria-labelledby="editTaskModalLabel"
-    aria-hidden="true"
-    ref="modalEl"
+  <n-modal
+    v-model:show="modelVisible"
+    preset="card"
+    :mask-closable="false"
+    title="ویرایش فعالیت"
+    class="edit-task-modal"
+    style="width: 60%; max-width: 60%"
   >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form @submit.prevent="saveTask">
-          <div class="modal-header border-bottom-0 pb-0">
-            <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
-            <button type="button" class="btn-close" @click="hideModal" aria-label="Close"></button>
+    <div class="modal-body p-4">
+      <div class="modal-grid">
+        <!-- LEFT 50 % – موضوع + توضیحات + عطف -->
+        <div class="form-left">
+          <!-- موضوع -->
+          <n-input v-model:value.trim="form.subject" placeholder="موضوع *" class="mb-3" />
+
+          <!-- توضیحات -->
+          <n-input
+            v-model:value="form.description"
+            type="textarea"
+            rows="3"
+            placeholder="توضیحات"
+            class="mb-3"
+          />
+
+          <!-- نوع عطف + عطف به -->
+          <div class="sub-grid-33-66 mb-3">
+            <n-select
+              v-model:value="form.regardingType"
+              :options="regardingTypeOptions"
+              placeholder="نوع عطف"
+            />
+            <n-auto-complete
+              v-model:value="form.regardingObjectLabel"
+              :options="regardingOptions"
+              :loading="searching"
+              :filter="false"
+              placeholder="عطف به"
+              @update:value="searchRegarding"
+              @select="onRegardingSelect"
+            />
           </div>
-          <div class="modal-body p-4">
-            <div class="mb-3">
-              <label for="task-subject" class="form-label">Subject</label>
-              <input type="text" class="form-control" id="task-subject" v-model="form.subject" />
-            </div>
+        </div>
 
-            <div class="mb-3">
-              <label for="task-description" class="form-label">Description</label>
-              <textarea
-                class="form-control"
-                id="task-description"
-                rows="3"
-                v-model="form.description"
-              ></textarea>
-            </div>
-
-            <!-- Regarding type -->
-            <div class="mb-3">
-              <label class="form-label">نوع موجودیت مرتبط</label>
-              <n-select
-                v-model:value="form.regardingType"
-                :options="regardingTypeOptions"
-                placeholder="انتخاب نوع موجودیت"
-              />
-            </div>
-
-            <!-- Regarding object search -->
-            <div class="mb-3">
-              <n-auto-complete
-                v-model:value="form.regardingObjectLabel"
-                :options="regardingOptions"
-                :loading="searching"
-                :filter="false"
-                placeholder="جستجوی موجودیت مرتبط"
-                @update:value="searchRegarding"
-                @select="onRegardingSelect"
-              />
-            </div>
-
-            <!-- Owner / مسئول --------------------------------------------------- -->
-            <div class="mb-3">
-              <n-auto-complete
-                v-model:value="form.ownerLabel"
-                :options="ownerOptions"
-                :loading="searchingOwner"
-                :filter="false"
-                placeholder="جستجوی مسئول (کاربر)"
-                @update:value="searchOwner"
-                @select="onOwnerSelect"
-              />
-            </div>
-
-            <!-- Priority ----------------------------------------------------- -->
-            <div class="mb-3">
-              <n-select
-                v-model:value="form.priority"
-                :options="priorityOptions"
-                placeholder="اولویت"
-              />
-            </div>
-
-            <!-- Seen --------------------------------------------------------- -->
-            <div class="mb-3">
-              <label class="form-label">دیده شده؟</label>
-              <n-select
-                v-model:value="form.newSeen"
-                :options="seenOptions"
-                placeholder="وضعیت دیده شدن"
-              />
-            </div>
-
-            <!-- Last Owner (read‑only) --------------------------------------- -->
-            <div class="mb-3">
-              <label class="form-label">آخرین مسئول قبلی</label>
-              <n-input :value="form.lastOwnerLabel" disabled />
-            </div>
-
-            <hr />
-
-            <div class="mb-3">
-              <label for="task-start" class="form-label">Start Date</label>
-              <date-picker
-                auto-submit
-                type="datetime"
-                v-model="form.startDisplay"
-                format="jYYYY/jMM/jDD HH:mm"
-                display-format="jYYYY/jMM/jDD HH:mm"
-                :jump-minute="30"
-                :round-minute="true"
-                @change="updateStartTime"
-                @update:modelValue="updateStartTime"
-              />
-            </div>
-
-            <div class="mb-3">
-              <label for="task-end" class="form-label">End Date</label>
-              <date-picker
-                auto-submit
-                type="datetime"
-                v-model="form.endDisplay"
-                format="jYYYY/jMM/jDD HH:mm"
-                display-format="jYYYY/jMM/jDD HH:mm"
-                :min="form.startDisplay"
-                :jump-minute="30"
-                :round-minute="true"
-                @change="updateEndTime"
-                @update:modelValue="updateEndTime"
-              />
-            </div>
-
-            <!-- Notes list -->
-            <hr />
-            <h6 class="fw-bold mb-2">یادداشت‌ها</h6>
-            <NoteList :notes="notes" />
-
-            <!-- Add new note -->
-            <div class="mb-2">
-              <input
-                v-model="newNote.subject"
-                class="form-control form-control-sm mb-1"
-                placeholder="عنوان یادداشت"
-              />
-              <textarea
-                v-model="newNote.text"
-                class="form-control form-control-sm mb-1"
-                rows="2"
-                placeholder="متن یادداشت"
-              ></textarea>
-              <input class="form-control form-control-sm mb-2" type="file" @change="onNewFile" />
-              <button type="button" class="btn btn-sm btn-outline-primary" @click="addNote">
-                افزودن یادداشت
-              </button>
-            </div>
+        <!-- RIGHT 50 % – owners / dates / priority‑seen -->
+        <div class="form-right">
+          <!-- مالک فعلی + قبلی -->
+          <div class="sub-grid-50-50 mb-3">
+            <n-auto-complete
+              v-model:value="form.ownerLabel"
+              :options="ownerOptions"
+              :loading="searchingOwner"
+              :filter="false"
+              placeholder="مالک فعلی"
+              @update:value="searchOwner"
+              @select="onOwnerSelect"
+            />
+            <n-input :value="form.lastOwnerLabel" disabled placeholder="مالک قبلی" />
           </div>
 
-          <div class="modal-footer pt-0 border-top-0">
-            <button type="button" class="btn btn-outline-secondary" @click="hideModal">
-              انصراف
-            </button>
-            <button type="submit" class="btn btn-success">ذخیره</button>
+          <!-- تاریخ‌ها -->
+          <div class="sub-grid-50-50 mb-3">
+            <DatePicker
+              auto-submit
+              v-model="form.startDisplay"
+              type="datetime"
+              format="jYYYY/jMM/jDD HH:mm"
+              display-format="jYYYY/jMM/jDD HH:mm"
+              :jump-minute="30"
+              :round-minute="true"
+              placeholder="تاریخ شروع *"
+              @change="updateStartTime"
+              @update:modelValue="updateStartTime"
+            />
+            <DatePicker
+              auto-submit
+              v-model="form.endDisplay"
+              type="datetime"
+              format="jYYYY/jMM/jDD HH:mm"
+              display-format="jYYYY/jMM/jDD HH:mm"
+              :min="form.startDisplay"
+              :jump-minute="30"
+              :round-minute="true"
+              placeholder="تاریخ پایان *"
+              @change="updateEndTime"
+              @update:modelValue="updateEndTime"
+            />
           </div>
-        </form>
+
+          <!-- اولویت / دیده شده -->
+          <div class="sub-grid-50-50 mb-3">
+            <n-select
+              v-model:value="form.priority"
+              :options="priorityOptions"
+              placeholder="اولویت"
+            />
+            <n-select v-model:value="form.newSeen" :options="seenOptions" placeholder="دیده شده؟" />
+          </div>
+        </div>
       </div>
+
+      <!-- یادداشت‌ها -->
+      <h6 class="fw-bold my-2">یادداشت‌ها</h6>
+      <NoteList :notes="notes" class="mb-2" />
+
+      <!-- افزودن یادداشت -->
+      <div class="sub-grid-50-50 mb-2">
+        <n-input v-model:value="newNote.subject" placeholder="موضوع" />
+        <input type="file" class="form-control form-control-sm" @change="onNewFile" />
+      </div>
+      <n-input
+        v-model:value="newNote.text"
+        type="textarea"
+        rows="3"
+        placeholder="توضیحات"
+        class="mb-2"
+      />
+      <button type="button" class="btn btn-sm btn-outline-primary" @click="addNote">
+        افزودن یادداشت
+      </button>
     </div>
-  </div>
+
+    <template #footer>
+      <n-space justify="end">
+        <n-button strong secondary @click="hideModal">انصراف</n-button>
+        <n-button strong secondary type="primary" @click="saveTask"> ذخیره </n-button>
+      </n-space>
+    </template>
+  </n-modal>
 </template>
 
 <script>
 import axios from 'axios'
-import { ref, watch, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
 import { getRegardingTypeOptions } from '@/composables/useEntityMap'
 import { searchEntity, updateTask, searchSystemUsers, getTaskNotes, addTaskNote } from '@/api/crm'
-import bootstrap from 'bootstrap/dist/js/bootstrap.bundle'
 import moment from 'moment-jalaali'
 import momentTz from 'moment-timezone'
 import DatePicker from 'vue3-persian-datetime-picker'
@@ -191,8 +158,14 @@ export default {
     },
   },
   setup(props, { emit }) {
-    const modalEl = ref(null)
-    let bsModal = null
+    const modelVisible = computed({
+      get: () => props.visible,
+      set: (v) => emit('update:visible', v),
+    })
+
+    function hideModal() {
+      modelVisible.value = false
+    }
 
     const form = ref({
       subject: '',
@@ -212,6 +185,10 @@ export default {
     })
 
     const notes = ref([])
+    async function loadNotes() {
+      const { ok, data } = await getTaskNotes(props.task.activityid)
+      notes.value = ok ? data : []
+    }
     const newNote = reactive({ subject: '', text: '', file: null, base64: '' })
     function onNewFile(e) {
       const f = e.target.files?.[0]
@@ -363,7 +340,7 @@ export default {
       form.value.startRaw = props.task.scheduledstart || ''
       form.value.endRaw = props.task.scheduledend || ''
     }
-
+    loadNotes()
     // Utility: Convert Jalali datetime string (jYYYY/jMM/jDD HH:mm) to UTC ISO string
     const jalaliToIso = (jDateStr) => {
       // Accept either a Moment instance or a Jalali-formatted string
@@ -422,30 +399,6 @@ export default {
       },
     )
 
-    const showModal = () => {
-      if (bsModal) {
-        bsModal.show()
-      }
-    }
-
-    const hideModal = () => {
-      if (bsModal) {
-        bsModal.hide()
-      }
-    }
-
-    watch(
-      () => props.visible,
-      async (newVal) => {
-        if (newVal) {
-          resetForm()
-          showModal()
-        } else {
-          hideModal()
-        }
-      },
-    )
-
     watch(
       () => props.task,
       (newTask) => {
@@ -456,26 +409,13 @@ export default {
       { immediate: true },
     )
 
-    onMounted(() => {
-      bsModal = new bootstrap.Modal(modalEl.value, {
-        backdrop: 'static',
-        keyboard: false,
-      })
-
-      modalEl.value.addEventListener('hidden.bs.modal', () => {
-        emit('update:visible', false)
-      })
-
-      // Fetch notes only after the modal is fully shown
-      modalEl.value.addEventListener('shown.bs.modal', async () => {
-        const { ok, data } = await getTaskNotes(props.task.activityid)
-        notes.value = ok ? data : []
-      })
-
-      if (props.visible) {
-        showModal()
-      }
-    })
+    // Fetch notes each time the modal becomes visible
+    watch(
+      () => props.visible,
+      (v) => {
+        if (v) loadNotes()
+      },
+    )
 
     const saveTask = async () => {
       try {
@@ -526,15 +466,14 @@ export default {
       }
       const { ok } = await addTaskNote(props.task.activityid, payload)
       if (ok) {
-        const { ok: ok2, data } = await getTaskNotes(props.task.activityid)
-        if (ok2) notes.value = data
+        await loadNotes()
         Object.assign(newNote, { subject: '', text: '', file: null, base64: '' })
       }
     }
 
     return {
-      modalEl,
       form,
+      modelVisible,
       hideModal,
       saveTask,
       updateStartTime,
@@ -554,6 +493,7 @@ export default {
       newNote,
       onNewFile,
       addNote,
+      loadNotes,
       NoteList,
     }
   },

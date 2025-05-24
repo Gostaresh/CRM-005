@@ -1,4 +1,5 @@
 import './assets/main.css'
+import './assets/modal-grid.css'
 import 'vfonts/FiraCode.css'
 import 'vfonts/FiraSans.css'
 
