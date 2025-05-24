@@ -48,7 +48,7 @@
                 :loading="searching"
                 :filter="false"
                 placeholder="جستجوی موجودیت مرتبط"
-                @search="searchRegarding"
+                @update:value="searchRegarding"
                 @select="onRegardingSelect"
               />
             </div>
@@ -244,6 +244,7 @@ export default {
     const regardingOptions = ref([])
 
     async function searchRegarding(query) {
+      console.log('Searching regarding ...', form.value.regardingType)
       if (!form.value.regardingType || !query || query.length < 2) {
         regardingOptions.value = []
         return
@@ -251,12 +252,15 @@ export default {
       searching.value = true
       try {
         const { ok, data } = await searchEntity(form.value.regardingType, query)
+        if (!ok) throw new Error('Search failed')
         if (ok) {
           regardingOptions.value = data.map((item) => ({
             label: item.name,
             value: item.id,
           }))
         }
+      } catch (e) {
+        console.error('Failed to search regarding objects:', e)
       } finally {
         searching.value = false
       }
