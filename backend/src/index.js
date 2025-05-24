@@ -6,8 +6,8 @@ const logger = require("./utils/logger");
 const routesFactory = require("./routes");
 const errorMiddleware = require("./middleware/errorMiddleware");
 const config = require("./config/config");
-const MetadataLoader = require("./core/metadata/MetadataLoader");
-const FormGenerator = require("./core/metadata/FormGenerator");
+// const MetadataLoader = require("./core/metadata/MetadataLoader");
+// const FormGenerator = require("./core/metadata/FormGenerator");
 const DynamicsService = require("./core/services/DynamicsService");
 const expressLayouts = require("express-ejs-layouts");
 
@@ -44,21 +44,7 @@ app.use(
 app.use(expressLayouts);
 app.use(
   cors({
-    origin: env.vue,
-    credentials: true,
-  })
-);
-
-app.use(
-  cors({
-    origin: env.vue_preview,
-    credentials: true,
-  })
-);
-
-app.use(
-  cors({
-    origin: "http://192.168.1.22",
+    origin: [env.vue, env.vue_preview, "http://192.168.1.22"],
     credentials: true,
   })
 );

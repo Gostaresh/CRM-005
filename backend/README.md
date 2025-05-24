@@ -17,6 +17,33 @@ npm run dev                   # nodemon + NTLM proxy on port 3000
 The Vue SPA (`frontend/`) expects the backend on **http://localhost:3000** in development.  
 CORS for the Vite dev server is enabled via `cors()` in `src/index.js`.
 
+## Server Boot Sequence (`src/index.js`)
+
+`src/index.js` is the single entry‑point that wires the Express server together.  
+Key steps—in the exact order they run—are:
+
+1. **Body parsing** – `express.json()`, `express.urlencoded()`, and a fallback `express.raw()` are each capped at **20 MB** to prevent abuse.
+2. **Session** – `express-session` uses `SESSION_SECRET`; cookies are set `sameSite:"lax"` and the `secure` flag is auto‑detected via `cookieSecure()` so deployments behind HTTPS proxies Just Work™.
+3. **CORS** – a lone `cors()` middleware now whitelists all three origins in one go:
+
+   ```js
+   app.use(
+     cors({
+       origin: [env.vue, env.vue_preview, "http://192.168.1.22"],
+       credentials: true,
+     })
+   );
+   ```
+
+4. **Session debug logger** – when `NODE_ENV !== "production"` the active session object is printed to the console, making it trivial to inspect NTLM credentials locally.
+5. **Views** – EJS with `express-ejs-layouts` renders HTML pages; a small helper captures each rendered view and injects it into `layouts/main.ejs`.
+6. **Static assets** – everything under `src/public/` is served from the site root, keeping file paths consistent between dev and prod.
+7. **Service initialisation** – heavy helpers can be instantiated once and placed on `app.locals` (currently commented out).
+8. **Routes** – `routesFactory()` attaches UI pages first, then mounts the `/api/**` routers.
+9. **Error handling** – the final `errorMiddleware` turns any uncaught exception into consistent JSON (for XHR) or an HTML error page.
+
+> **Heads‑up**: The three original `cors()` calls have been folded into the single block above. Make sure your env file sets `VUE` and `VUE_PREVIEW` correctly; otherwise the browser will see CORS errors.
+
 ---
 
 ## Environment Variables
@@ -54,28 +81,126 @@ backend/
 2. Any `/api/crm/**` route requires the session cookie (enforced by `authMiddleware`).
 3. **POST `/api/auth/logout`** destroys the session.
 
----
+### Implementation Details
 
-## Main API Routes
-
-| Method    | Path                                       | Purpose                              |
-| --------- | ------------------------------------------ | ------------------------------------ |
-| **POST**  | `/api/auth/login`                          | Authenticate & create session        |
-| **GET**   | `/api/auth/user`                           | Current session user (if any)        |
-| **POST**  | `/api/auth/logout`                         | End session                          |
-| **GET**   | `/api/crm/activities/my`                   | Tasks owned by logged‑in user        |
-| **POST**  | `/api/crm/activities`                      | **Create** task                      |
-| **PATCH** | `/api/crm/activities/:id`                  | **Edit** task                        |
-| **PATCH** | `/api/crm/activities/:id/update-dates`     | Update dates only (drag/resize)      |
-| **GET**   | `/api/crm/activities/filter?owners=GUID,…` | Tasks for selected owners            |
-| **GET**   | `/api/crm/search?type={entity}&q=foo`      | Generic **fuzzy search** (see below) |
-| **GET**   | `/api/crm/entities/{set}`                  | Raw OData pass‑through               |
-| **GET**   | `/api/crm/accounts/dropdown`               | Top 500 accounts (id + name)         |
-| **GET**   | `/api/crm/systemusers/dropdown`            | Top 500 system users (id + fullname) |
-
-Responses respect Dynamics Web API conventions (`value`, `@odata.nextLink`).
+| File                              | Responsibility                                                                                                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **controllers/authController.js** | Validates login payload, calls `authService.authenticate`, stores the encrypted password and user object in the session, returns `{ user }` on success.                     |
+| **services/authService.js**       | Performs the heavy lifting: LDAP bind to verify credentials, then Dynamics 365 `/systemusers` lookup via NTLM. Returns a sanitised user object or throws a user‑safe error. |
+| **middleware/authMiddleware.js**  | Guards protected routes. For API calls, returns JSON `401`; for page requests, redirects to `/`. Logs every unauthorised attempt.                                           |
 
 ---
+
+## Route Reference
+
+### UI pages
+
+| Method  | Path         | Description                                                |
+| ------- | ------------ | ---------------------------------------------------------- |
+| **GET** | `/`          | Login page (redirects to **/dashboard** if session exists) |
+| **GET** | `/dashboard` | Main dashboard (requires session)                          |
+| **GET** | `/logout`    | Destroy session and return to login                        |
+
+### API – Authentication (`/api/auth`)
+
+| Method   | Path               | Description                         |
+| -------- | ------------------ | ----------------------------------- |
+| **POST** | `/api/auth/login`  | Authenticate user, start session    |
+| **POST** | `/api/auth/logout` | End session, clear cookie           |
+| **GET**  | `/api/auth/me`     | Return currently authenticated user |
+
+### API – Activities (`/api/crm/activities`)
+
+| Method    | Path                                           | Description                            |
+| --------- | ---------------------------------------------- | -------------------------------------- |
+| **GET**   | `/api/crm/activities/all`                      | All tasks user can see                 |
+| **GET**   | `/api/crm/activities/my`                       | Tasks owned by logged‑in user          |
+| **GET**   | `/api/crm/activities/filter?owners={GUID,...}` | Tasks for selected owners              |
+| **GET**   | `/api/crm/activities/regarding-options`        | Lookup metadata for Regarding dropdown |
+| **GET**   | `/api/crm/activities/:activityId`              | Task details                           |
+| **POST**  | `/api/crm/activities`                          | Create new task                        |
+| **PATCH** | `/api/crm/activities/:activityId/update-dates` | Drag/resize update                     |
+| **PATCH** | `/api/crm/activities/:activityId`              | Edit task                              |
+
+### API – Notes
+
+| Method   | Path                                    | Description              |
+| -------- | --------------------------------------- | ------------------------ |
+| **GET**  | `/api/crm/activities/:activityId/notes` | List notes for activity  |
+| **POST** | `/api/crm/activities/:activityId/notes` | Add note (optional file) |
+| **GET**  | `/api/crm/notes/:noteId/download`       | Download note attachment |
+
+### API – Accounts
+
+| Method  | Path                         | Description        |
+| ------- | ---------------------------- | ------------------ |
+| **GET** | `/api/crm/accounts`          | Paginated accounts |
+| **GET** | `/api/crm/accounts/dropdown` | Top 500 id + name  |
+
+### API – Entities & Search
+
+| Method  | Path                                  | Description                |
+| ------- | ------------------------------------- | -------------------------- |
+| **GET** | `/api/crm/entities/:entity`           | Raw OData pass‑through     |
+| **GET** | `/api/crm/search?type={entity}&q=foo` | Fuzzy search across entity |
+
+### API – Users
+
+| Method  | Path                            | Description            |
+| ------- | ------------------------------- | ---------------------- |
+| **GET** | `/api/crm/users/me`             | Current logged‑in user |
+| **GET** | `/api/crm/systemusers/dropdown` | System user dropdown   |
+
+---
+
+## CRM Controllers
+
+Each controller in `src/controllers/crm/` owns a single slice of Dynamics 365 functionality.  
+They are thin HTTP wrappers that delegate heavy work to `CrmService` while enforcing
+request‑level validation and building clean JSON responses.
+
+| File                                      | Responsibility                                                                                                                     |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **controllers/crm/activityController.js** | All task/appointment logic: list (all / my / by owners), get details, create, drag‑resize update, full edit, “Regarding” dropdown. |
+| **controllers/crm/accountController.js**  | Lists accounts with pagination and supplies a trimmed dropdown (id + name) used by dialogs.                                        |
+| **controllers/crm/noteController.js**     | CRUD for annotation notes: list, add (JSON or `multipart/form-data`), stream attachment download.                                  |
+| **controllers/crm/entityController.js**   | Generic OData passthrough for ad‑hoc entities (read & create).                                                                     |
+| **controllers/crm/userController.js**     | Returns current CRM user (`/users/me`) and a dropdown of system users (top 500).                                                   |
+| **controllers/crm/searchController.js**   | Entity‑agnostic fuzzy search powered by `config/entityMap.json`.                                                                   |
+
+## Core Resources (`src/core/resources.js`)
+
+A single file that centralises **all** entity constants, field names, status/state codes and helper functions for label localisation.
+
+| Group                                 | Example                                                                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **StateCode**                         | `{ ACTIVE: 0, INACTIVE: 1 }`                                                                                  |
+| **EntityNames**                       | `'account', 'contact', 'new_department', 'activitypointer'`                                                   |
+| **AccountFields / ContactFields / …** | Strongly‑typed field constants that extend a shared `CommonFields` object.                                    |
+| **ActivityPointer & SystemUser**      | Rich “entity definition” objects used by `crmService` to build `$select` lists and expansions.                |
+| **StatusCodes**                       | Maps entity → status reason integers (e.g. `IN_PROGRESS: 2`).                                                 |
+| **getStatusLabel / getStateLabel**    | Helper functions that return a language‑specific label given a code plus `LanguageCodes.ENGLISH` / `PERSIAN`. |
+
+> Any file—controller or service—can import these constants to avoid hard‑coding magic strings.
+
+## CRM Service (`src/services/crmService.js`)
+
+A **thin wrapper** around the Dynamics 365 Web API (NTLM) that hides all HTTP details from controllers.
+
+| Method                                              | Purpose                                                                                                                     |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `_getEntityColor`                                   | Caches and returns the colour defined in Dynamics metadata for an entity type (used to theme calendar items).               |
+| `fetchEntity`                                       | Generic GET helper supporting `$select,$filter,$orderby,$top,$skip,$expand`, custom `Prefer` headers and `@odata.nextLink`. |
+| `fetchActivities`                                   | Lists tasks (optionally filtered) and augments each item with `seen` and themed `color`.                                    |
+| `fetchActivityDetails`                              | Reads a single task, resolves polymorphic “regarding” lookup, owner names, last owner shadow column, annotations.           |
+| `fetchPaginatedAccounts`                            | Shared pagination helper for the accounts grid.                                                                             |
+| `createEntity`                                      | Generic POST that handles both `201` and `204` responses, plus follow‑up lookup when `OData‑EntityId` header is missing.    |
+| `updateTaskDates` / `updateTask`                    | PATCH helpers used by drag‑resize and full‑edit forms.                                                                      |
+| `fetchOwnerName`                                    | Resolves a GUID first against `systemusers`, then `teams`.                                                                  |
+| `fetchAccounts` / `fetchContacts`                   | Bulk dropdown helpers (up to 2 000 rows with formatted‑value annotations).                                                  |
+| `fetchNotes` / `fetchNoteAttachment` / `createNote` | CRUD helpers for task annotations (attachments).                                                                            |
+
+Each public method expects `credentials = { username, password }` (decrypted from the session) and automatically prefixes the Windows **DOMAIN** (`env.domain`) when performing NTLM requests.
 
 ### Generic Search Endpoint
 
