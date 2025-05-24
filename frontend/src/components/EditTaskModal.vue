@@ -5,9 +5,9 @@
     :mask-closable="false"
     title="ویرایش فعالیت"
     class="edit-task-modal"
-    style="width: 60%; max-width: 60%"
+    style="width: 80%; max-width: 85%"
   >
-    <div class="modal-body p-4">
+    <div class="modal-body">
       <div class="modal-grid">
         <!-- LEFT 50 % – موضوع + توضیحات + عطف -->
         <div class="form-left">
@@ -28,6 +28,8 @@
             <n-select
               v-model:value="form.regardingType"
               :options="regardingTypeOptions"
+              placement="bottom-start"
+              :consistent-menu-width="true"
               placeholder="نوع عطف"
             />
             <n-auto-complete
@@ -35,6 +37,8 @@
               :options="regardingOptions"
               :loading="searching"
               :filter="false"
+              placement="bottom-start"
+              :consistent-menu-width="true"
               placeholder="عطف به"
               @update:value="searchRegarding"
               @select="onRegardingSelect"
@@ -51,6 +55,8 @@
               :options="ownerOptions"
               :loading="searchingOwner"
               :filter="false"
+              placement="bottom-start"
+              :consistent-menu-width="true"
               placeholder="مالک فعلی"
               @update:value="searchOwner"
               @select="onOwnerSelect"
@@ -92,9 +98,17 @@
             <n-select
               v-model:value="form.priority"
               :options="priorityOptions"
+              placement="bottom-start"
+              :consistent-menu-width="true"
               placeholder="اولویت"
             />
-            <n-select v-model:value="form.newSeen" :options="seenOptions" placeholder="دیده شده؟" />
+            <n-select
+              v-model:value="form.newSeen"
+              :options="seenOptions"
+              placement="bottom-start"
+              :consistent-menu-width="true"
+              placeholder="دیده شده؟"
+            />
           </div>
         </div>
       </div>
@@ -278,8 +292,8 @@ export default {
     ]
 
     const seenOptions = [
-      { label: 'بله', value: 1 },
-      { label: 'خیر', value: 0 },
+      { label: 'دیده شده', value: 1 },
+      { label: 'دیده نشده', value: 0 },
     ]
 
     const resetForm = () => {

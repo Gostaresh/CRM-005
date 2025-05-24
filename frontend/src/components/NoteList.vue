@@ -69,4 +69,18 @@ function formatDate(value?: string | null) {
   background-color: var(--n-success-color-hover);
   color: var(--n-success-color-suppl);
 }
+
+table,
+td,
+th {
+  border: 1px solid #ddd;
+}
+
+tr:hover {
+  background-color: coral;
+}
+th {
+  background-color: #04aa6d;
+  color: white;
+}
 </style>

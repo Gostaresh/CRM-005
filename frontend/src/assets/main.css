@@ -1,7 +1,17 @@
 @import './base.css';
 
+@font-face {
+  font-family: 'IranSans';
+  src:
+    url('./fonts/iranSans/IranSans.woff2') format('woff2'),
+    url('./fonts/iranSans/IranSans.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 #app {
-  max-width: 100%;
+  max-width: 80%;
   margin: 0 auto;
   padding: 2rem;
   font-weight: normal;
@@ -21,7 +31,7 @@ a,
   }
 }
 
-@media (min-width: 80%) {
+@media (min-width: 100%) {
   body {
     display: flex;
     place-items: center;

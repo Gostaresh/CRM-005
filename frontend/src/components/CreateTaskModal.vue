@@ -5,7 +5,7 @@
     :mask-closable="false"
     title="ایجاد فعالیت"
     class="create-task-modal"
-    style="width: 60%; max-width: 60%"
+    style="width: 80%; max-width: 85%"
   >
     <div class="modal-grid">
       <!--  LEFT 50 %  – موضوع + توضیحات + عطف -->
@@ -27,6 +27,9 @@
           <n-select
             v-model:value="form.regardingType"
             :options="regardingTypeOptions"
+            placement="bottom-end"
+            :consistent-menu-width="true"
+            teleported="false"
             placeholder="نوع عطف"
           />
           <n-auto-complete
@@ -34,6 +37,9 @@
             :options="regardingOptions"
             :loading="searching"
             :filter="false"
+            placement="bottom-end"
+            :consistent-menu-width="true"
+            teleported="false"
             placeholder="عطف به"
             @update:value="searchRegarding"
             @select="onRegardingSelect"
@@ -49,6 +55,9 @@
             v-model:value="form.ownerLabel"
             :options="ownerOptions"
             :loading="searchingOwner"
+            placement="bottom-end"
+            :consistent-menu-width="true"
+            teleported="false"
             placeholder="مالک فعلی"
             @update:value="searchOwner"
             @select="onOwnerSelect"
@@ -84,8 +93,22 @@
 
         <!-- اولویت / دیده شده -->
         <div class="sub-grid-50-50 mb-3">
-          <n-select v-model:value="form.priority" :options="priorityOptions" placeholder="اولویت" />
-          <n-select v-model:value="form.newSeen" :options="seenOptions" placeholder="دیده شده؟" />
+          <n-select
+            v-model:value="form.priority"
+            placement="bottom-end"
+            :consistent-menu-width="true"
+            teleported="false"
+            :options="priorityOptions"
+            placeholder="اولویت"
+          />
+          <n-select
+            v-model:value="form.newSeen"
+            :options="seenOptions"
+            placement="bottom-end"
+            :consistent-menu-width="true"
+            teleported="false"
+            placeholder="دیده شده؟"
+          />
         </div>
       </div>
     </div>
@@ -169,7 +192,7 @@ const form = reactive({
   endMoment: null, // moment | null  (required)
   startIso: '',
   endIso: '',
-  priority: 1,
+  priority: '1',
   regardingType: 'account',
   regardingObjectId: '',
   regardingObjectLabel: '',
@@ -229,14 +252,14 @@ watch(
   },
 )
 const priorityOptions = [
-  { label: 'کم', value: 0 },
-  { label: 'متوسط', value: 1 },
-  { label: 'زیاد', value: 2 },
+  { label: 'کم', value: '0' },
+  { label: 'متوسط', value: '1' },
+  { label: 'زیاد', value: '2' },
 ]
 
 const seenOptions = [
-  { label: 'Yes', value: 1 },
-  { label: 'No', value: 0 },
+  { label: 'دیده شده', value: 1 },
+  { label: 'دیده نشده', value: 0 },
 ]
 
 const regardingTypeOptions = getRegardingTypeOptions()
@@ -389,7 +412,7 @@ async function save() {
       description: form.description,
       scheduledstart: form.startIso || undefined,
       scheduledend: form.endIso, // required
-      prioritycode: form.priority,
+      prioritycode: Number(form.priority),
       new_seen: !!Number(form.newSeen),
     }
 
@@ -445,7 +468,7 @@ function resetFormFields() {
     endMoment: '',
     startIso: '',
     endIso: '',
-    priority: 1,
+    priority: '1',
     regardingType: 'account',
     regardingObjectId: '',
     regardingObjectLabel: '',

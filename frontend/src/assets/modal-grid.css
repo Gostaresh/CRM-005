@@ -1,4 +1,5 @@
 /* Responsive two‑column grid for CreateTaskModal & EditTaskModal */
+
 .modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr; /* 50 % | 50 % */
@@ -66,13 +67,67 @@
   text-align: right;
 }
 
-/* Mobile breakpoint – collapse to single column */
+/* Desktop & tablet – limit modal width */
+@media (min-width: 768px) {
+  .create-task-modal,
+  .edit-task-modal {
+    width: 75vw !important; /* ~75 % of viewport */
+    max-width: 1100px !important;
+  }
+}
+
+/* Mobile breakpoint – full-screen single-column */
 @media (max-width: 767px) {
+  /* Keep the one-column grid */
   .modal-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
-  .notes-list {
-    max-height: 240px;
+
+  /* Ensure every input stretches */
+  .modal-grid input,
+  .modal-grid textarea,
+  .modal-grid .n-input,
+  .modal-grid .n-select,
+  .modal-grid .n-auto-complete,
+  .modal-grid .n-date-picker {
+    width: 100%;
+  }
+
+  /* Sticky footer always visible */
+  .n-modal .n-card__footer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.08);
+    z-index: 1;
+  }
+
+  /* Full-width stacked buttons */
+  .n-modal .n-card__footer .n-space {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .n-modal .n-card__footer .n-button {
+    flex: 1 1 100%;
+    margin-bottom: 0.5rem;
+  }
+  .n-modal > .n-card {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+  .create-task-modal > .n-card,
+  .edit-task-modal > .n-card {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+
+  /* Also stretch the modal container for absolute full‑width */
+  .create-task-modal,
+  .edit-task-modal {
+    width: 95vw !important;
+    max-width: 95vw !important;
   }
 }
 

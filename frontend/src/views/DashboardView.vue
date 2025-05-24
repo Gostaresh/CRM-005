@@ -41,6 +41,7 @@ import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
+import listPlugin from '@fullcalendar/list'
 import { NMessageProvider } from 'naive-ui'
 
 import { useAuthStore } from '@/stores/auth'
@@ -131,7 +132,7 @@ function formatTime(date) {
  * FullCalendar options
  * -------------------------------------------------------------------------*/
 const calendarOptions = {
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
   initialView: 'timeGridWeek',
   navLinks: true,
   dayMaxEvents: true,
@@ -141,13 +142,14 @@ const calendarOptions = {
   selectable: true,
   selectMirror: true,
   editable: true,
+  nowIndicator: true,
   eventStartEditable: true,
   eventDurationEditable: true,
   direction: 'rtl',
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
-    right: 'dayGridMonth,timeGridWeek,timeGridDay',
+    right: 'listMonth,dayGridMonth,timeGridWeek,timeGridDay',
   },
 
   /** Fetch events for the logged‑in user. */
