@@ -28,9 +28,11 @@ class CrmService {
         credentials
       );
       const color = meta.EntityColor || "#6c757d";
-      this._colorCache.set(logicalName, EntityColor);
+      this._colorCache.set(logicalName, color);
       return color;
-    } catch (_) {
+    } catch (error) {
+      logger.error(`Error in fetchActivities: ${error.message}`);
+      throw error;
       // fallback grey if the metadata call fails
       return "#6c757d";
     }

@@ -6,7 +6,13 @@
         <button class="btn btn-outline-danger" @click="logout">خروج</button>
       </div>
 
-      <div class="mb-3 text-end">
+      <div class="mb-3 text-end d-flex justify-content-end gap-2">
+        <!-- Refresh -->
+        <button class="btn btn-outline-secondary" @click="refreshCalendar" title="بارگیری دوباره">
+          🔄 بروزرسانی
+        </button>
+
+        <!-- New activity -->
         <button class="btn btn-primary" @click="isCreateVisible = true">ایجاد فعالیت جدید</button>
       </div>
 
@@ -71,6 +77,10 @@ var br = document.createElement('br')
 /* ---------------------------------------------------------------------------
  * helpers
  * -------------------------------------------------------------------------*/
+const refreshCalendar = () => {
+  calendarRef.value?.getApi().refetchEvents()
+}
+
 const logout = async () => {
   await auth.logout()
   router.push('/login')
@@ -175,6 +185,7 @@ const calendarOptions = {
           durationEditable: true,
         })),
       )
+      console.log(value[1].color)
     } catch (e) {
       console.error('❌ Failed to fetch activities:', e)
       failure(e)
@@ -274,6 +285,10 @@ function onTaskUpdated() {
 /* optional: tweak FullCalendar height */
 :deep(.fc) {
   min-height: 80vh;
+}
+
+:deep(.fc-event .event-title) {
+  color: #222; /* any hex / RGB / CSS var */
 }
 
 .seen-icon {
