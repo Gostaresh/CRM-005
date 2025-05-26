@@ -37,6 +37,7 @@ app.use(
     cookie: {
       secure: cookieSecure,
       sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -44,12 +45,19 @@ app.use(
 app.use(expressLayouts);
 app.use(
   cors({
-    origin: [env.vue, env.vue_preview, "http://192.168.1.22"],
+    origin: (origin, callback) => {
+      const allowedOrigins = ["http://192.168.1.22", "https://192.168.1.22"];
+
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed from origin: " + origin));
+      }
+    },
     credentials: true,
   })
 );
 
-console.log(env.vue);
 // Debug middleware to log session information (after session middleware)
 app.use((req, res, next) => {
   logger.debug(

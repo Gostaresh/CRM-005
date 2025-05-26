@@ -51,7 +51,9 @@ import CreateTaskModal from '@/components/CreateTaskModal.vue'
 /* ---------------------------------------------------------------------------
  * constants / state
  * -------------------------------------------------------------------------*/
-const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || import.meta.env.VITE_API_BASE_URL || ''
+
+// const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || import.meta.env.VITE_API_BASE_URL || ''
+const BASE_URL = ''
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -193,8 +195,7 @@ const calendarOptions = {
     const timeSpan = document.createElement('span')
     timeSpan.className = 'event-time'
     timeSpan.textContent = `${start} – ${end}`
-    container.appendChild(timeSpan)
-    container.appendChild(br)
+    // container.appendChild(timeSpan)
 
     if (event.extendedProps.new_seen) {
       const tick = document.createElement('span')

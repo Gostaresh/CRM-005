@@ -10,7 +10,8 @@ export interface CRMResponse<T> {
   status: number
 }
 
-const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || import.meta.env.VITE_API_BASE_URL || ''
+// const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || import.meta.env.VITE_API_BASE_URL || ''
+const baseUrl = ''
 
 export async function crmFetch<T>(
   path: string,
