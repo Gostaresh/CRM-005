@@ -3,7 +3,7 @@
     v-model:show="modelVisible"
     preset="card"
     :mask-closable="false"
-    title="ایجاد فعالیت"
+    title="ایجاد وظیفه"
     class="create-task-modal"
     style="width: 80%; max-width: 85%"
   >

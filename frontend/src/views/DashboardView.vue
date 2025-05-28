@@ -2,11 +2,27 @@
   <n-message-provider>
     <div class="container py-4" dir="rtl">
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">داشبورد</h2>
+        <div class="text-center flex-grow-1">
+          <h2 class="mb-0">داشبورد</h2>
+          <small v-if="auth.user" class="text-muted">
+            {{ auth.user.fullname || auth.user.username }}
+          </small>
+        </div>
+
         <button class="btn btn-outline-danger" @click="logout">خروج</button>
       </div>
 
-      <div class="mb-3 text-end d-flex justify-content-end gap-2">
+      <div class="mb-3 text-end d-flex justify-content-between mb-1 gap-2">
+        <n-select
+          v-model:value="selectedPreset"
+          :options="presetOptions"
+          size="large"
+          style="width: 220px"
+          @update:value="presetChange"
+        />
+        <!-- Filter drawer toggle -->
+        <button class="btn btn-outline-primary" @click="showFilter = true">🔍 فیلتر</button>
+
         <!-- Refresh -->
         <button class="btn btn-outline-secondary" @click="refreshCalendar" title="بارگیری دوباره">
           🔄 بروزرسانی
@@ -16,7 +32,23 @@
         <button class="btn btn-primary" @click="isCreateVisible = true">ایجاد فعالیت جدید</button>
       </div>
 
-      <FullCalendar :options="calendarOptions" ref="calendarRef" />
+      <n-spin :show="isLoading">
+        <FullCalendar :options="calendarOptions" ref="calendarRef" />
+      </n-spin>
+
+      <!-- Side filter panel -->
+      <n-drawer v-model:show="showFilter" placement="right" :width="330">
+        <n-drawer-content title="فیلتر فعالیت‌ها" closable>
+          <TaskFilterForm
+            @filter="
+              (q) => {
+                applyFilter(q)
+                showFilter = false
+              }
+            "
+          />
+        </n-drawer-content>
+      </n-drawer>
 
       <!-- Edit existing task -->
       <EditTaskModal
@@ -48,11 +80,17 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import listPlugin from '@fullcalendar/list'
-import { NMessageProvider } from 'naive-ui'
+import { NMessageProvider, NSelect, NSpin } from 'naive-ui'
+import { NDrawer, NDrawerContent } from 'naive-ui'
+const showFilter = ref(false)
 
 import { useAuthStore } from '@/stores/auth'
 import EditTaskModal from '@/components/EditTaskModal.vue'
 import CreateTaskModal from '@/components/CreateTaskModal.vue'
+import TaskFilterForm from '@/components/TaskFilterForm.vue'
+import { ref as vueRef } from 'vue'
+import dayjs from 'dayjs'
+import { ActivityPresets } from '@/constants/activityFilters'
 
 /* ---------------------------------------------------------------------------
  * constants / state
@@ -72,6 +110,14 @@ const createStartIso = ref(null)
 const createEndIso = ref(null)
 
 const calendarRef = ref(null)
+const selectedPreset = ref('ALL')
+const presetOptions = ActivityPresets.map((p) => ({
+  label: p.label,
+  value: p.key,
+  disabled: !!p.disabled,
+}))
+const isLoading = ref(false)
+const odataFilter = vueRef('') // holds $filter string from TaskFilterForm
 
 var br = document.createElement('br')
 /* ---------------------------------------------------------------------------
@@ -79,6 +125,46 @@ var br = document.createElement('br')
  * -------------------------------------------------------------------------*/
 const refreshCalendar = () => {
   calendarRef.value?.getApi().refetchEvents()
+}
+
+function presetChange(key) {
+  const p = ActivityPresets.find((x) => x.key === key)
+  if (!p) return
+
+  // token replacements
+  const repl = {
+    '{TODAY}': dayjs().startOf('day').toISOString(),
+    '{TOMORROW}': dayjs().add(1, 'day').startOf('day').toISOString(),
+    '{TODAY+7}': dayjs().add(7, 'day').startOf('day').toISOString(),
+    '{USERID}': auth.user?.id ?? '',
+  }
+
+  let filter = p.filter
+  Object.entries(repl).forEach(([token, val]) => {
+    filter = filter.replaceAll(token, val)
+  })
+
+  /* -------------------------------------------------------------
+   * If the preset itself did NOT specify an owner condition,
+   * we assume "activities that I own".
+   * ----------------------------------------------------------- */
+  if (!filter.includes('_ownerid_value')) {
+    const ownerClause = `_ownerid_value eq '${auth.user?.id ?? ''}'`
+    filter = filter ? `${ownerClause} and (${filter})` : ownerClause
+  }
+
+  applyFilter(filter)
+}
+
+function applyFilter(q) {
+  odataFilter.value = q || ''
+  nextTick(() => {
+    const api = calendarRef.value?.getApi()
+    if (api) {
+      api.removeAllEventSources()
+      api.addEventSource(calendarOptions.events)
+    }
+  })
 }
 
 const logout = async () => {
@@ -167,7 +253,8 @@ const calendarOptions = {
   /** Fetch events for the logged‑in user. */
   events: async (fetchInfo, success, failure) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/crm/activities/my`, {
+      const query = odataFilter.value ? `?$filter=${encodeURIComponent(odataFilter.value)}` : ''
+      const res = await fetch(`${BASE_URL}/api/crm/activities/my${query}`, {
         credentials: 'include',
       })
       const { value } = await res.json()
@@ -178,8 +265,8 @@ const calendarOptions = {
           start: t.scheduledstart,
           end: t.scheduledend,
           extendedProps: t,
-          backgroundColor: t.seen ? '#EFEFEF' : t.color,
-          borderColor: t.seen ? '#EFEFEF' : t.color,
+          backgroundColor: t.seen ? t.color : '#FFF8A6',
+          borderColor: t.seen ? t.color : '#FFF8A6',
           editable: true,
           startEditable: true,
           durationEditable: true,
@@ -264,6 +351,11 @@ const calendarOptions = {
     } catch {
       revert()
     }
+  },
+
+  // Toggle the global spinner automatically
+  loading: (busy) => {
+    isLoading.value = busy
   },
 }
 

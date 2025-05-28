@@ -27,7 +27,20 @@ export const useAuthStore = defineStore('auth', {
           throw new Error(result.error || 'Login failed')
         }
 
-        this.user = { username } // Placeholder – ideally fetch `/api/auth/me`
+        // Prefer user object returned by backend, otherwise call /me endpoint
+        let data
+        try {
+          data = await response.json() // if backend returns user info
+        } catch {
+          data = null
+        }
+
+        if (data && data.user) {
+          this.user = data.user // { id, username, fullname, ... }
+        } else {
+          // Fallback: fetch /me to fill id & fullname
+          await this.fetchUser()
+        }
         return true
       } catch (err) {
         this.error = err.message

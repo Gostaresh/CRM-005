@@ -1,12 +1,14 @@
 const express = require("express");
 const authRoutes = require("./api/authRoutes");
 const crmRoutes = require("./api/crmRoutes");
+const metaRoutes = require("./api/metaRoutes");
 
 module.exports = () => {
   const router = express.Router();
 
   router.use("/api/auth", authRoutes);
   router.use("/api/crm", crmRoutes);
+  // router.use("/api/meta", metaRoutes);
 
   router.get("/", (req, res) => {
     if (req.session.user) {

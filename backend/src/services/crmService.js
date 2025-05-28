@@ -94,7 +94,8 @@ class CrmService {
   ) {
     try {
       const select =
-        Object.values(ActivityPointer.properties).join(",") + ",new_seen"; // custom two‑options field on task
+        Object.values(ActivityPointer.properties).join(",") +
+        ",new_seen,_createdby_value"; // add creator lookup field
       let filter = "";
 
       if (customFilter) {
@@ -152,6 +153,7 @@ class CrmService {
     const query = {
       select: [
         ...Object.values(ActivityPointer.properties),
+        "_createdby_value",
         "_regardingobjectid_value",
         "new_seen", // two‑options field
         "_new_lastowner_value", // lookup GUID (shadow column)
@@ -198,13 +200,25 @@ class CrmService {
       data["_new_lastowner_value@OData.Community.Display.V1.FormattedValue"] ||
       "";
 
+    // Creator display name (annotation)
+    const createdByName =
+      data["_createdby_value@OData.Community.Display.V1.FormattedValue"] || "";
+
+    // Build Dynamics deep‑link that works for any entity type
+    const entityTypeCode = data.objecttypecode || 4212; // fallback to Task OTC
+    const recordUrl =
+      `http://192.168.1.6/Gostaresh/main.aspx?pagetype=entityrecord&etc=${entityTypeCode}` +
+      `&id=%7B${activityId}%7D`; // encode {GUID}
+
     return {
       ...data,
       lastownername: lastOwnerName,
+      createdbyname: createdByName,
       owner: {
         id: data[ActivityPointer.properties.ownerId],
         name: ownerName,
       },
+      recordUrl,
     };
   }
 

@@ -48,16 +48,20 @@ const fetchMyActivities = async (req, res) => {
       password: decrypt(req.session.encryptedPassword),
     };
     const userId = req.session.user.id;
+    const rawFilter = req.query.$filter
+      ? decodeURIComponent(req.query.$filter)
+      : null;
+    // If a custom $filter arrives from the front‑end we will pass it straight to CRM;
+    // otherwise we keep the default "owner = me" filter implemented by userId param.
     logger.info(
-      `Fetching my activities for user: ${
-        credentials.username
-      }, userId: ${userId}, nextLink: ${nextLink || "none"}`
+      `Fetching my activities for user:${credentials.username}, userId:${userId}, nextLink:${nextLink || "none"}, customFilter:${rawFilter || "none"}`
     );
     const data = await CrmService.fetchActivities(
       credentials,
-      userId,
+      rawFilter ? null : userId, // if custom filter -> drop hard owner filter
       nextLink,
-      pageSize
+      pageSize,
+      rawFilter // pass custom filter (can be null)
     );
 
     // Convert dates in the response

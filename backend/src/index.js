@@ -1,3 +1,4 @@
+const compression = require("compression");
 const express = require("express");
 const session = require("express-session");
 const cors = require("cors");
@@ -41,6 +42,9 @@ app.use(
     },
   })
 );
+
+// Gzip-compress all JSON / HTML responses
+app.use(compression());
 
 app.use(expressLayouts);
 app.use(

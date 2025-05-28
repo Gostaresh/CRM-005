@@ -3,11 +3,14 @@
     v-model:show="modelVisible"
     preset="card"
     :mask-closable="false"
-    title="ویرایش فعالیت"
+    title="ویرایش وظیفه"
     class="edit-task-modal"
     style="width: 80%; max-width: 85%"
   >
     <div class="modal-body">
+      <n-alert v-if="!canEdit" type="warning" class="mb-2">
+        شما مالک یا سازندهٔ این فعالیت نیستید؛ امکان ویرایش ندارید.
+      </n-alert>
       <div class="modal-grid">
         <!-- LEFT 50 % – موضوع + توضیحات + عطف -->
         <div class="form-left">
@@ -137,7 +140,19 @@
     <template #footer>
       <n-space justify="end">
         <n-button strong secondary @click="hideModal">انصراف</n-button>
-        <n-button strong secondary type="primary" @click="saveTask"> ذخیره </n-button>
+        <n-button strong type="primary" :disabled="!canEdit" @click="saveTask"> ذخیره </n-button>
+      </n-space>
+      <n-space justify="start">
+        <n-button
+          strong
+          secondary
+          type="warning"
+          tag="a"
+          target="_blank"
+          :href="task.recordUrl"
+          v-if="task.recordUrl"
+          >CRM</n-button
+        >
       </n-space>
     </template>
   </n-modal>
@@ -146,6 +161,7 @@
 <script>
 import axios from 'axios'
 import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import { getRegardingTypeOptions } from '@/composables/useEntityMap'
 import { searchEntity, updateTask, searchSystemUsers, getTaskNotes, addTaskNote } from '@/api/crm'
 import moment from 'moment-jalaali'
@@ -172,11 +188,16 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const auth = useAuthStore()
     const modelVisible = computed({
       get: () => props.visible,
       set: (v) => emit('update:visible', v),
     })
-
+    /** user may edit if they’re owner or creator */
+    const canEdit = computed(() => {
+      const me = auth.user?.id
+      return props.task?._ownerid_value === me || props.task?._createdby_value === me
+    })
     function hideModal() {
       modelVisible.value = false
     }
@@ -509,6 +530,7 @@ export default {
       addNote,
       loadNotes,
       NoteList,
+      canEdit,
     }
   },
 }
