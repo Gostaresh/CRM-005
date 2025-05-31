@@ -1,5 +1,11 @@
 /* in src/assets/calendar.css or in style tag */
 #calendar {
-  height: 100%;
-  height: auto;
+  width: 80%;
+}
+
+/* let the dashboard stretch the full width */
+.full-width {
+  max-width: 100% !important; /* cancel Bootstrap max-width */
+  padding-left: 1rem; /* keep a little breathing room */
+  padding-right: 1rem;
 }

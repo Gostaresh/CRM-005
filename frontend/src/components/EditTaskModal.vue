@@ -68,7 +68,7 @@
           </div>
 
           <!-- تاریخ‌ها -->
-          <div class="sub-grid-50-50 mb-3">
+          <div class="sub-grid-33-33-33 mb-3">
             <DatePicker
               auto-submit
               v-model="form.startDisplay"
@@ -94,10 +94,23 @@
               @change="updateEndTime"
               @update:modelValue="updateEndTime"
             />
+            <DatePicker
+              auto-submit
+              v-model="form.endActual"
+              type="datetime"
+              format="jYYYY/jMM/jDD HH:mm"
+              display-format="jYYYY/jMM/jDD HH:mm"
+              :min="form.startDisplay"
+              :jump-minute="30"
+              :round-minute="true"
+              placeholder="مهلت انجام *"
+              @change="updateEndActual"
+              @update:modelValue="updateEndActual"
+            />
           </div>
 
           <!-- اولویت / دیده شده -->
-          <div class="sub-grid-50-50 mb-3">
+          <div class="sub-grid-33-33-33 mb-3">
             <n-select
               v-model:value="form.priority"
               :options="priorityOptions"
@@ -105,12 +118,23 @@
               :consistent-menu-width="true"
               placeholder="اولویت"
             />
-            <n-select
+            <n-switch
+              size="large"
+              label="دیده شده"
               v-model:value="form.newSeen"
               :options="seenOptions"
               placement="bottom-start"
               :consistent-menu-width="true"
-              placeholder="دیده شده؟"
+            >
+              <template #checked>دیده شده</template>
+              <template #unchecked>دیده نشده</template>
+            </n-switch>
+            <n-select
+              v-model:value="form.stateCode"
+              :options="stateOptions"
+              placement="bottom-start"
+              :consistent-menu-width="true"
+              placeholder="وضعیت"
             />
           </div>
         </div>
@@ -207,14 +231,17 @@ export default {
       description: '',
       startDisplay: '',
       endDisplay: '',
+      endActual: '',
       startRaw: '',
       endRaw: '',
+      endARaw: '',
       regardingType: '',
       regardingObjectId: '',
       regardingObjectLabel: '',
       ownerId: '',
       ownerLabel: '',
       priority: 1,
+      stateCode: 0, // 0 = open , 1 = completed , 2 = canceled , 3 - scheduled
       newSeen: 0, // option‑set: 0 = No, 1 = Yes
       lastOwnerLabel: '', // read‑only label
     })
@@ -317,6 +344,13 @@ export default {
       { label: 'دیده نشده', value: 0 },
     ]
 
+    const stateOptions = [
+      { label: 'باز', value: 0 },
+      { label: 'اتمام کار', value: 1 },
+      { label: 'لغو شده', value: 2 },
+      { label: 'برنامه ریزی شده', value: 3 },
+    ]
+
     const resetForm = () => {
       if (!props.task) return
 
@@ -335,9 +369,9 @@ export default {
 
       form.value.priority =
         typeof props.task.prioritycode === 'number' ? props.task.prioritycode : 1
-
+      form.value.statecode = typeof props.task.statecode === 'number' ? props.task.statecode : 1
       form.value.newSeen =
-        typeof props.task.new_seen !== 'undefined' ? (props.task.new_seen ? 1 : 0) : 0
+        typeof props.task.new_seen !== 'undefined' ? (props.task.new_seen ? true : false) : false
 
       form.value.lastOwnerLabel = props.task.lastownername || '(N/A)'
 
@@ -372,8 +406,11 @@ export default {
       form.value.endDisplay = props.task.scheduledend
         ? formatDatetimeLocal(props.task.scheduledend)
         : ''
+      form.value.endActual = props.task.actualend ? formatDatetimeLocal(props.task.actualend) : ''
+
       form.value.startRaw = props.task.scheduledstart || ''
       form.value.endRaw = props.task.scheduledend || ''
+      form.value.endARaw = props.task.actualend || ''
     }
     loadNotes()
     // Utility: Convert Jalali datetime string (jYYYY/jMM/jDD HH:mm) to UTC ISO string
@@ -418,6 +455,13 @@ export default {
       }
     }
 
+    const updateEndActual = (value) => {
+      console.log('updateEndActual received:', value)
+      if (value !== null && value !== undefined) {
+        form.value.endARaw = jalaliToIso(value)
+      }
+    }
+
     let hasInitialized = false
     watch(
       () => form.value.regardingType,
@@ -459,8 +503,10 @@ export default {
           description: form.value.description,
           scheduledstart: form.value.startRaw || props.task.scheduledstart,
           scheduledend: form.value.endRaw || props.task.scheduledend,
-          prioritycode: Number(form.value.priority),
+          actualend: form.value.endARaw || props.task.actualend,
+          prioritycode: String(form.value.priority),
           new_seen: !!Number(form.value.newSeen),
+          statecode: String(form.value.stateCode),
         }
 
         if (form.value.regardingObjectId) {
@@ -472,7 +518,7 @@ export default {
           updatedTask.ownerid = form.value.ownerId
         }
 
-        console.log('form start task:', form.value.startRaw, 'form end Task:', form.value.endRaw)
+        //console.log('form start task:', form.value.startRaw, 'form end Task:', form.value.endRaw)
         const { ok, data } = await updateTask(props.task.activityid, updatedTask)
         if (!ok) throw new Error('HTTP error while updating task')
         const response = { data }
@@ -513,6 +559,7 @@ export default {
       saveTask,
       updateStartTime,
       updateEndTime,
+      updateEndActual,
       regardingTypeOptions,
       regardingOptions,
       searching,
@@ -524,6 +571,7 @@ export default {
       onOwnerSelect,
       priorityOptions,
       seenOptions,
+      stateOptions,
       notes,
       newNote,
       onNewFile,

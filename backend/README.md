@@ -27,17 +27,17 @@ CORS for the Vite dev server is enabled via `cors()` in `src/index.js`.
 
 ## Key Dependencies
 
-| Package                           | Reason we need it                                                    |
-| --------------------------------- | -------------------------------------------------------------------- |
-| **express @ 5.x**                 | Core web‑server—v5 beta brings native Promises & async middleware.   |
-| **express‑session**               | Cookie‑backed session store for NTLM credentials.                    |
-| **axios‑ntlm**                    | Sends NTLM‑auth HTTP requests to Dynamics 365 Web API.               |
-| **ldapjs**                        | Verifies Windows credentials via LDAP bind before CRM lookup.        |
-| **cors**                          | Whitelists front‑end origins during local dev & production.          |
-| **ejs** + **express‑ejs‑layouts** | Lightweight server‑rendered views for login & error pages.           |
-| **multer**                        | Handles `multipart/form-data` uploads for note attachments.          |
-| **winston**                       | Structured logging with daily rotation via `error.log` / `info.log`. |
-| **jalali‑moment**                 | Converts Gregorian datetimes to Jalali for Persian UI consistency.   |
+| Package                           | Reason we need it                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **express @ 5.x**                 | Core web‑server—v5 beta brings native Promises & async middleware.                                      |
+| **express‑session**               | Cookie‑backed session store for NTLM credentials.                                                       |
+| **axios‑ntlm**                    | Sends NTLM‑auth HTTP requests to Dynamics 365 Web API.                                                  |
+| **ldapjs**                        | Verifies Windows credentials via LDAP bind before CRM lookup.                                           |
+| **cors**                          | Whitelists front‑end origins during local dev & production.                                             |
+| **ejs** + **express‑ejs‑layouts** | Lightweight server‑rendered views for login & error pages.                                              |
+| **multer**                        | Handles `multipart/form-data` uploads for note attachments.                                             |
+| **winston**                       | Structured logging with daily rotation via `error.log` / `info.log`.                                    |
+| **jalaali-js** (utility)          | Tiny converter used by `utils/date.js`; most Jalali/Gregorian work now relies on the built‑in Intl API. |
 
 ## Environment & Configuration (`src/config/env.js`, `src/config/entityMap.json`)
 
@@ -200,6 +200,12 @@ backend/
 | **GET** | `/api/crm/entities/:entity`           | Raw OData pass‑through     |
 | **GET** | `/api/crm/search?type={entity}&q=foo` | Fuzzy search across entity |
 
+### API – Metadata (`/api/meta`)
+
+| Method  | Path                     | Description                                                                                       |
+| ------- | ------------------------ | ------------------------------------------------------------------------------------------------- |
+| **GET** | `/api/meta/task/filters` | Returns Task fields (picklists, booleans, lookups, dates) plus option‑sets for the dynamic filter |
+
 ### API – Users
 
 | Method  | Path                            | Description            |
@@ -257,6 +263,8 @@ A **thin wrapper** around the Dynamics 365 Web API (NTLM) that hides all HTTP d
 | `fetchNotes` / `fetchNoteAttachment` / `createNote` | CRUD helpers for task annotations (attachments).                                                                            |
 
 Each public method expects `credentials = { username, password }` (decrypted from the session) and automatically prefixes the Windows **DOMAIN** (`env.domain`) when performing NTLM requests.
+
+For read‑only field metadata the backend exposes an auxiliary **metaService.js** which feeds the `/api/meta` routes.
 
 ### Generic Search Endpoint
 

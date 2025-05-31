@@ -50,7 +50,12 @@ app.use(expressLayouts);
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ["http://192.168.1.22", "https://192.168.1.22"];
+      const allowedOrigins = [
+        "http://192.168.1.22",
+        "https://192.168.1.22",
+        "http://192.168.1.22:5173",
+        "https://192.168.1.22:5173",
+      ];
 
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);

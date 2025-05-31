@@ -113,7 +113,9 @@ class CrmService {
             orderby,
             top: pageSize,
             headers: {
-              Prefer: `odata.maxpagesize=${pageSize}`,
+              Prefer:
+                `odata.maxpagesize=${pageSize},` +
+                'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
             },
           };
 
@@ -135,6 +137,14 @@ class CrmService {
             item.activitytypecode,
             credentials
           );
+          // display name from annotation
+          const ownerName =
+            item["_ownerid_value@OData.Community.Display.V1.FormattedValue"] ||
+            "";
+          item.owner = {
+            id: item[ActivityPointer.properties.ownerId],
+            name: ownerName,
+          };
           return item;
         })
       );
@@ -370,7 +380,7 @@ class CrmService {
 
   async updateTask(activityId, taskData, credentials) {
     const url = `${this.baseUrl}/tasks(${activityId})`;
-    logger.info(`Updating task at: ${url}, data: ${JSON.stringify(taskData)}`);
+    //logger.info(`Updating task at: ${url}, data: ${JSON.stringify(taskData)}`);
     const res = await new Promise((resolve, reject) => {
       httpntlm.patch(
         {

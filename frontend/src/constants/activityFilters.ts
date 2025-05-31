@@ -15,6 +15,11 @@ export const ActivityPresets: ActivityPreset[] = [
     filter: '',
   },
   {
+    key: 'THIS_MONTH',
+    label: 'فعالیت‌های این ماه',
+    filter: 'scheduledend ge {MONTH_START} and scheduledend lt {NEXT_MONTH_START}',
+  },
+  {
     key: 'NEXT_7',
     label: 'فعالیت‌های ۷ روز آینده',
     filter: 'scheduledend ge {TODAY} and scheduledend lt {TODAY+7}',

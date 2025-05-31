@@ -30,17 +30,17 @@ npm run dev                 # Vite dev-server on http://localhost:5173
 
 ## Key Dependencies
 
-| Package                         | Why it’s here                                     |
-| ------------------------------- | ------------------------------------------------- |
-| **vue @ 3**                     | Core reactive UI                                  |
-| **vite @ 5**                    | Fast dev server + production bundler              |
-| **vue-router @ 4**              | SPA routing (`/dashboard`, `/accounts/:id`, …)    |
-| **pinia**                       | Store modules (user, metadata, toast)             |
-| **naive-ui**                    | Component library (forms, dialogs, notifications) |
-| **fullcalendar @ 6** + plugins  | Calendar view with drag‑and‑drop                  |
-| **moment** + **moment‑jalaali** | Date handling and Jalali conversion               |
-| **axios**                       | HTTP client (with credentials)                    |
-| **mitt**                        | Tiny event bus for cross‑component messages       |
+| Package                        | Why it’s here                                     |
+| ------------------------------ | ------------------------------------------------- |
+| **vue @ 3**                    | Core reactive UI                                  |
+| **vite @ 5**                   | Fast dev server + production bundler              |
+| **vue-router @ 4**             | SPA routing (`/dashboard`, `/accounts/:id`, …)    |
+| **pinia**                      | Store modules (user, metadata, toast)             |
+| **naive-ui**                   | Component library (forms, dialogs, notifications) |
+| **fullcalendar @ 6** + plugins | Calendar view with drag‑and‑drop                  |
+| **intl‑jalali (utils)**        | Jalali↔Gregorian helpers via Intl API            |
+| **axios**                      | HTTP client (with credentials)                    |
+| **mitt**                       | Tiny event bus for cross‑component messages       |
 
 ---
 
@@ -113,21 +113,39 @@ For local development, the login form comes pre‑filled with **GOSTARESH\\ehsnt
 ## Dates & Localization
 
 - Back‑end sends **ISO 8601 UTC** strings.
-- `moment‑jalaali` patches Moment so **FullCalendar** shows Jalali dates while internal logic stays Gregorian.
-- Custom directive `v‑jalali` renders readable Jalali timestamps in components.
+- `toJalali()` helper (Intl API) renders Persian dates; all OData filters stay Gregorian.
+- FullCalendar is fed Gregorian dates but displays Jalali UI via `fa` locale + RTL.
 
 ## Dashboard View
 
-- The default landing page after signing in is **DashboardView.vue**, built around **FullCalendar 6** in Jalali locale.
+After sign‑in you land on **DashboardView.vue** – a FullCalendar‑powered agenda
+in Jalali locale.
 
-  - **Week agenda** layout with RTL support, drag‑and‑drop + resize to adjust start/end.
-  - Custom event renderer shows “HH:mm – HH:mm ✓ title” and a coloured bar based on CRM entity.
-  - Clicking an event opens **EditTaskModal**; selecting an empty slot opens **CreateTaskModal**.
-  - **CreateTaskModal** – modal for new tasks; fields for subject, description, “regarding” (type & object), owner, priority, seen flag, and an optional first note (subject/text/file ≤ 330 KB). Converts Jalali date‑times to ISO and calls **/api/crm/activities** (and, if a note is present, **/api/crm/activities/:id/notes**) before refreshing the calendar.
-  - **EditTaskModal** – opens when an existing event is clicked; pre‑loads task data, includes a read‑only “last owner” field, allows updating subject, description, “regarding”, owner, priority, seen flag, and start/end dates. Hosts **NoteList** to view existing annotations and add a new note (subject, text, optional file ≤ 330 KB). Saves via **/api/crm/activities/:id** and triggers `refetchEvents()` on success.
-  - **NoteList** – embedded in **EditTaskModal**; renders a scrollable table of annotations (subject, text, creator, Jalali date) and a paper‑clip link that streams `/api/crm/notes/{id}/download` if an attachment is present.
-  - Calendar updates (`eventDrop`,`eventResize`) PATCH **/api/crm/activities/:id** and automatically `refetchEvents()` on success.
-  - Top‑right _Logout_ button calls `auth.logout()` then routes to **/login**.
+### Core features
+
+| Feature                  | How it works                                                                                                                                                                                                                                                                                                |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Week agenda**          | RTL, drag‑and‑drop & resize to adjust start/end.                                                                                                                                                                                                                                                            |
+| **Event renderer**       | `HH:mm – HH:mm ✓ title` with a coloured _priority dot_ (🔴 High, 🟡 Normal, 🟢 Low).                                                                                                                                                                                                                        |
+| **Modals**               | • **CreateTaskModal** for new tasks. <br>• **EditTaskModal** for existing tasks with embedded **NoteList**.                                                                                                                                                                                                 |
+| **Inline edits**         | Calendar updates (`eventDrop`,`eventResize`) PATCH `/api/crm/activities/:id` and trigger a refresh.                                                                                                                                                                                                         |
+| **Alternate table view** | Press **T** or click **📋 جدول** in the toolbar to replace the calendar with a sortable Naive‑UI **DataTable** showing the same activities. Columns include Subject, Jalali start/end, Actual end, Owner, Seen flag, State & Activity type. Clicking a row (or the _Subject_ link) opens **EditTaskModal**. |
+| **Filter drawer**        | 🔍 button opens **TaskFilterForm**; presets combine with the current calendar window.                                                                                                                                                                                                                       |
+| **Refresh**              | **R** key or 🔄 button.                                                                                                                                                                                                                                                                                     |
+| **Mini calendar**        | Jalali mini‑month on the right; selecting a day navigates the main calendar.                                                                                                                                                                                                                                |
+
+### Keyboard Shortcuts
+
+| Key (⇧ = Shift) | Action                   |
+| --------------- | ------------------------ |
+| **N**           | New task                 |
+| **R**           | Refresh events           |
+| **T**           | Toggle Calendar ↔ Table |
+| **F**           | Open filter drawer       |
+| **.**           | Jump to today            |
+| **⇧ ← / ⇧ →**   | Previous / next period   |
+
+_(Shortcuts ignore keypresses when focus is inside an input field.)_
 
 ---
 

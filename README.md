@@ -46,19 +46,32 @@ Log in with the preset **`GOSTARESH\ehsntb / Ss12345`** credentials (dev only).
 
 ## Feature Highlights
 
-| Layer         | Highlights                                                                                                                                                                          |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Back‑end**  | NTLM + LDAP auth, session cookies, CORS whitelist, PM2 config, dynamic form generation from CRM metadata, fully typed controllers (`activities`, `notes`, `accounts`, `search`, …). |
-| **Front‑end** | RTL Jalali calendar, drag‑&‑resize tasks, modals for create/edit, `NoteList` with file download, Pinia stores, axios‑style `crmFetch` wrapper.                                      |
-| **Core**      | One source of truth for entity names, field constants, status/state codes, language codes, plus helpers `getStatusLabel()` / `getStateLabel()`.                                     |
+| Layer         | Highlights                                                                                                                                                                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Back‑end**  | NTLM + LDAP auth, session cookies, CORS whitelist, PM2 config, dynamic form generation from CRM metadata, **/api/meta** filters endpoint, fully typed controllers (`activities`, `notes`, `accounts`, `search`, …).                                |
+| **Front‑end** | RTL Jalali calendar, drag‑&‑resize tasks, **keyboard shortcuts** (N / R / T / F / Shift ←/→ / \.), instant toggle **Calendar ↔ Table** view, modals for create/edit, `NoteList` with file download, Pinia stores, axios‑style `crmFetch` wrapper. |
+| **Core**      | One source of truth for entity names, field constants, status/state codes, language codes, plus helpers `getStatusLabel()` / `getStateLabel()`.                                                                                                    |
 
 ---
 
 ## Localisation
 
-- All server ⇄ browser dates travel as **ISO 8601 UTC**.
-- UI shows **Jalali** via `moment‑jalaali`.
+- All server ⇄ browser dates travel as **ISO 8601 UTC** (Gregorian) in OData queries.
+- The UI formats dates to **Jalali** with the native **`Intl.DateTimeFormat('fa-IR-u-ca-persian')`** API (fallback helper in `utils/date.js` – no more `moment‑jalaali`).
 - Field labels, state & status codes translate on‑the‑fly using `LanguageCodes.ENGLISH | PERSIAN`.
+
+---
+
+## Keyboard Shortcuts
+
+| Key           | Action                   |
+| ------------- | ------------------------ |
+| **N**         | New task                 |
+| **R**         | Refresh tasks            |
+| **T**         | Toggle Calendar ↔ Table |
+| **F**         | Open filter drawer       |
+| **⇧ ← / ⇧ →** | Previous / next period   |
+| **. (dot)**   | Jump to today            |
 
 ---
 

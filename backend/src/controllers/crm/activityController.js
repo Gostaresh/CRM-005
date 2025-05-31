@@ -1,7 +1,15 @@
 const CrmService = require("../../services/crmService");
 const logger = require("../../utils/logger");
 const { decrypt } = require("../../utils/crypto");
+
 const { ActivityPointer, SystemUser } = require("../../core/resources");
+
+// Dynamics default status codes for Task
+const STATUS_CODE_MAP = {
+  0: 2, // Open      -> Not Started
+  1: 5, // Completed -> Completed
+  2: 6, // Canceled  -> Canceled
+};
 
 const fetchAllActivities = async (req, res) => {
   try {
@@ -100,7 +108,9 @@ const createActivity = async (req, res) => {
     description,
     scheduledstart,
     scheduledend,
+    actualend,
     prioritycode,
+    statecode,
     regardingobjectid,
     regardingtype,
     customworkflowid,
@@ -122,13 +132,19 @@ const createActivity = async (req, res) => {
 
   const utcStartDate = scheduledstart || null;
   const utcEndDate = scheduledend;
+  const utcEndActual = actualend;
+
+  const sc = Math.max(0, Math.min(2, parseInt(statecode) || 0));
 
   const activityData = {
     [ActivityPointer.properties.subject]: subject,
     [ActivityPointer.properties.description]: description || "",
     [ActivityPointer.properties.scheduledStart]: utcStartDate,
     [ActivityPointer.properties.scheduledEnd]: utcEndDate,
+    [ActivityPointer.properties.actualEnd]: utcEndActual,
     [ActivityPointer.properties.priorityCode]: parseInt(prioritycode) || 1,
+    [ActivityPointer.properties.statecode]: sc,
+    [ActivityPointer.properties.statuscode]: STATUS_CODE_MAP[sc],
     "ownerid@odata.bind": `/${SystemUser.type}(${ownerid || userId})`,
     [ActivityPointer.properties.activityTypeCode]: "task",
   };
@@ -181,7 +197,7 @@ const createActivity = async (req, res) => {
 
 const updateTaskDates = async (req, res) => {
   const { activityId } = req.params;
-  const { scheduledstart, scheduledend } = req.body;
+  const { scheduledstart, scheduledend, actualend } = req.body;
   const credentials = {
     username: req.session.user.username.split("\\")[1],
     password: decrypt(req.session.encryptedPassword),
@@ -194,6 +210,7 @@ const updateTaskDates = async (req, res) => {
   const updateData = {
     scheduledstart,
     scheduledend,
+    actualend,
   };
 
   logger.info(
@@ -219,10 +236,11 @@ const updateTask = async (req, res) => {
     description,
     scheduledstart,
     scheduledend,
+    actualend,
     prioritycode,
     regardingobjectid,
     regardingtype,
-    statuscode,
+    statecode,
     ownerid,
     new_seen,
   } = req.body;
@@ -231,14 +249,19 @@ const updateTask = async (req, res) => {
     password: decrypt(req.session.encryptedPassword),
   };
 
+  const sc = Math.max(0, Math.min(2, parseInt(statecode) || 0));
+
   const updateData = {
     subject,
     description,
     scheduledstart,
     scheduledend,
-    prioritycode: prioritycode ? parseInt(prioritycode) : undefined,
+    actualend,
+    statecode: sc,
+    statuscode: STATUS_CODE_MAP[sc],
+    prioritycode: prioritycode ? parseInt(prioritycode) : 1,
   };
-  logger.info(`updateData: ${JSON.stringify(updateData)}`);
+  // logger.info(`updateData: ${JSON.stringify(updateData)}`);
 
   const entityMap = {
     account: "accounts",

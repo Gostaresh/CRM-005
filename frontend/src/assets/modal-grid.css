@@ -2,7 +2,7 @@
 
 .modal-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 50 % | 50 % */
+  grid-template-columns: 0.4fr 0.6fr;
   gap: 1.25rem;
   direction: rtl; /* ensure columns flow right‑to‑left naturally */
 }
@@ -53,9 +53,15 @@
   gap: 1rem;
   direction: rtl;
 }
-
+.sub-grid-33-33-33 {
+  display: grid;
+  grid-template-columns: 0.3333fr 0.3333fr 0.3333fr;
+  gap: 1rem;
+  direction: rtl;
+}
 .sub-grid-33-66 > *,
-.sub-grid-50-50 > * {
+.sub-grid-50-50 > *,
+.sub-grid-33-33-33 > * {
   width: 100%;
   box-sizing: border-box;
 }

@@ -5,7 +5,7 @@
     :mask-closable="false"
     title="ایجاد وظیفه"
     class="create-task-modal"
-    style="width: 80%; max-width: 85%"
+    style="width: 95%; max-width: 95%"
   >
     <div class="modal-grid">
       <!--  LEFT 50 %  – موضوع + توضیحات + عطف -->
@@ -67,7 +67,7 @@
         </div>
 
         <!-- تاریخ شروع / پایان -->
-        <div class="sub-grid-50-50 mb-3">
+        <div class="sub-grid-33-33-33 mb-3">
           <DatePicker
             auto-submit
             v-model="form.startMoment"
@@ -89,10 +89,20 @@
             :round-minute="true"
             placeholder="تاریخ پایان *"
           />
+          <DatePicker
+            auto-submit
+            v-model="form.endActual"
+            type="date"
+            format="jYYYY/jMM/jDD"
+            display-format="jYYYY/jMM/jDD"
+            :min="form.startMoment"
+            :round-minute="true"
+            placeholder="نهایت مهلت *"
+          />
         </div>
 
         <!-- اولویت / دیده شده -->
-        <div class="sub-grid-50-50 mb-3">
+        <div class="sub-grid-33-33-33 mb-3">
           <n-select
             v-model:value="form.priority"
             placement="bottom-end"
@@ -101,13 +111,23 @@
             :options="priorityOptions"
             placeholder="اولویت"
           />
-          <n-select
+          <n-switch
+            size="large"
+            label="دیده شده"
             v-model:value="form.newSeen"
             :options="seenOptions"
-            placement="bottom-end"
+            placement="bottom-start"
             :consistent-menu-width="true"
-            teleported="false"
-            placeholder="دیده شده؟"
+          >
+            <template #checked>دیده شده</template>
+            <template #unchecked>دیده نشده</template>
+          </n-switch>
+          <n-select
+            v-model:value="form.state"
+            :options="stateOptions"
+            placement="bottom-start"
+            :consistent-menu-width="true"
+            placeholder="وضعیت"
           />
         </div>
       </div>
@@ -158,7 +178,7 @@ import { searchEntity, createTask, searchSystemUsers, addTaskNote } from '@/api/
 \* ---------------------------------------------------------------- */
 
 import { reactive, ref, watch, computed, onMounted } from 'vue'
-import moment from 'moment-jalaali'
+import moment, { now } from 'moment-jalaali'
 import { useMessage } from 'naive-ui'
 import Vue3PersianDatetimePicker from 'vue3-persian-datetime-picker'
 
@@ -190,15 +210,18 @@ const form = reactive({
   description: '',
   startMoment: null, // moment | null
   endMoment: null, // moment | null  (required)
+  endActual: null,
   startIso: '',
   endIso: '',
-  priority: '1',
+  endAIso: '',
+  priority: 0,
   regardingType: 'account',
   regardingObjectId: '',
   regardingObjectLabel: '',
   ownerId: '',
   ownerLabel: '',
-  newSeen: 0,
+  newSeen: false,
+  state: 0,
 })
 
 /**
@@ -210,8 +233,10 @@ function initDefaults() {
   Object.assign(form, {
     startMoment: '',
     endMoment: '',
+    endActual: '',
     startIso: '',
     endIso: '',
+    endAIso: '',
   })
 
   // Helper → ISO ➜ local‑jalali string
@@ -252,14 +277,21 @@ watch(
   },
 )
 const priorityOptions = [
-  { label: 'کم', value: '0' },
-  { label: 'متوسط', value: '1' },
-  { label: 'زیاد', value: '2' },
+  { label: 'کم', value: 0 },
+  { label: 'متوسط', value: 1 },
+  { label: 'زیاد', value: 2 },
 ]
 
 const seenOptions = [
   { label: 'دیده شده', value: 1 },
   { label: 'دیده نشده', value: 0 },
+]
+
+const stateOptions = [
+  { label: 'باز', value: 0 },
+  { label: 'اتمام کار', value: 1 },
+  { label: 'لغو شده', value: 2 },
+  { label: 'برنامه ریزی شده', value: 3 },
 ]
 
 const regardingTypeOptions = getRegardingTypeOptions()
@@ -328,6 +360,12 @@ watch(
   () => form.endMoment,
   (val) => {
     form.endIso = jalaliToIso(val)
+  },
+)
+watch(
+  () => form.endActual,
+  (val) => {
+    form.endAIso = jalaliToIso(val)
   },
 )
 watch(
@@ -404,6 +442,10 @@ async function save() {
     message.error('تاریخ سررسید الزامی است')
     return
   }
+  if (!form.endActual) {
+    message.error('تاریخ انجام الزامی است')
+    return
+  }
   loading.value = true
 
   try {
@@ -412,8 +454,10 @@ async function save() {
       description: form.description,
       scheduledstart: form.startIso || undefined,
       scheduledend: form.endIso, // required
-      prioritycode: Number(form.priority),
+      actualend: form.endAIso,
+      prioritycode: String(form.priority),
       new_seen: !!Number(form.newSeen),
+      statecode: String(form.state),
     }
 
     // only add regarding if both pieces are present
@@ -466,8 +510,10 @@ function resetFormFields() {
     description: '',
     startMoment: '',
     endMoment: '',
+    endActual: '',
     startIso: '',
     endIso: '',
+    endAIso: '',
     priority: '1',
     regardingType: 'account',
     regardingObjectId: '',
@@ -475,6 +521,7 @@ function resetFormFields() {
     ownerId: '',
     ownerLabel: '',
     newSeen: 0,
+    state: 0,
   })
   Object.assign(note, { subject: '', text: '', file: null, base64: '' })
   regardingOptions.value = []
