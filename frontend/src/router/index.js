@@ -11,7 +11,13 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/login' },
     { path: '/login', name: 'Login', component: LoginView },
-    { path: '/dashboard', name: 'Dashboard', component: DashboardView },
+    {
+      path: '/dashboard',
+      name: 'Dashboard',
+      component: DashboardView,
+      // pass ?activityId=<GUID> as a prop so DashboardView can open the modal
+      props: (route) => ({ activityId: route.query.activityId || null }),
+    },
   ],
 })
 

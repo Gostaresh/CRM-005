@@ -454,23 +454,26 @@ async function save() {
       description: form.description,
       scheduledstart: form.startIso || undefined,
       scheduledend: form.endIso, // required
-      actualend: form.endAIso,
-      prioritycode: String(form.priority),
-      new_seen: !!Number(form.newSeen),
-      statecode: String(form.state),
+      actualend: form.endAIso || undefined,
+      prioritycode: Number(form.priority),
+      new_seen: !!form.newSeen,
     }
 
-    // only add regarding if both pieces are present
+    // Regarding lookup – only add when both pieces exist
     if (form.regardingObjectId) {
-      payload.regardingobjectid = form.regardingObjectId
-      payload.regardingtype = form.regardingType
+      const nav = `regardingobjectid_${form.regardingType}@odata.bind`
+      payload[nav] = `/${form.regardingType}s(${form.regardingObjectId})`
     }
 
-    // only add owner if user picked one
+    // Owner lookup
     if (form.ownerId) {
-      payload.ownerid = form.ownerId
+      payload['ownerid@odata.bind'] = `/systemusers(${form.ownerId})`
     }
 
+    // (Remove any legacy plain columns if present)
+    // payload.regardingobjectid, payload.regardingtype, payload.ownerid are not set anymore
+
+    console.log(payload)
     const { ok, data } = await createTask(payload)
     if (!ok) throw new Error('HTTP error creating task')
 

@@ -95,7 +95,7 @@ class CrmService {
     try {
       const select =
         Object.values(ActivityPointer.properties).join(",") +
-        ",new_seen,_createdby_value"; // add creator lookup field
+        ",_createdby_value"; // new_seen exists only on tasks – fetched later
       let filter = "";
 
       if (customFilter) {
@@ -119,8 +119,12 @@ class CrmService {
             },
           };
 
-      // use the *task* entity set so custom task fields are available
-      const data = await this.fetchEntity("tasks", query, credentials);
+      // use the activitypointer entity set for all activities
+      const data = await this.fetchEntity(
+        "activitypointers",
+        query,
+        credentials
+      );
 
       if (!data || !data.value) {
         logger.error("Invalid response format from CRM");
@@ -129,9 +133,6 @@ class CrmService {
 
       const withExtras = await Promise.all(
         (data.value || []).map(async (item) => {
-          // boolean flag (undefined → false)
-          item.seen = !!item.new_seen;
-
           // color based on activitytypecode (task, phonecall …)
           item.color = await this._getEntityColor(
             item.activitytypecode,
@@ -148,6 +149,29 @@ class CrmService {
           return item;
         })
       );
+
+      /* ── second call: retrieve new_seen for tasks only ───────────── */
+      const taskIds = withExtras
+        .filter((a) => a.activitytypecode === "task")
+        .map((a) => a.activityid);
+
+      if (taskIds.length) {
+        const filter = taskIds.map((id) => `activityid eq ${id}`).join(" or ");
+        const taskMeta = await this.fetchEntity(
+          "tasks",
+          { select: "activityid,new_seen", filter, top: taskIds.length },
+          credentials
+        );
+        const seenMap = new Map(
+          (taskMeta.value || []).map((t) => [t.activityid, !!t.new_seen])
+        );
+        withExtras.forEach((a) => {
+          a.seen = seenMap.has(a.activityid) ? seenMap.get(a.activityid) : true;
+        });
+      } else {
+        // non‑task activities have no seen field
+        withExtras.forEach((a) => (a.seen = false));
+      }
 
       return {
         value: withExtras,
@@ -247,6 +271,15 @@ class CrmService {
   async createEntity(entity, data, credentials) {
     const url = `${this.baseUrl}/${entity}`;
     logger.info(`Creating entity at: ${url}, data: ${JSON.stringify(data)}`);
+    // Sanitize Dynamics payload
+    const payload = { ...data };
+    // Remove legacy and read-only columns
+    // Only remove actualstart (not actualend)
+    delete payload.statecode;
+    delete payload.statuscode;
+    delete payload.actualstart; // read‑only
+    delete payload.ownerid; // shadow GUID column – use @odata.bind
+
     const res = await new Promise((resolve, reject) => {
       const requestOptions = {
         url,
@@ -260,7 +293,7 @@ class CrmService {
           "OData-Version": "4.0",
           Accept: "application/json",
         },
-        json: data,
+        json: payload,
       };
       logger.debug(
         `Sending POST request: ${JSON.stringify(requestOptions, null, 2)}`
@@ -304,11 +337,11 @@ class CrmService {
         logger.info(`Created entity ID from header: ${activityId}`);
       } else {
         // Fallback: query by subject + ownerid (works for tasks, not for annotations)
-        const ownerId = data["ownerid@odata.bind"]?.match(
+        const ownerId = payload["ownerid@odata.bind"]?.match(
           /systemusers\(([^)]+)\)/
         )?.[1];
 
-        if (!ownerId || !data.subject) {
+        if (!ownerId || !payload.subject) {
           logger.warn(
             "204 response without OData-EntityId header; returning without ID"
           );
@@ -317,7 +350,7 @@ class CrmService {
 
         const query = {
           select: "activityid",
-          filter: `subject eq '${data.subject}' and _ownerid_value eq '${ownerId}'`,
+          filter: `subject eq '${payload.subject}' and _ownerid_value eq '${ownerId}'`,
           orderby: "createdon desc",
           top: 1,
         };
@@ -337,7 +370,7 @@ class CrmService {
   }
 
   async updateTaskDates(activityId, dates, credentials) {
-    const url = `${this.baseUrl}/tasks(${activityId})`;
+    const url = `${this.baseUrl}/activitypointers(${activityId})`;
     // Commenting on date conversion logic in the updateTaskDates method
     logger.info(
       `Updating task dates at: ${url}, data: ${JSON.stringify(dates)}`

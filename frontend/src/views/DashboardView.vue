@@ -115,6 +115,13 @@
 </template>
 
 <script setup>
+/** when the route contains ?activityId=<GUID> it is forwarded here */
+const props = defineProps({
+  activityId: {
+    type: String,
+    default: null,
+  },
+})
 /* ---------------------------------------------------------------------------
  * imports
  * -------------------------------------------------------------------------*/
@@ -203,6 +210,13 @@ const tableColumns = [
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeys)
+})
+
+/* open EditTaskModal when arriving with ?activityId=… */
+onMounted(() => {
+  if (props.activityId) {
+    loadTaskById(props.activityId)
+  }
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeys)

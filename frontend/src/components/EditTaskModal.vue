@@ -177,6 +177,17 @@
           v-if="task.recordUrl"
           >CRM</n-button
         >
+        <n-button
+          strong
+          secondary
+          tag="a"
+          :href="shareLink"
+          target="_blank"
+          type="default"
+          v-if="shareLink"
+        >
+          لینک اشتراک
+        </n-button>
       </n-space>
     </template>
   </n-modal>
@@ -225,6 +236,11 @@ export default {
     function hideModal() {
       modelVisible.value = false
     }
+    const shareLink = computed(() =>
+      props.task?.activityid
+        ? `${window.location.origin}/dashboard?activityId=${props.task.activityid}`
+        : '',
+    )
 
     const form = ref({
       subject: '',
@@ -579,6 +595,7 @@ export default {
       loadNotes,
       NoteList,
       canEdit,
+      shareLink,
     }
   },
 }

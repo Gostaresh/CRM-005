@@ -110,7 +110,6 @@ const createActivity = async (req, res) => {
     scheduledend,
     actualend,
     prioritycode,
-    statecode,
     regardingobjectid,
     regardingtype,
     customworkflowid,
@@ -134,8 +133,6 @@ const createActivity = async (req, res) => {
   const utcEndDate = scheduledend;
   const utcEndActual = actualend;
 
-  const sc = Math.max(0, Math.min(2, parseInt(statecode) || 0));
-
   const activityData = {
     [ActivityPointer.properties.subject]: subject,
     [ActivityPointer.properties.description]: description || "",
@@ -143,10 +140,7 @@ const createActivity = async (req, res) => {
     [ActivityPointer.properties.scheduledEnd]: utcEndDate,
     [ActivityPointer.properties.actualEnd]: utcEndActual,
     [ActivityPointer.properties.priorityCode]: parseInt(prioritycode) || 1,
-    [ActivityPointer.properties.statecode]: sc,
-    [ActivityPointer.properties.statuscode]: STATUS_CODE_MAP[sc],
     "ownerid@odata.bind": `/${SystemUser.type}(${ownerid || userId})`,
-    [ActivityPointer.properties.activityTypeCode]: "task",
   };
 
   const entityMap = {
