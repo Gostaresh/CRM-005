@@ -1,48 +1,62 @@
 <template>
   <n-message-provider>
     <div class="container py-4 full-width" dir="rtl">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="text-center flex-grow-1">
-          <h2 class="mb-0">داشبورد</h2>
+      <div class="d-flex align-items-center mb-3 gap-3 justify-content-between">
+        <!-- keep title on the RTL‑right -->
+        <h2 class="m-0">داشبورد</h2>
+        <n-button-group>
+          <n-select
+            v-model:value="selectedPreset"
+            :options="presetOptions"
+            size="medium"
+            style="width: 220px"
+            @update:value="presetChange"
+          />
+          <!-- categories dropdown -->
+          <n-dropdown
+            trigger="hover"
+            placement="bottom-start"
+            size="large"
+            :options="menuOptions"
+            @select="handleMenuSelect"
+          >
+            <n-button secondary type="default" class="px-3">📂 منو</n-button>
+          </n-dropdown>
+          <n-button secondary type="primary" @click="showFilter = true">🔍 فیلتر</n-button>
+          <n-button secondary @click="refreshCalendar" title="بارگیری دوباره"
+            >🔄 بروزرسانی</n-button
+          >
+          <n-button type="primary" @click="isCreateVisible = true">➕ ایجاد فعالیت جدید</n-button>
+        </n-button-group>
+        <!-- push user / help / logout to RTL‑left -->
+        <div class="d-flex align-items-center gap-3">
           <small v-if="auth.user" class="text-muted">
             {{ auth.user.fullname || auth.user.username }}
           </small>
-          <n-button text @click="showShortcuts = true">❔</n-button>
-          <n-modal v-model:show="showShortcuts" preset="dialog">
-            <template #header>کلیدهای میان‌بر</template>
-            <ul class="list-unstyled m-0">
-              <li><kbd>N</kbd> ایجاد فعالیت جدید</li>
-              <li><kbd>R</kbd> بازآوری تقویم</li>
-              <li><kbd>T</kbd> تقویم ⇄ جدول</li>
-              <li><kbd>F</kbd> فیلتر</li>
-              <li><kbd>Shift + →/←</kbd> دوره بعد / قبل</li>
-              <li><kbd>.</kbd> امروز</li>
-            </ul>
-          </n-modal>
+          <n-tooltip>
+            <template #trigger>
+              <n-button text @click="showShortcuts = true">❓</n-button>
+            </template>
+            کلیدهای میان‌بر
+          </n-tooltip>
+          <button class="btn btn-outline-danger" @click="logout">خروج</button>
         </div>
 
-        <button class="btn btn-outline-danger" @click="logout">خروج</button>
+        <!-- shortcuts modal stays unchanged -->
+        <n-modal v-model:show="showShortcuts" preset="dialog" dir="rtl">
+          <template #header>کلیدهای میان‌بر</template>
+          <ul class="list-unstyled m-0">
+            <li><kbd>N</kbd> ایجاد فعالیت جدید</li>
+            <li><kbd>R</kbd> بازآوری تقویم</li>
+            <li><kbd>T</kbd> تقویم ⇄ جدول</li>
+            <li><kbd>F</kbd> فیلتر</li>
+            <li><kbd>Shift + →/←</kbd> دوره بعد / قبل</li>
+            <li><kbd>.</kbd> امروز</li>
+          </ul>
+        </n-modal>
       </div>
 
-      <div class="mb-3 text-end d-flex justify-content-between mb-1 gap-2">
-        <n-select
-          v-model:value="selectedPreset"
-          :options="presetOptions"
-          size="large"
-          style="width: 220px"
-          @update:value="presetChange"
-        />
-        <!-- Filter drawer toggle -->
-        <button class="btn btn-outline-primary" @click="showFilter = true">🔍 فیلتر</button>
-
-        <!-- Refresh -->
-        <button class="btn btn-outline-secondary" @click="refreshCalendar" title="بارگیری دوباره">
-          🔄 بروزرسانی
-        </button>
-
-        <!-- New activity -->
-        <button class="btn btn-primary" @click="isCreateVisible = true">ایجاد فعالیت جدید</button>
-      </div>
+      <div class="mb-3 d-flex justify-content-between align-items-center gap-2"></div>
 
       <div class="calendar-area">
         <!-- Calendar + mini when view is CAL -->
@@ -125,18 +139,20 @@ const props = defineProps({
 /* ---------------------------------------------------------------------------
  * imports
  * -------------------------------------------------------------------------*/
-import { ref, watch, nextTick, h, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, h, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import listPlugin from '@fullcalendar/list'
-import { NMessageProvider, NSelect, NSpin, NDataTable } from 'naive-ui'
+import { NMessageProvider, NSelect, NSpin, NDataTable, NModal } from 'naive-ui'
 import { NDrawer, NDrawerContent } from 'naive-ui'
+const showShortcuts = ref(false)
 const showFilter = ref(false)
 
 import { useAuthStore } from '@/stores/auth'
+import { useMenuStore } from '@/stores/menu'
 import EditTaskModal from '@/components/EditTaskModal.vue'
 import CreateTaskModal from '@/components/CreateTaskModal.vue'
 import TaskFilterForm from '@/components/TaskFilterForm.vue'
@@ -152,6 +168,29 @@ const BASE_URL = ''
 
 const router = useRouter()
 const auth = useAuthStore()
+/* ── dynamic menu ─────────────────────────────────────────────── */
+const menuStore = useMenuStore()
+onMounted(() => {
+  if (!menuStore.tree.length) menuStore.load()
+})
+
+function treeToOptions(nodes) {
+  return nodes.map((n) => ({
+    label: n.title,
+    key: `node-${n.id}`, //  <- ALWAYS the same for the same record
+    link: n.link || '', // NEW → keep original URL
+    children: n.children?.length ? treeToOptions(n.children) : undefined,
+  }))
+}
+
+const menuOptions = computed(() => treeToOptions(menuStore.tree))
+
+function handleMenuSelect(key, option) {
+  // Only leaf nodes have no children and have a link
+  if (!option.children && option.link) {
+    window.open(option.link, '_blank')
+  }
+}
 
 const isEditModalVisible = ref(false)
 const selectedTask = ref(null)
@@ -280,6 +319,12 @@ const miniOptions = {
   selectable: false,
   showNonCurrentDates: false,
   fixedWeekCount: false, // true gives exactly 6 rows
+  dayMaxEvents: false,
+  dayHeaders: true,
+  locale: 'fa',
+  firstDay: 6,
+  direction: 'rtl',
+  events: [], // no events in the mini
   dayHeaderContent: ({ text }) => {
     const map = {
       شنبه: 'ش',
@@ -296,13 +341,10 @@ const miniOptions = {
     // Jump the main calendar to the clicked day
     calendarRef.value?.getApi().gotoDate(date)
   },
-  dayMaxEvents: false,
-  navLinks: false,
-  dayHeaders: true,
-  locale: 'fa',
-  firstDay: 6,
-  direction: 'rtl',
-  events: [], // no events in the mini
+  dayCellClassNames: ({ date }) => {
+    const today = new Date()
+    return date.toDateString() === today.toDateString() ? ['mini-today'] : []
+  },
   dateClick({ date, dayEl }) {
     // clear previous
     document
@@ -440,6 +482,20 @@ function formatTime(date) {
 /* ---------------------------------------------------------------------------
  * FullCalendar options
  * -------------------------------------------------------------------------*/
+/** Time‑grid spans 07‑22.  Clamp a Date into that visible band for display
+ *  while keeping the true times in extendedProps. */
+function clampToGrid(date, isStart) {
+  if (!date) return date
+  const d = new Date(date) // copy
+  const H = d.getHours()
+  if (H < 7) {
+    d.setHours(7, 0, 0, 0)
+  } else if (H >= 22) {
+    // put late events in the last slot 21:00‑22:00
+    d.setHours(21, 59, 0, 0)
+  }
+  return d
+}
 /** Format ISO into “YYYY/MM/DD HH:mm” using the Persian calendar.
  *  Works in modern browsers with Intl DateTimeFormat. */
 function toJalali(iso) {
@@ -469,7 +525,7 @@ const calendarOptions = {
   eventStartEditable: true,
   eventDurationEditable: true,
   direction: 'rtl',
-  height: '100%',
+  height: '85vh',
   slotMinTime: '07:00:00' /* show from 07:00 */,
   slotMaxTime: '22:00:00' /* …until 22:00 */,
   scrollTime: '07:00:00' /* auto‑scroll to 07:00 */,
@@ -510,8 +566,9 @@ const calendarOptions = {
         value.map((t) => ({
           id: t.activityid,
           title: t.subject,
-          start: t.scheduledstart,
-          end: t.scheduledend,
+          // display times are clamped to 07‑22 so early/late tasks remain visible
+          start: clampToGrid(t.scheduledstart, true),
+          end: clampToGrid(t.scheduledend ?? t.scheduledstart, false),
           extendedProps: t,
           backgroundColor: t.seen ? t.color : '#FFF8A6',
           borderColor: t.seen ? t.color : '#FFF8A6',
@@ -671,6 +728,12 @@ watch(viewMode, (m) => {
 </script>
 
 <style scoped>
+.header-bar {
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
 /* optional: tweak FullCalendar height */
 :deep(.fc) {
   min-height: 80vh;
@@ -714,21 +777,6 @@ watch(viewMode, (m) => {
   text-overflow: ellipsis;
 }
 
-.mini-calendar-wrapper {
-  width: 300px;
-  float: right; /* or use flexbox/grid */
-  margin-left: 1rem;
-}
-.mini-calendar-wrapper :deep(.fc) {
-  height: auto; /* let it shrink */
-}
-
-.mini-selected {
-  background-color: #0d6efd !important;
-  color: #fff !important;
-  border-radius: 4px;
-}
-
 :deep(.n-data-table) {
   width: 100%;
 }
@@ -754,4 +802,38 @@ watch(viewMode, (m) => {
 :deep(.prio-low) {
   background: #28a745;
 } /* green */
+
+.mini-calendar-wrapper {
+  width: 300px;
+  float: right; /* or use flexbox/grid */
+  margin-left: 1rem;
+}
+.mini-calendar-wrapper :deep(.fc) {
+  height: auto; /* let it shrink */
+}
+.mini-selected {
+  background-color: #0d6efd !important;
+  color: #fff !important;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px white;
+}
+:deep(.mini-today) {
+  background-color: #e6f4ff !important;
+  border-radius: 4px;
+  font-weight: bold;
+}
+.mini-selected:hover {
+  background-color: #0b5ed7 !important;
+}
+.mini-card-header {
+  font-weight: 600;
+  background: #f7f7f7;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #ddd;
+}
+@media (max-width: 768px) {
+  .mini-calendar-wrapper {
+    display: none;
+  }
+}
 </style>

@@ -38,6 +38,7 @@ CORS for the Vite dev server is enabled via `cors()` in `src/index.js`.
 | **multer**                        | Handles `multipart/form-data` uploads for note attachments.                                             |
 | **winston**                       | Structured logging with daily rotation via `error.log` / `info.log`.                                    |
 | **jalaali-js** (utility)          | Tiny converter used by `utils/date.js`; most Jalali/Gregorian work now relies on the built‑in Intl API. |
+| **mssql**                         | SQL Server driver used by the new _/api/menus_ endpoint.                                                |
 
 ## Environment & Configuration (`src/config/env.js`, `src/config/entityMap.json`)
 
@@ -199,6 +200,12 @@ backend/
 | ------- | ------------------------------------- | -------------------------- |
 | **GET** | `/api/crm/entities/:entity`           | Raw OData pass‑through     |
 | **GET** | `/api/crm/search?type={entity}&q=foo` | Fuzzy search across entity |
+
+### API – Menus (`/api/ui`)
+
+| Method  | Path           | Description                                                                        |
+| ------- | -------------- | ---------------------------------------------------------------------------------- |
+| **GET** | `/api/ui/menu` | Returns a nested JSON tree of categories / sub-categories for the header dropdown. |
 
 ### API – Metadata (`/api/meta`)
 

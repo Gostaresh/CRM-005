@@ -30,17 +30,18 @@ npm run dev                 # Vite dev-server on http://localhost:5173
 
 ## Key Dependencies
 
-| Package                        | Why it’s here                                     |
-| ------------------------------ | ------------------------------------------------- |
-| **vue @ 3**                    | Core reactive UI                                  |
-| **vite @ 5**                   | Fast dev server + production bundler              |
-| **vue-router @ 4**             | SPA routing (`/dashboard`, `/accounts/:id`, …)    |
-| **pinia**                      | Store modules (user, metadata, toast)             |
-| **naive-ui**                   | Component library (forms, dialogs, notifications) |
-| **fullcalendar @ 6** + plugins | Calendar view with drag‑and‑drop                  |
-| **intl‑jalali (utils)**        | Jalali↔Gregorian helpers via Intl API            |
-| **axios**                      | HTTP client (with credentials)                    |
-| **mitt**                       | Tiny event bus for cross‑component messages       |
+| Package                        | Why it’s here                                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| **vue @ 3**                    | Core reactive UI                                                                                                  |
+| **vite @ 5**                   | Fast dev server + production bundler                                                                              |
+| **vue-router @ 4**             | SPA routing (`/dashboard`, `/accounts/:id`, …)                                                                    |
+| **pinia**                      | Store modules (user, metadata, toast)                                                                             |
+| **naive-ui**                   | Component library (forms, dialogs, notifications)                                                                 |
+| **fullcalendar @ 6** + plugins | Calendar view with drag‑and‑drop                                                                                  |
+| **intl‑jalali (utils)**        | Jalali↔Gregorian helpers via Intl API                                                                            |
+| **axios**                      | HTTP client (with credentials)                                                                                    |
+| **mitt**                       | Tiny event bus for cross‑component messages                                                                       |
+| **mssql**                      | SQL‑Server driver (only used by the back‑end, but the front‑end README references the menu API that relies on it) |
 
 ---
 
@@ -132,7 +133,7 @@ in Jalali locale.
 | **Alternate table view** | Press **T** or click **📋 جدول** in the toolbar to replace the calendar with a sortable Naive‑UI **DataTable** showing the same activities. Columns include Subject, Jalali start/end, Actual end, Owner, Seen flag, State & Activity type. Clicking a row (or the _Subject_ link) opens **EditTaskModal**. |
 | **Filter drawer**        | 🔍 button opens **TaskFilterForm**; presets combine with the current calendar window.                                                                                                                                                                                                                       |
 | **Refresh**              | **R** key or 🔄 button.                                                                                                                                                                                                                                                                                     |
-| **Mini calendar**        | Jalali mini‑month on the right; selecting a day navigates the main calendar.                                                                                                                                                                                                                                |
+| **Mini calendar**        | Jalali mini‑month (compact 240 px height) on the right; selecting a day navigates the main calendar.                                                                                                                                                                                                        |
 
 ### Keyboard Shortcuts
 
@@ -145,7 +146,37 @@ in Jalali locale.
 | **.**           | Jump to today            |
 | **⇧ ← / ⇧ →**   | Previous / next period   |
 
-_(Shortcuts ignore keypresses when focus is inside an input field.)_
+#### Dynamic Categories / Quick‑Links 📂
+
+The header now includes a **📂 منو** dropdown powered by `Pinia` and Naive‑UI
+`n‑dropdown`.  
+It consumes the JSON tree returned from **GET `/api/menus`** and renders
+arbitrary‑depth sub‑menus (categories → sub‑categories → links).  
+The data is fetched once at app start by `useMenuStore`:
+
+```ts
+// src/stores/menu.js
+export const useMenuStore = defineStore('menu', {
+  state: () => ({ tree: [] }),
+  actions: {
+    async load() {
+      this.tree = (await axios.get('/api/menus')).data
+    },
+  },
+})
+```
+
+Inside `DashboardView.vue`:
+
+```html
+<n-dropdown trigger="hover" :options="menuOptions" @select="handleMenuSelect">
+  <n-button secondary>📂 منو</n-button>
+</n-dropdown>
+```
+
+Leaf items (`option.children === undefined`) open their `link` in a new tab,
+so the menu doubles as a quick portal to legacy PHP tools, Power BI reports
+and other in‑house pages.
 
 ---
 

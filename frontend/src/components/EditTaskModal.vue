@@ -196,6 +196,7 @@
 <script>
 import axios from 'axios'
 import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
+import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import { getRegardingTypeOptions } from '@/composables/useEntityMap'
 import { searchEntity, updateTask, searchSystemUsers, getTaskNotes, addTaskNote } from '@/api/crm'
@@ -224,6 +225,7 @@ export default {
   },
   setup(props, { emit }) {
     const auth = useAuthStore()
+    const message = useMessage()
     const modelVisible = computed({
       get: () => props.visible,
       set: (v) => emit('update:visible', v),
@@ -385,7 +387,7 @@ export default {
 
       form.value.priority =
         typeof props.task.prioritycode === 'number' ? props.task.prioritycode : 1
-      form.value.statecode = typeof props.task.statecode === 'number' ? props.task.statecode : 1
+      form.value.stateCode = typeof props.task.statecode === 'number' ? props.task.statecode : 1
       form.value.newSeen =
         typeof props.task.new_seen !== 'undefined' ? (props.task.new_seen ? true : false) : false
 
@@ -537,13 +539,16 @@ export default {
         //console.log('form start task:', form.value.startRaw, 'form end Task:', form.value.endRaw)
         const { ok, data } = await updateTask(props.task.activityid, updatedTask)
         if (!ok) throw new Error('HTTP error while updating task')
-        const response = { data }
-        emit('update', {
-          ...response.data,
-          start: response.data.scheduledstart,
-          end: response.data.scheduledend,
-        })
-        hideModal()
+        if (ok) {
+          message.success('فعالیت با موفقیت ویرایش شد.')
+          const response = { data }
+          emit('update', {
+            ...response.data,
+            start: response.data.scheduledstart,
+            end: response.data.scheduledend,
+          })
+          hideModal()
+        }
       } catch (error) {
         console.error('Failed to update task:', error)
         alert('Failed to update task. Please try again.')

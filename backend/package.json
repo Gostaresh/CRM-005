@@ -46,6 +46,7 @@
     "moment-jalaali": "^0.10.4",
     "moment-jalali": "^0.3.9",
     "moment-timezone": "^0.5.48",
+    "mssql": "^11.0.1",
     "multer": "^2.0.0",
     "node-fetch": "^3.3.2",
     "node-http-ntlm": "^1.7.5",

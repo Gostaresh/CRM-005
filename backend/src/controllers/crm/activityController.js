@@ -255,6 +255,11 @@ const updateTask = async (req, res) => {
     statuscode: STATUS_CODE_MAP[sc],
     prioritycode: prioritycode ? parseInt(prioritycode) : 1,
   };
+  if (sc === 1) {
+    // Mark Complete behavior
+    updateData.percentcomplete = 100;
+    updateData.actualend = actualend || new Date().toISOString(); // fallback to now if not provided
+  }
   // logger.info(`updateData: ${JSON.stringify(updateData)}`);
 
   const entityMap = {

@@ -29,7 +29,7 @@ cd CRM-005
 
 # 1. Back‑end
 cd backend
-cp .env.example .env          # set CRM_URL, DOMAIN, SESSION_SECRET …
+cp .env.example .env          # set CRM_URL, DOMAIN, SESSION_SECRET, SQL_HOST …
 npm i
 npm run dev                   # http://localhost:3000
 
@@ -50,7 +50,30 @@ Log in with the preset **`GOSTARESH\ehsntb / Ss12345`** credentials (dev only).
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Back‑end**  | NTLM + LDAP auth, session cookies, CORS whitelist, PM2 config, dynamic form generation from CRM metadata, **/api/meta** filters endpoint, fully typed controllers (`activities`, `notes`, `accounts`, `search`, …).                                |
 | **Front‑end** | RTL Jalali calendar, drag‑&‑resize tasks, **keyboard shortcuts** (N / R / T / F / Shift ←/→ / \.), instant toggle **Calendar ↔ Table** view, modals for create/edit, `NoteList` with file download, Pinia stores, axios‑style `crmFetch` wrapper. |
-| **Core**      | One source of truth for entity names, field constants, status/state codes, language codes, plus helpers `getStatusLabel()` / `getStateLabel()`.                                                                                                    |
+|               | **NEW:** Dynamic multi‑level menu (categories & sub‑categories) loaded from `/api/menus` and rendered via Naive‑UI dropdown.                                                                                                                       |
+
+---
+
+## Dynamic Menu API
+
+A tiny route exposes your SQL‑driven navigation tree to the SPA:
+
+```
+GET /api/ui/menu
+```
+
+```jsonc
+[
+  { "id": 1, "title": "خانه", "link": "/", "children": [ … ] }
+]
+```
+
+- **Backend**  → `src/services/menuService.js` (SQL Server via `mssql`)
+- **Route**    → `src/routes/api/menuRoutes.js`
+- **Env**      → `SQL_HOST`, `SQL_DB`, `SQL_USER`, `SQL_PASSWORD`
+
+The front‑end loads this once in `stores/menu.js` and feeds it to a single `n-dropdown`
+in the header.
 
 ---
 
@@ -72,6 +95,8 @@ Log in with the preset **`GOSTARESH\ehsntb / Ss12345`** credentials (dev only).
 | **F**         | Open filter drawer       |
 | **⇧ ← / ⇧ →** | Previous / next period   |
 | **. (dot)**   | Jump to today            |
+
+- **Deep links:** `/dashboard?activityId=<GUID>` opens the Edit modal for that activity.
 
 ---
 
