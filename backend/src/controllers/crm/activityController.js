@@ -191,7 +191,7 @@ const createActivity = async (req, res) => {
 
 const updateTaskDates = async (req, res) => {
   const { activityId } = req.params;
-  const { scheduledstart, scheduledend, actualend } = req.body;
+  const { scheduledstart, scheduledend, activitytypecode } = req.body;
   const credentials = {
     username: req.session.user.username.split("\\")[1],
     password: decrypt(req.session.encryptedPassword),
@@ -204,7 +204,6 @@ const updateTaskDates = async (req, res) => {
   const updateData = {
     scheduledstart,
     scheduledend,
-    actualend,
   };
 
   logger.info(
@@ -213,7 +212,12 @@ const updateTaskDates = async (req, res) => {
     }, data: ${JSON.stringify(updateData)}`
   );
   try {
-    await CrmService.updateTaskDates(activityId, updateData, credentials);
+    await CrmService.updateTaskDates(
+      activityId,
+      activitytypecode,
+      updateData,
+      credentials
+    );
     res
       .status(200)
       .json({ message: "زمان‌بندی وظیفه با موفقیت به‌روزرسانی شد" });

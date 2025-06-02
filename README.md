@@ -70,7 +70,7 @@ GET /api/ui/menu
 
 - **Backend**  → `src/services/menuService.js` (SQL Server via `mssql`)
 - **Route**    → `src/routes/api/menuRoutes.js`
-- **Env**      → `SQL_HOST`, `SQL_DB`, `SQL_USER`, `SQL_PASSWORD`
+- **Env**      →
 
 The front‑end loads this once in `stores/menu.js` and feeds it to a single `n-dropdown`
 in the header.

@@ -1,10 +1,15 @@
 <template>
   <n-message-provider>
     <div class="container py-4 full-width" dir="rtl">
-      <div class="d-flex align-items-center mb-3 gap-3 justify-content-between">
+      <div
+        class="header-bar d-flex flex-wrap align-items-center mb-3 gap-3 justify-content-between"
+      >
         <!-- keep title on the RTL‑right -->
-        <h2 class="m-0">داشبورد</h2>
-        <n-button-group>
+        <h2 class="m-0 flex-shrink-0">داشبورد</h2>
+        <n-button text size="large" class="d-md-none fs-3" @click="showMobileMenu = true"
+          >☰</n-button
+        >
+        <div class="d-none d-md-flex flex-wrap gap-2 header-actions">
           <n-select
             v-model:value="selectedPreset"
             :options="presetOptions"
@@ -27,9 +32,9 @@
             >🔄 بروزرسانی</n-button
           >
           <n-button type="primary" @click="isCreateVisible = true">➕ ایجاد فعالیت جدید</n-button>
-        </n-button-group>
+        </div>
         <!-- push user / help / logout to RTL‑left -->
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-none d-md-flex align-items-center gap-3">
           <small v-if="auth.user" class="text-muted">
             {{ auth.user.fullname || auth.user.username }}
           </small>
@@ -41,6 +46,82 @@
           </n-tooltip>
           <button class="btn btn-outline-danger" @click="logout">خروج</button>
         </div>
+
+        <!-- 📱 Mobile off-canvas menu -->
+        <n-drawer v-model:show="showMobileMenu" placement="right" :width="280">
+          <n-drawer-content title="منو" closable>
+            <div class="d-flex flex-column gap-2">
+              <n-select
+                v-model:value="selectedPreset"
+                :options="presetOptions"
+                size="medium"
+                style="width: 100%"
+                @update:value="presetChange"
+              />
+
+              <!-- Category tree -->
+              <n-dropdown
+                trigger="click"
+                placement="bottom-start"
+                size="large"
+                :options="menuOptions"
+                @select="handleMenuSelect"
+              >
+                <n-button secondary type="default" class="w-100">📂 منو</n-button>
+              </n-dropdown>
+
+              <n-button
+                secondary
+                type="primary"
+                class="w-100"
+                @click="
+                  () => {
+                    showFilter = true
+                    showMobileMenu = false
+                  }
+                "
+              >
+                🔍 فیلتر
+              </n-button>
+
+              <n-button secondary class="w-100" @click="refreshCalendar"> 🔄 بروزرسانی </n-button>
+
+              <n-button
+                type="primary"
+                class="w-100"
+                @click="
+                  () => {
+                    isCreateVisible = true
+                    showMobileMenu = false
+                  }
+                "
+              >
+                ➕ ایجاد فعالیت جدید
+              </n-button>
+
+              <n-divider />
+
+              <small v-if="auth.user" class="text-muted d-block">
+                {{ auth.user.fullname || auth.user.username }}
+              </small>
+
+              <n-button
+                text
+                class="w-100"
+                @click="
+                  () => {
+                    showShortcuts = true
+                    showMobileMenu = false
+                  }
+                "
+              >
+                ❓ کلیدهای میان‌بر
+              </n-button>
+
+              <n-button text type="error" class="w-100" @click="logout"> 🚪 خروج </n-button>
+            </div>
+          </n-drawer-content>
+        </n-drawer>
 
         <!-- shortcuts modal stays unchanged -->
         <n-modal v-model:show="showShortcuts" preset="dialog" dir="rtl">
@@ -78,20 +159,31 @@
         <!-- Full‑width data‑table when view is TABLE -->
         <template v-else>
           <!-- toolbar row -->
-          <div class="d-flex justify-content-end mb-2">
+          <div class="d-flex justify-content-end mb-2 gap-2">
+            <n-input
+              v-model:value="searchTerm"
+              placeholder="جستجو..."
+              clearable
+              style="max-width: 240px"
+              @keydown.enter.native="fetchTableData"
+            />
             <button class="btn btn-outline-secondary" @click="viewMode = VIEW.CAL">
               📅 بازگشت به تقویم
             </button>
           </div>
 
-          <n-data-table
-            :columns="tableColumns"
-            :data="activities"
-            :row-props="(row) => ({ style: 'cursor:pointer', onClick: () => loadTaskById(row.id) })"
-            striped
-            :pagination="false"
-            size="small"
-          />
+          <div class="table-responsive">
+            <n-data-table
+              :columns="tableColumns"
+              :data="activities"
+              :row-props="
+                (row) => ({ style: 'cursor:pointer', onClick: () => loadTaskById(row.id) })
+              "
+              striped
+              :pagination="false"
+              size="small"
+            />
+          </div>
         </template>
       </div>
 
@@ -146,10 +238,17 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import listPlugin from '@fullcalendar/list'
-import { NMessageProvider, NSelect, NSpin, NDataTable, NModal } from 'naive-ui'
-import { NDrawer, NDrawerContent } from 'naive-ui'
-const showShortcuts = ref(false)
-const showFilter = ref(false)
+import {
+  NMessageProvider,
+  NSelect,
+  NSpin,
+  NDataTable,
+  NModal,
+  NInput,
+  NDrawer,
+  NDrawerContent,
+  NDivider,
+} from 'naive-ui'
 
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
@@ -210,6 +309,10 @@ const presetOptions = ActivityPresets.map((p) => ({
 }))
 const isLoading = ref(false)
 const odataFilter = vueRef('') // holds $filter string from TaskFilterForm
+const searchTerm = ref('')
+const showShortcuts = ref(false)
+const showFilter = ref(false)
+const showMobileMenu = ref(false)
 
 // view toggle: calendar <-> table
 const VIEW = { CAL: 'calendar', TABLE: 'table' }
@@ -452,11 +555,12 @@ function handleCalendarSelect(selection) {
 /** Persist start/end when an event is dragged or resized. */
 async function saveEventTimes(event) {
   try {
-    const res = await fetch(`${BASE_URL}/api/crm/activities/${event.id}`, {
+    const res = await fetch(`${BASE_URL}/api/crm/activities/${event.id}/update-dates`, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        activitytypecode: event.extendedProps.activitytypecode,
         scheduledstart: event.start.toISOString(),
         scheduledend: event.end ? event.end.toISOString() : event.start.toISOString(),
       }),
@@ -570,8 +674,8 @@ const calendarOptions = {
           start: clampToGrid(t.scheduledstart, true),
           end: clampToGrid(t.scheduledend ?? t.scheduledstart, false),
           extendedProps: t,
-          backgroundColor: t.seen ? t.color : '#FFF8A6',
-          borderColor: t.seen ? t.color : '#FFF8A6',
+          /* prettier-ignore */ backgroundColor: t.new_seen ? '#FFF8A6' : (t.color || '#6c757d'),
+          borderColor: '#000000',
           editable: true,
           startEditable: true,
           durationEditable: true,
@@ -663,6 +767,21 @@ const calendarOptions = {
     }
   },
 
+  /* ── make list‑view dots match the background (ignore borderColor) ── */
+  eventDidMount: ({ event, view, el }) => {
+    if (view.type.startsWith('list')) {
+      // The dot lives in a sibling <td>; search the entire row
+      const row = el.closest('tr') || el.parentElement
+      const dot = row?.querySelector('.fc-list-event-dot, .fc-event-dot')
+      if (dot) {
+        // Force‑set both borderColor (stroke) and background (fill)
+        const c = event.backgroundColor || ''
+        dot.style.borderColor = c
+        dot.style.backgroundColor = c
+      }
+    }
+  },
+
   // Toggle the global spinner automatically
   loading: (busy) => {
     isLoading.value = busy
@@ -673,13 +792,19 @@ const calendarOptions = {
  * emitted callbacks from modals
  * -------------------------------------------------------------------------*/
 function onTaskCreated() {
-  // refresh calendar events after creating
+  // Refresh calendar events
   calendarRef.value?.getApi().refetchEvents()
+
+  // If the table view is active, refresh it too
+  if (viewMode.value === VIEW.TABLE) fetchTableData()
 }
 
 function onTaskUpdated() {
-  // refresh calendar events after editing
+  // Refresh calendar events
   calendarRef.value?.getApi().refetchEvents()
+
+  // If the table view is active, refresh it too
+  if (viewMode.value === VIEW.TABLE) fetchTableData()
 }
 async function loadTaskById(id) {
   try {
@@ -697,7 +822,20 @@ async function loadTaskById(id) {
 async function fetchTableData() {
   try {
     isLoading.value = true
-    const q = odataFilter.value ? `?$filter=${encodeURIComponent(odataFilter.value)}` : ''
+    // Always scope to activities owned by the current user
+    let filter = `_ownerid_value eq '${auth.user?.id}'`
+
+    // Merge any extra predicates coming from the side panel
+    if (odataFilter.value) filter += ` and (${odataFilter.value})`
+
+    // Optional keyword search on subject
+    if (searchTerm.value) {
+      // Escape single quotes for OData
+      const term = searchTerm.value.replace(/'/g, "''")
+      filter += ` and contains(subject,'${term}')`
+    }
+
+    const q = `?$filter=${encodeURIComponent(filter)}`
     const res = await fetch(`${BASE_URL}/api/crm/activities/my${q}`, {
       credentials: 'include',
     })
@@ -725,6 +863,9 @@ async function fetchTableData() {
 watch(viewMode, (m) => {
   if (m === VIEW.TABLE) fetchTableData()
 })
+watch(searchTerm, () => {
+  if (viewMode.value === VIEW.TABLE) fetchTableData()
+})
 </script>
 
 <style scoped>
@@ -733,7 +874,13 @@ watch(viewMode, (m) => {
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
 }
-
+.header-actions > * {
+  flex-shrink: 0; /* prevent items from squashing */
+}
+/* prevent drawer buttons from shrinking */
+:deep(.n-drawer-content .n-button) {
+  flex-shrink: 0;
+}
 /* optional: tweak FullCalendar height */
 :deep(.fc) {
   min-height: 80vh;
@@ -831,9 +978,55 @@ watch(viewMode, (m) => {
   padding: 0.5rem 1rem;
   border-bottom: 1px solid #ddd;
 }
+/* ── make the data‑table scroll horizontally on narrow screens ── */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* smooth momentum scrolling on iOS */
+}
+.table-responsive :deep(table) {
+  min-width: 620px; /* keep columns wide enough to avoid letter‑wrap */
+}
+
 @media (max-width: 768px) {
   .mini-calendar-wrapper {
     display: none;
+  }
+}
+/* ── FullCalendar toolbar: stack rows & shrink buttons on phones ── */
+@media (max-width: 576px) {
+  /* allow flex rows to wrap */
+  :deep(.fc-header-toolbar) {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  /* each chunk (nav, title, views) gets its own line */
+  :deep(.fc-header-toolbar .fc-toolbar-chunk) {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* title centred with smaller font */
+  :deep(.fc-header-toolbar .fc-toolbar-title) {
+    font-size: 0.9rem;
+  }
+
+  /* compact the buttons */
+  :deep(.fc-header-toolbar button) {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.75rem;
+  }
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .table-toolbar :deep(.n-input) {
+    width: 100%;
+  }
+  .table-toolbar button {
+    width: 100%;
   }
 }
 </style>

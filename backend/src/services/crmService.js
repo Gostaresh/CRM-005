@@ -2,7 +2,11 @@ const httpntlm = require("httpntlm");
 const env = require("../config/env");
 const logger = require("../utils/logger");
 const { decrypt } = require("../utils/crypto");
-const { ActivityPointer, SystemUser } = require("../core/resources");
+const {
+  ActivityPointer,
+  SystemUser,
+  activityTypeToEtc,
+} = require("../core/resources");
 const DateTimeService = require("../core/services/DateTimeService");
 
 class CrmService {
@@ -31,9 +35,10 @@ class CrmService {
       this._colorCache.set(logicalName, color);
       return color;
     } catch (error) {
-      logger.error(`Error in fetchActivities: ${error.message}`);
-      throw error;
-      // fallback grey if the metadata call fails
+      logger.warn(
+        `Unable to fetch EntityColor for ${logicalName}: ${error.message}; using default.`
+      );
+      // graceful fallback – keep the app running
       return "#6c757d";
     }
   }
@@ -150,7 +155,7 @@ class CrmService {
         })
       );
 
-      /* ── second call: retrieve new_seen for tasks only ───────────── */
+      /* ── second call: retrieve new_seen, new_lastownerid, lastownername for tasks only ───────────── */
       const taskIds = withExtras
         .filter((a) => a.activitytypecode === "task")
         .map((a) => a.activityid);
@@ -159,18 +164,51 @@ class CrmService {
         const filter = taskIds.map((id) => `activityid eq ${id}`).join(" or ");
         const taskMeta = await this.fetchEntity(
           "tasks",
-          { select: "activityid,new_seen", filter, top: taskIds.length },
+          {
+            select: "activityid,new_seen,_new_lastowner_value",
+            filter,
+            top: taskIds.length,
+            headers: {
+              Prefer:
+                'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+            },
+          },
           credentials
         );
-        const seenMap = new Map(
-          (taskMeta.value || []).map((t) => [t.activityid, !!t.new_seen])
+
+        // Build lookup maps for seen + last-owner
+        const taskInfoMap = new Map(
+          (taskMeta.value || []).map((t) => [
+            t.activityid,
+            {
+              new_seen: !!t.new_seen,
+              new_lastownerid: t._new_lastowner_value || null,
+              lastownername:
+                t[
+                  "_new_lastowner_value@OData.Community.Display.V1.FormattedValue"
+                ] || "",
+            },
+          ])
         );
+
+        // Attach to each activity
         withExtras.forEach((a) => {
-          a.seen = seenMap.has(a.activityid) ? seenMap.get(a.activityid) : true;
+          if (a.activitytypecode === "task" && taskInfoMap.has(a.activityid)) {
+            Object.assign(a, taskInfoMap.get(a.activityid));
+          } else {
+            // defaults for non‑tasks
+            a.new_seen = false;
+            a.new_lastownerid = null;
+            a.lastownername = "";
+          }
         });
       } else {
-        // non‑task activities have no seen field
-        withExtras.forEach((a) => (a.seen = false));
+        // non‑task activities have no seen/owner fields
+        withExtras.forEach((a) => {
+          a.new_seen = false;
+          a.new_lastownerid = null;
+          a.lastownername = "";
+        });
       }
 
       return {
@@ -184,27 +222,52 @@ class CrmService {
   }
 
   async fetchActivityDetails(activityId, credentials) {
-    const query = {
+    // ── Only fetch columns that exist on activitypointer ──
+    const baseQuery = {
       select: [
         ...Object.values(ActivityPointer.properties),
         "_createdby_value",
         "_regardingobjectid_value",
-        "new_seen", // two‑options field
-        "_new_lastowner_value", // lookup GUID (shadow column)
       ].join(","),
-      // no expand – lookup doesn't expose a navigation property
-      // Ask Web API to include all annotations (formatted value, lookuplogicalname, etc.)
       headers: {
         Prefer: 'odata.include-annotations="*"',
       },
     };
 
-    // Use the task entity set to access task‑specific custom columns
     const data = await this.fetchEntity(
-      `tasks(${activityId})`,
-      query,
+      `activitypointers(${activityId})`,
+      baseQuery,
       credentials
     );
+
+    // ── task‑specific columns (new_seen, lastowner) ──
+    let newSeen = false;
+    let lastOwnerId = null;
+    let lastOwnerName = "";
+
+    if (data.activitytypecode === "task") {
+      try {
+        const taskData = await this.fetchEntity(
+          `tasks(${activityId})`,
+          {
+            select: "new_seen,_new_lastowner_value",
+            headers: {
+              Prefer: 'odata.include-annotations="*"',
+            },
+          },
+          credentials
+        );
+
+        newSeen = !!taskData.new_seen;
+        lastOwnerId = taskData._new_lastowner_value || null;
+        lastOwnerName =
+          taskData[
+            "_new_lastowner_value@OData.Community.Display.V1.FormattedValue"
+          ] || "";
+      } catch (err) {
+        logger.warn(`Unable to fetch task extras: ${err.message}`);
+      }
+    }
 
     // Extract regarding lookup fields
     const regardingId = data._regardingobjectid_value || null;
@@ -229,23 +292,21 @@ class CrmService {
     const ownerName =
       data["_ownerid_value@OData.Community.Display.V1.FormattedValue"] || "-";
 
-    // Last‑owner display name (annotation on the shadow column)
-    const lastOwnerName =
-      data["_new_lastowner_value@OData.Community.Display.V1.FormattedValue"] ||
-      "";
-
     // Creator display name (annotation)
     const createdByName =
       data["_createdby_value@OData.Community.Display.V1.FormattedValue"] || "";
 
     // Build Dynamics deep‑link that works for any entity type
-    const entityTypeCode = data.objecttypecode || 4212; // fallback to Task OTC
+    const entityTypeCode =
+      activityTypeToEtc[data.activitytypecode?.toLowerCase()] || 4212; // default Task ETC
     const recordUrl =
       `http://192.168.1.6/Gostaresh/main.aspx?pagetype=entityrecord&etc=${entityTypeCode}` +
       `&id=%7B${activityId}%7D`; // encode {GUID}
 
     return {
       ...data,
+      new_seen: newSeen,
+      new_lastownerid: lastOwnerId,
       lastownername: lastOwnerName,
       createdbyname: createdByName,
       owner: {
@@ -369,11 +430,11 @@ class CrmService {
     return { activityid: activityId };
   }
 
-  async updateTaskDates(activityId, dates, credentials) {
-    const url = `${this.baseUrl}/activitypointers(${activityId})`;
+  async updateTaskDates(activityId, activitytypecode, dates, credentials) {
+    const url = `${this.baseUrl}/${activitytypecode}s(${activityId})`;
     // Commenting on date conversion logic in the updateTaskDates method
     logger.info(
-      `Updating task dates at: ${url}, data: ${JSON.stringify(dates)}`
+      `Updating ${activitytypecode} dates at: ${url}, data: ${JSON.stringify(dates)}`
     );
     // The 'dates' object likely contains date fields that are being sent to the CRM system.
     // Ensure that these dates are converted to UTC format before sending them.

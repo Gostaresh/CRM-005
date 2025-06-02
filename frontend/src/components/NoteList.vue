@@ -58,12 +58,15 @@ function formatDate(value?: string | null) {
   max-height: 500px;
   overflow-y: auto;
   direction: rtl;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* smooth momentum scrolling on iOS */
 }
 
 .note-list table {
   width: 100%;
+  min-width: 620px; /* keep columns wide enough to avoid letter‑wrap */
 }
-
 /* Use Naive‑UI theme tokens for header row */
 .note-list thead tr {
   background-color: var(--n-success-color-hover);
