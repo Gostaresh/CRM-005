@@ -11,8 +11,8 @@ export interface ActivityPreset {
 export const ActivityPresets: ActivityPreset[] = [
   {
     key: 'ALL',
-    label: 'همه فعالیت‌های من', // default
-    filter: '',
+    label: 'همه فعالیت‌های من (باز)', // default
+    filter: 'statecode eq 0', // only open activities
   },
   {
     key: 'THIS_MONTH',

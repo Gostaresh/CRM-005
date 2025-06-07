@@ -56,12 +56,15 @@ export function createTask(payload: Record<string, unknown>) {
 /**
  * Full task update (PATCH /api/crm/activities/{id})
  */
-export function updateTask(id: string, payload: Record<string, unknown>) {
+export function updateActivity(id: string, payload: Record<string, unknown>) {
   return crmFetch<{ message: string }>(`/api/crm/activities/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
 }
+
+/** @deprecated — kept temporarily for older components */
+export const updateTask = updateActivity
 
 export function updateTaskDates(
   id: string,

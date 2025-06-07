@@ -257,6 +257,13 @@ import CreateTaskModal from '@/components/CreateTaskModal.vue'
 import TaskFilterForm from '@/components/TaskFilterForm.vue'
 import { ref as vueRef } from 'vue'
 import { ActivityPresets } from '@/constants/activityFilters'
+import { getIranHolidayEvents } from '@/constants/iranHolidays'
+
+/* static background events for Iranian public holidays */
+const holidayEventSource = {
+  id: 'iran-holidays',
+  events: getIranHolidayEvents(), // already in FC event‑object format
+}
 
 /* ---------------------------------------------------------------------------
  * constants / state
@@ -272,7 +279,10 @@ const menuStore = useMenuStore()
 onMounted(() => {
   if (!menuStore.tree.length) menuStore.load()
 })
-
+onMounted(() => {
+  // apply the initial filter so calendar + table load right away
+  presetChange(selectedPreset.value)
+})
 function treeToOptions(nodes) {
   return nodes.map((n) => ({
     label: n.title,
@@ -301,7 +311,7 @@ const createEndIso = ref(null)
 const calendarRef = ref(null)
 const miniRef = ref(null)
 
-const selectedPreset = ref('ALL')
+const selectedPreset = ref(ActivityPresets[0].key)
 const presetOptions = ActivityPresets.map((p) => ({
   label: p.label,
   value: p.key,
@@ -460,7 +470,10 @@ const miniOptions = {
 }
 
 const refreshCalendar = () => {
-  calendarRef.value?.getApi().refetchEvents()
+  const api = calendarRef.value?.getApi()
+  if (!api) return
+  const crmSource = api.getEventSources().find((s) => s.id === 'crm-events')
+  crmSource?.refetch()
 }
 
 function presetChange(key) {
@@ -509,14 +522,16 @@ function presetChange(key) {
 
 function applyFilter(q) {
   odataFilter.value = q || ''
+
   nextTick(() => {
     const api = calendarRef.value?.getApi()
     if (api) {
-      api.removeAllEventSources()
-      api.addEventSource(calendarOptions.events)
+      // only refetch the CRM event source; keep holiday source intact
+      const crmSource = api.getEventSources().find((s) => s.id === 'crm-events')
+      crmSource?.refetch()
     }
 
-    // calendar is hidden → refresh table data directly
+    // If we are in table mode, reload the rows immediately
     if (viewMode.value === VIEW.TABLE) {
       fetchTableData()
     }
@@ -658,50 +673,55 @@ const calendarOptions = {
     right: 'showCalendar,showTable listMonth,dayGridMonth,timeGridWeek,timeGridDay',
   },
 
-  /** Fetch events for the logged‑in user. */
-  events: async (fetchInfo, success, failure) => {
-    try {
-      const query = odataFilter.value ? `?$filter=${encodeURIComponent(odataFilter.value)}` : ''
-      const res = await fetch(`${BASE_URL}/api/crm/activities/my${query}`, {
-        credentials: 'include',
-      })
-      const { value } = await res.json()
-      success(
-        value.map((t) => ({
-          id: t.activityid,
-          title: t.subject,
-          // display times are clamped to 07‑22 so early/late tasks remain visible
-          start: clampToGrid(t.scheduledstart, true),
-          end: clampToGrid(t.scheduledend ?? t.scheduledstart, false),
-          extendedProps: t,
-          /* prettier-ignore */ backgroundColor: t.new_seen ? '#FFF8A6' : (t.color || '#6c757d'),
-          borderColor: '#000000',
-          editable: true,
-          startEditable: true,
-          durationEditable: true,
-        })),
-      )
-      /* keep a lightweight copy for the data table */
-      activities.value = value.map((t) => {
-        return {
-          id: t.activityid,
-          key: t.activityid,
-          subject: t.subject,
-          startJ: toJalali(t.scheduledstart),
-          endJ: toJalali(t.scheduledend),
-          actualEndJ: toJalali(t.actualend),
-          typeLabel: t['activitytypecode@OData.Community.Display.V1.FormattedValue'] || '',
-          seenLabel: t['new_seen@OData.Community.Display.V1.FormattedValue'] || '',
-          stateLabel: t['statecode@OData.Community.Display.V1.FormattedValue'] || '',
-          owner: t.owner?.name ?? '',
+  eventSources: [
+    holidayEventSource,
+    {
+      id: 'crm-events',
+      events: async (fetchInfo, success, failure) => {
+        try {
+          const query = odataFilter.value ? `?$filter=${encodeURIComponent(odataFilter.value)}` : ''
+          const res = await fetch(`${BASE_URL}/api/crm/activities/my${query}`, {
+            credentials: 'include',
+          })
+          const { value } = await res.json()
+          success(
+            value.map((t) => ({
+              id: t.activityid,
+              title: t.subject,
+              // display times are clamped to 07‑22 so early/late tasks remain visible
+              start: clampToGrid(t.scheduledstart, true),
+              end: clampToGrid(t.scheduledend ?? t.scheduledstart, false),
+              extendedProps: t,
+              /* prettier-ignore */ backgroundColor: t.new_seen ? '#FFF8A6' : (t.color || '#6c757d'),
+              borderColor: '#000000',
+              editable: true,
+              startEditable: true,
+              durationEditable: true,
+            })),
+          )
+          /* keep a lightweight copy for the data table */
+          activities.value = value.map((t) => {
+            return {
+              id: t.activityid,
+              key: t.activityid,
+              subject: t.subject,
+              startJ: toJalali(t.scheduledstart),
+              endJ: toJalali(t.scheduledend),
+              actualEndJ: toJalali(t.actualend),
+              typeLabel: t['activitytypecode@OData.Community.Display.V1.FormattedValue'] || '',
+              seenLabel: t['new_seen@OData.Community.Display.V1.FormattedValue'] || '',
+              stateLabel: t['statecode@OData.Community.Display.V1.FormattedValue'] || '',
+              owner: t.owner?.name ?? '',
+            }
+          })
+          console.log(value[1].color)
+        } catch (e) {
+          console.error('❌ Failed to fetch activities:', e)
+          failure(e)
         }
-      })
-      console.log(value[1].color)
-    } catch (e) {
-      console.error('❌ Failed to fetch activities:', e)
-      failure(e)
-    }
-  },
+      },
+    },
+  ],
 
   /** Render “HH:mm – HH:mm ✓ title” (✓ only if seen) */
   eventContent: ({ event }) => {

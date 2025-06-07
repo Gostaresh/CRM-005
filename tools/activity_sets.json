@@ -1,0 +1,172 @@
+{
+  "new_returncustomer": {
+    "set": "new_returncustomers",
+    "label": "مشتری برگشته",
+    "MetadataId": "9ac95ba1-84a9-ea11-80c5-000c297c67a0"
+  },
+  "socialactivity": {
+    "set": "socialactivities",
+    "label": "فعالیت اجتماعی",
+    "MetadataId": "e0a50003-7062-42ab-8a74-95eeec03c13e"
+  },
+  "serviceappointment": {
+    "set": "serviceappointments",
+    "label": "فعالیت خدماتی",
+    "MetadataId": "b9399b55-f032-4104-a8ca-6b0f9a083e32"
+  },
+  "new_takhfif": {
+    "set": "new_takhfifs",
+    "label": "اعمال تخفیف",
+    "MetadataId": "850fa378-ab27-e411-967e-000c2991133d"
+  },
+  "incidentresolution": {
+    "set": "incidentresolutions",
+    "label": "حل پرونده خدمات",
+    "MetadataId": "bceb9f02-968e-4363-beb0-ad7ecdef4908"
+  },
+  "new_sms": {
+    "set": "new_smses",
+    "label": "SMS",
+    "MetadataId": "e91b6b95-5aa5-e311-b725-000c2991133d"
+  },
+  "campaignresponse": {
+    "set": "campaignresponses",
+    "label": "پاسخ کمپین بازاریابی",
+    "MetadataId": "a8c1e72a-90ac-46fa-9bf5-465097edd021"
+  },
+  "new_peigirihesab": {
+    "set": "new_peigirihesabs",
+    "label": "پیگیری حساب",
+    "MetadataId": "3a54934e-ed38-e411-8166-000c2991133d"
+  },
+  "fax": {
+    "set": "faxes",
+    "label": "نمابر",
+    "MetadataId": "58d4edef-1ea8-4796-939b-9c37db3d2deb"
+  },
+  "letter": {
+    "set": "letters",
+    "label": "نامه",
+    "MetadataId": "ebf2fb01-f630-4564-950e-79161bd655c9"
+  },
+  "new_mosaedeh": {
+    "set": "new_mosaedehs",
+    "label": "درخواست مسائده حقوق",
+    "MetadataId": "3daaef56-f5e8-e411-b8ec-000c2991133d"
+  },
+  "new_dissatisfaction": {
+    "set": "new_dissatisfactions",
+    "label": "نارضایتی مشتری",
+    "MetadataId": "06fd5e8e-94bf-e611-8397-000c295a3e9a"
+  },
+  "new_pilotfollowing": {
+    "set": "new_pilotfollowings",
+    "label": "پیگیری پایلوت",
+    "MetadataId": "042f1bc4-5f5f-e511-8c28-000c295a3e9a"
+  },
+  "opportunityclose": {
+    "set": "opportunitycloses",
+    "label": "بستن پرونده فروش",
+    "MetadataId": "dc22c553-5e16-45d3-8842-d142bef3877e"
+  },
+  "appointment": {
+    "set": "appointments",
+    "label": "قرارملاقات",
+    "MetadataId": "95e930c5-812a-44e8-85c9-154cd5f59465"
+  },
+  "task": {
+    "set": "tasks",
+    "label": "وظیفه",
+    "MetadataId": "78e45d5e-f22b-4e20-813f-6cd2a3777968"
+  },
+  "quoteclose": {
+    "set": "quotecloses",
+    "label": "بستن پیش فاکتور",
+    "MetadataId": "f58ee955-da78-4e95-8608-01e0092fd684"
+  },
+  "bulkoperation": {
+    "set": "bulkoperations",
+    "label": "کمپین سریع",
+    "MetadataId": "b237ecf9-e361-41cd-bce7-52bbd74eba0c"
+  },
+  "new_downtrendcustomer": {
+    "set": "new_downtrendcustomers",
+    "label": "کم فعال",
+    "MetadataId": "8384568d-87a9-ea11-80c5-000c297c67a0"
+  },
+  "new_morakhasi": {
+    "set": "new_morakhasis",
+    "label": "مرخصی",
+    "MetadataId": "bf0030cd-3528-e411-967e-000c2991133d"
+  },
+  "phonecall": {
+    "set": "phonecalls",
+    "label": "تماس تلفنی",
+    "MetadataId": "21538890-1e54-4171-aca8-7ec97a9c652c"
+  },
+  "new_urgentfollowup": {
+    "set": "new_urgentfollowups",
+    "label": "پیگیری فوری",
+    "MetadataId": "d5a9835d-60a9-ee11-a749-000c29df2e7d"
+  },
+  "untrackedemail": {
+    "set": "untrackedemails",
+    "label": "UntrackedEmail",
+    "MetadataId": "c000abde-7474-4013-8887-203e3c9ab55f"
+  },
+  "new_carditinception": {
+    "set": "new_carditinceptions",
+    "label": "بررسی کریدیت",
+    "MetadataId": "588adda4-f58c-e511-a091-000c295a3e9a"
+  },
+  "new_customerlostfollowup": {
+    "set": "new_customerlostfollowups",
+    "label": "فراموش شده",
+    "MetadataId": "c6605685-0d15-ea11-8119-000c29df652b"
+  },
+  "new_receiptpaymentapproval": {
+    "set": "new_receiptpaymentapprovals",
+    "label": "تأییدیه پرداخت",
+    "MetadataId": "50053e7a-f23e-f011-ac5c-000c299c9756"
+  },
+  "campaignactivity": {
+    "set": "campaignactivities",
+    "label": "فعالیت کمپین",
+    "MetadataId": "87e909a7-e378-407e-92f2-2dab2a6b7ca6"
+  },
+  "new_pardakht": {
+    "set": "new_pardakhts",
+    "label": "پرداخت وجه",
+    "MetadataId": "b9b6e607-602b-e411-967e-000c2991133d"
+  },
+  "new_daryaft": {
+    "set": "new_daryafts",
+    "label": "دریافت وجه",
+    "MetadataId": "39dbdc20-8e2b-e411-967e-000c2991133d"
+  },
+  "new_testactivity": {
+    "set": "new_testactivities",
+    "label": "TestActivity",
+    "MetadataId": "05482148-e927-f011-ac55-000c299c9756"
+  },
+  "orderclose": {
+    "set": "ordercloses",
+    "label": "بستن سفارش",
+    "MetadataId": "89fefcf4-6eec-4bb4-bfb0-87dfb9bb9930"
+  },
+  "recurringappointmentmaster": {
+    "set": "recurringappointmentmasters",
+    "label": "ملاقات تکرارشونده",
+    "MetadataId": "e4796c89-bd47-4413-a5ff-92959ac3a3e0"
+  },
+  "new_assembly": {
+    "set": "new_assemblies",
+    "label": "اسمبل نرم افزار و عیب یابی",
+    "MetadataId": "13cc8abf-9326-e411-967e-000c2991133d"
+  },
+  "email": {
+    "set": "emails",
+    "label": "ایمیل",
+    "MetadataId": "95ae88b3-cc0c-45ac-a2db-655dceec238b"
+  }
+}

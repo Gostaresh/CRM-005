@@ -6,3 +6,4 @@ frontend/build
 *.log
 tools/.venv
 node_modules
+tools/d365-env

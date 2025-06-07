@@ -199,7 +199,13 @@ import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import { getRegardingTypeOptions } from '@/composables/useEntityMap'
-import { searchEntity, updateTask, searchSystemUsers, getTaskNotes, addTaskNote } from '@/api/crm'
+import {
+  searchEntity,
+  updateActivity, // ← renamed generic patch helper
+  searchSystemUsers,
+  getTaskNotes,
+  addTaskNote,
+} from '@/api/crm'
 import moment from 'moment-jalaali'
 import momentTz from 'moment-timezone'
 import DatePicker from 'vue3-persian-datetime-picker'
@@ -525,6 +531,9 @@ export default {
           prioritycode: String(form.value.priority),
           new_seen: !!Number(form.value.newSeen),
           statecode: String(form.value.stateCode),
+
+          // Required by backend to resolve the correct entity‑set
+          activitytypecode: props.task.activitytypecode || 'task',
         }
 
         if (form.value.regardingObjectId) {
@@ -537,7 +546,7 @@ export default {
         }
 
         //console.log('form start task:', form.value.startRaw, 'form end Task:', form.value.endRaw)
-        const { ok, data } = await updateTask(props.task.activityid, updatedTask)
+        const { ok, data } = await updateActivity(props.task.activityid, updatedTask)
         if (!ok) throw new Error('HTTP error while updating task')
         if (ok) {
           message.success('فعالیت با موفقیت ویرایش شد.')

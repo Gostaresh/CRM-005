@@ -28,7 +28,7 @@ router.patch(
   "/activities/:activityId/update-dates",
   activityController.updateTaskDates
 );
-router.patch("/activities/:activityId", activityController.updateTask);
+router.patch("/activities/:activityId", activityController.updateActivity);
 
 // Notes routes
 router.get("/activities/:activityId/notes", noteController.fetchNotes);

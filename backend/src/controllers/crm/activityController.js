@@ -2,14 +2,11 @@ const CrmService = require("../../services/crmService");
 const logger = require("../../utils/logger");
 const { decrypt } = require("../../utils/crypto");
 
-const { ActivityPointer, SystemUser } = require("../../core/resources");
-
-// Dynamics default status codes for Task
-const STATUS_CODE_MAP = {
-  0: 2, // Open      -> Not Started
-  1: 5, // Completed -> Completed
-  2: 6, // Canceled  -> Canceled
-};
+const {
+  ActivityPointer,
+  SystemUser,
+  activityStatusMap,
+} = require("../../core/resources");
 
 const fetchAllActivities = async (req, res) => {
   try {
@@ -207,7 +204,7 @@ const updateTaskDates = async (req, res) => {
   };
 
   logger.info(
-    `Updating task dates for activityId: ${activityId}, user: ${
+    `Updating ${activitytypecode} dates for activityId: ${activityId}, user: ${
       credentials.username
     }, data: ${JSON.stringify(updateData)}`
   );
@@ -227,7 +224,7 @@ const updateTaskDates = async (req, res) => {
   }
 };
 
-const updateTask = async (req, res) => {
+const updateActivity = async (req, res) => {
   const { activityId } = req.params;
   const {
     subject,
@@ -241,6 +238,7 @@ const updateTask = async (req, res) => {
     statecode,
     ownerid,
     new_seen,
+    activitytypecode = "task",
   } = req.body;
   const credentials = {
     username: req.session.user.username.split("\\")[1],
@@ -256,7 +254,18 @@ const updateTask = async (req, res) => {
     scheduledend,
     actualend,
     statecode: sc,
-    statuscode: STATUS_CODE_MAP[sc],
+    // Choose a valid statuscode for this entity + state
+    statuscode: (() => {
+      if (req.body.statuscode) return parseInt(req.body.statuscode);
+      const entMap = activityStatusMap[activitytypecode] || {};
+      const stateMap = entMap[sc] || {};
+      // pick the first statuscode defined for this state
+      const first = Object.keys(stateMap)[0];
+      if (first) return parseInt(first);
+      // fallback: use Task defaults (works for classic tasks)
+      const taskFallback = { 0: 2, 1: 5, 2: 6 }[sc];
+      return taskFallback ?? null;
+    })(),
     prioritycode: prioritycode ? parseInt(prioritycode) : 1,
   };
   if (sc === 1) {
@@ -294,13 +303,18 @@ const updateTask = async (req, res) => {
   });
 
   logger.info(
-    `Updating task for activityId: ${activityId}, user: ${
+    `Updating ${activitytypecode} for activityId: ${activityId}, user: ${
       credentials.username
     }, data: ${JSON.stringify(updateData)}`
   );
   try {
-    await CrmService.updateTask(activityId, updateData, credentials);
-    res.status(200).json({ message: "وظیفه با موفقیت به‌روزرسانی شد" });
+    await CrmService.updateActivity(
+      activityId,
+      activitytypecode,
+      updateData,
+      credentials
+    );
+    res.status(200).json({ message: "فعالیت با موفقیت به‌روزرسانی شد" });
   } catch (err) {
     logger.error(`Update task error: ${err.message}`);
     res.status(500).json({ error: `خطا در به‌روزرسانی وظیفه: ${err.message}` });
@@ -395,7 +409,7 @@ module.exports = {
   fetchActivityDetails,
   createActivity,
   updateTaskDates,
-  updateTask,
+  updateActivity,
   fetchActivitiesByOwners,
   getRegardingOptions,
 };

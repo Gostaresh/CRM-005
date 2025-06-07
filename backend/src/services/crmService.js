@@ -6,6 +6,7 @@ const {
   ActivityPointer,
   SystemUser,
   activityTypeToEtc,
+  activityTypeToEntitySet,
 } = require("../core/resources");
 const DateTimeService = require("../core/services/DateTimeService");
 
@@ -472,9 +473,20 @@ class CrmService {
     return { success: true };
   }
 
-  async updateTask(activityId, taskData, credentials) {
-    const url = `${this.baseUrl}/tasks(${activityId})`;
-    //logger.info(`Updating task at: ${url}, data: ${JSON.stringify(taskData)}`);
+  /**
+   * Update any activity entity (task, phonecall, custom new_* …).
+   * @param {string} activityId      GUID of the activity record
+   * @param {string} logicalName     activitytypecode, e.g. 'task'
+   * @param {object} payload         fields to PATCH
+   * @param {object} credentials     { username, password }
+   */
+  async updateActivity(activityId, logicalName, payload, credentials) {
+    // Resolve plural entity‑set name
+    const entitySet = activityTypeToEntitySet[logicalName] || `${logicalName}s`;
+    const url = `${this.baseUrl}/${entitySet}(${activityId})`;
+
+    logger.info(`PATCH ${url}  data: ${JSON.stringify(payload)}`);
+
     const res = await new Promise((resolve, reject) => {
       httpntlm.patch(
         {
@@ -489,7 +501,7 @@ class CrmService {
             "OData-Version": "4.0",
             Accept: "application/json",
           },
-          json: taskData,
+          json: payload,
         },
         (err, res) => {
           if (err) return reject(err);
@@ -505,7 +517,6 @@ class CrmService {
       );
       throw new Error(`CRM update request failed: ${res.statusCode}`);
     }
-
     return { success: true };
   }
 
