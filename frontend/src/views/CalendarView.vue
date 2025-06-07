@@ -5,7 +5,8 @@
         class="header-bar d-flex flex-wrap align-items-center mb-3 gap-3 justify-content-between"
       >
         <!-- keep title on the RTL‑right -->
-        <h2 class="m-0 flex-shrink-0">داشبورد</h2>
+        <h2 class="m-0 flex-shrink-0">تقویم</h2>
+        <n-button text size="large" class="d-md-none fs-3" @click="router.push('/')"> ← </n-button>
         <n-button text size="large" class="d-md-none fs-3" @click="showMobileMenu = true"
           >☰</n-button
         >
@@ -44,7 +45,8 @@
             </template>
             کلیدهای میان‌بر
           </n-tooltip>
-          <button class="btn btn-outline-danger" @click="logout">خروج</button>
+          <n-button type="info" ghost @click="router.push('/')"> بازگشت </n-button>
+          <n-button type="error" ghost @click="logout">خروج</n-button>
         </div>
 
         <!-- 📱 Mobile off-canvas menu -->
