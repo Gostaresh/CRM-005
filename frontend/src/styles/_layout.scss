@@ -19,3 +19,115 @@
 .sub-grid-33-33-33 {
   grid-template-columns: repeat(3, 1fr);
 }
+
+// ---------------------------------------------------------------------------
+// Modal two‑column layout (used by CreateTaskModal & EditTaskModal)
+// ---------------------------------------------------------------------------
+.modal-grid {
+  display: grid;
+  grid-template-columns: 0.4fr 0.6fr;
+  gap: 1rem;             // keep the original 1 rem gap from modal‑grid.css
+  direction: rtl;        // ensure columns flow right‑to‑left
+}
+
+/* Left & right column containers */
+.form-left,
+.form-right {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Right column sticky notes pane */
+.notes-pane {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+
+.notes-list {
+  flex: 1 1 auto;
+  overflow: auto;
+  max-height: 400px;
+  width: 100%;
+}
+
+.note-editor {
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding-top: 0.75rem;
+}
+
+/* RTL headings alignment inside modals */
+.modal-grid + h6,
+.n-modal .n-card-header,
+.n-modal .n-card-title {
+  text-align: right;
+}
+
+/* Desktop breakpoint – limit modal width */
+@media (min-width: 768px) {
+  .create-task-modal,
+  .edit-task-modal {
+    width: 75vw !important;
+    max-width: 1100px !important;
+  }
+}
+
+/* Mobile breakpoint – full‑screen single‑column */
+@media (max-width: 767px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  /* Ensure inputs stretch in one‑column layout */
+  .modal-grid input,
+  .modal-grid textarea,
+  .modal-grid .n-input,
+  .modal-grid .n-select,
+  .modal-grid .n-auto-complete,
+  .modal-grid .n-date-picker {
+    width: 100%;
+  }
+
+  /* Sticky footer visibility */
+  .n-modal .n-card__footer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.08);
+    z-index: 1;
+  }
+
+  /* Full‑width stacked buttons */
+  .n-modal .n-card__footer .n-space {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .n-modal .n-card__footer .n-button {
+    flex: 1 1 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Stretch modal container */
+  .create-task-modal,
+  .edit-task-modal,
+  .n-modal > .n-card {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+}
+
+/* Consistent Naive‑UI border radius */
+.modal-grid input,
+.modal-grid textarea,
+.modal-grid .n-input,
+.modal-grid .n-select,
+.modal-grid .n-auto-complete,
+.modal-grid .n-date-picker,
+.modal-grid .n-input__input-el {
+  border-radius: var(--n-border-radius);
+}

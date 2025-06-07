@@ -133,6 +133,10 @@
       </div>
     </div>
 
+    <n-alert v-if="formErrors.length" type="error" class="mb-2">
+      {{ formErrors[0] }}
+    </n-alert>
+
     <!-- یادداشت‌ها label -->
     <h6 class="fw-bold my-2">یادداشت‌ها</h6>
 
@@ -169,6 +173,10 @@ import { nextTick } from 'vue'
 import { NModal, NInput, NButton, NSpace, NSelect, NAutoComplete } from 'naive-ui'
 import { getRegardingTypeOptions } from '@/composables/useEntityMap'
 import { searchEntity, createTask, searchSystemUsers, addTaskNote } from '@/api/crm'
+import { PRIORITY_OPTIONS, SEEN_OPTIONS, STATE_OPTIONS } from '@/constants/taskOptions'
+import { MAX_FILE_SIZE, fileToBase64 } from '@/utils/fileHelpers'
+import { useRegardingSearch, useOwnerSearch } from '@/composables/useEntitySearch'
+import { validateTask } from '@/utils/validators'
 /* ---------------------------------------------------------------- *\
   Create‑task modal
   – Uses Naive‑UI & vue3-persian-datetime-picker
@@ -178,12 +186,9 @@ import { searchEntity, createTask, searchSystemUsers, addTaskNote } from '@/api/
 \* ---------------------------------------------------------------- */
 
 import { reactive, ref, watch, computed, onMounted } from 'vue'
-import moment, { now } from 'moment-jalaali'
+import { jalaliToIso, formatDatetimeLocal } from '@/utils/dateHelpers'
 import { useMessage } from 'naive-ui'
 import Vue3PersianDatetimePicker from 'vue3-persian-datetime-picker'
-
-// Maximum upload size (≈ 330 KB)
-const MAX_FILE_SIZE = 330 * 1024
 
 const DatePicker = Vue3PersianDatetimePicker
 
@@ -239,22 +244,15 @@ function initDefaults() {
     endAIso: '',
   })
 
-  // Helper → ISO ➜ local‑jalali string
-  const isoToJalali = (iso?: string) => {
-    if (!iso) return ''
-    const m = moment(iso).utc().local()
-    return m.isValid() ? m.format('jYYYY/jMM/jDD HH:mm') : ''
-  }
-
   // Apply incoming defaults
   if (props.defaultStart) {
-    form.startMoment = isoToJalali(props.defaultStart)
-    form.startIso = moment(props.defaultStart).utc().toISOString()
+    form.startMoment = formatDatetimeLocal(props.defaultStart)
+    form.startIso = new Date(props.defaultStart).toISOString()
   }
 
   if (props.defaultEnd) {
-    form.endMoment = isoToJalali(props.defaultEnd)
-    form.endIso = moment(props.defaultEnd).utc().toISOString()
+    form.endMoment = formatDatetimeLocal(props.defaultEnd)
+    form.endIso = new Date(props.defaultEnd).toISOString()
   }
 
   // Wait a tick so DatePicker picks up the new strings
@@ -276,66 +274,23 @@ watch(
     if (modelVisible.value) initDefaults()
   },
 )
-const priorityOptions = [
-  { label: 'کم', value: 0 },
-  { label: 'متوسط', value: 1 },
-  { label: 'زیاد', value: 2 },
-]
-
-const seenOptions = [
-  { label: 'دیده شده', value: 1 },
-  { label: 'دیده نشده', value: 0 },
-]
-
-const stateOptions = [
-  { label: 'باز', value: 0 },
-  { label: 'اتمام کار', value: 1 },
-  { label: 'لغو شده', value: 2 },
-  { label: 'برنامه ریزی شده', value: 3 },
-]
+const priorityOptions = PRIORITY_OPTIONS.slice()
+const seenOptions = SEEN_OPTIONS.slice()
+const stateOptions = STATE_OPTIONS.slice()
 
 const regardingTypeOptions = getRegardingTypeOptions()
 
-const searching = ref(false)
-const regardingOptions = ref([])
-async function searchRegarding(query: string) {
-  if (!form.regardingType || !query || query.length < 2) {
-    regardingOptions.value = []
-    return
-  }
+// reactive entity-type ref for regarding search
+const regardingTypeRef = computed(() => form.regardingType)
 
-  searching.value = true
-  try {
-    const { ok, data } = await searchEntity(form.regardingType, query)
-    if (!ok) throw new Error('Search failed')
+const { regardingOptions, searching, searchRegarding } = useRegardingSearch(regardingTypeRef)
 
-    // value carries GUID, label is the Persian name shown in the input
-    regardingOptions.value = data.map((item) => ({
-      label: item.name,
-      value: item.id,
-    }))
-  } catch (e) {
-    console.error('Failed to search regarding objects:', e)
-  } finally {
-    searching.value = false
-  }
-}
+const { ownerOptions, searchingOwner, searchOwner } = useOwnerSearch()
 
 function onRegardingSelect(value: string) {
   form.regardingObjectId = value // GUID
   const match = regardingOptions.value.find((o) => o.value === value)
   form.regardingObjectLabel = match ? match.label : ''
-}
-
-/* Owner search */
-const ownerOptions = ref([])
-const searchingOwner = ref(false)
-
-async function searchOwner(q: string) {
-  if (!q || q.length < 2) return
-  searchingOwner.value = true
-  ownerOptions.value = await searchSystemUsers(q)
-  searchingOwner.value = false
 }
 function onOwnerSelect(value: string, opt?: { label: string; value: string }) {
   if (!opt) {
@@ -368,22 +323,23 @@ watch(
     form.endAIso = jalaliToIso(val)
   },
 )
-watch(
-  () => form.regardingType,
-  () => {
-    // Reset related fields when entity type changes
-    form.regardingObjectId = ''
-    form.regardingObjectLabel = ''
-    regardingOptions.value = []
-  },
-)
 
 /* ---------------------------------------------------------------- *\
   Derived state
 \* ---------------------------------------------------------------- */
 // form.endMoment is immediately reactive when the user picks a date
-const isValid = computed(
-  () => form.subject.trim().length > 0 && !!form.startMoment && !!form.endMoment,
+const isValid = computed(() => formErrors.value.length === 0)
+
+watch(
+  () => [form.subject, form.startIso, form.endIso],
+  () => {
+    formErrors.value = validateTask({
+      subject: form.subject,
+      startRaw: form.startIso,
+      endRaw: form.endIso,
+    })
+  },
+  { immediate: true },
 )
 
 /* ---------------------------------------------------------------- *\
@@ -410,22 +366,23 @@ const note = reactive<{ subject: string; text: string; file: File | null; base64
   base64: '',
 })
 
-function onFileChange(e: Event) {
+const formErrors = ref<string[]>([])
+
+async function onFileChange(e: Event) {
   const target = e.target as HTMLInputElement
   if (!target.files?.length) return
-  note.file = target.files[0]
-  if (note.file.size > MAX_FILE_SIZE) {
-    message.error('حداکثر اندازه فایل ۳۳۰ کیلوبایت است')
+
+  const f = target.files[0]
+  try {
+    note.base64 = await fileToBase64(f)
+    note.file = f
+  } catch (err: any) {
+    message.error(err.message)
     note.file = null
     note.base64 = ''
-    target.value = ''
-    return
+  } finally {
+    target.value = '' // allow re‑selecting the same file
   }
-  const reader = new FileReader()
-  reader.onload = () => {
-    note.base64 = String(reader.result).split(',').pop() || ''
-  }
-  reader.readAsDataURL(note.file)
 }
 
 async function save() {
@@ -529,20 +486,6 @@ function resetFormFields() {
   Object.assign(note, { subject: '', text: '', file: null, base64: '' })
   regardingOptions.value = []
   ownerOptions.value = []
-}
-
-/* ---------------------------------------------------------------- *\
-  Minimal Jalali→ISO helper
-  (can later be replaced with composable)
-\* ---------------------------------------------------------------- */
-function jalaliToIso(value: any) {
-  if (!value) return ''
-  if (moment.isMoment(value)) return value.clone().utc().toISOString()
-  if (value instanceof Date) return moment(value).utc().toISOString()
-
-  // Accept strings coming from <DatePicker>
-  const m = moment(value, ['jYYYY/jMM/jDD HH:mm', 'jYYYY/jMM/jDD'], true)
-  return m.isValid() ? m.utc().toISOString() : ''
 }
 </script>
 

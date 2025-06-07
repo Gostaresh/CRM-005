@@ -231,7 +231,7 @@ const props = defineProps({
 /* ---------------------------------------------------------------------------
  * imports
  * -------------------------------------------------------------------------*/
-import { ref, watch, nextTick, h, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, watch, nextTick, h, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import FullCalendar from '@fullcalendar/vue3'
 import {
@@ -251,12 +251,11 @@ import { useMenuStore } from '@/stores/menu'
 import EditTaskModal from '@/components/EditTaskModal.vue'
 import CreateTaskModal from '@/components/CreateTaskModal.vue'
 import TaskFilterForm from '@/components/TaskFilterForm.vue'
-import { ref as vueRef } from 'vue'
 import { ActivityPresets } from '@/constants/activityFilters'
 import { HOLIDAY_SOURCE } from '@/constants/iranHolidays'
 import { VIEW, TABLE_COLUMNS } from '@/constants/ui'
 import { SEEN_EVENT_BG, DEFAULT_EVENT_BG } from '@/constants/colors'
-import { clampToGrid, formatTime, toJalali } from '@/utils/dateHelpers'
+import { clampToGrid, toJalali } from '@/utils/dateHelpers'
 import { replaceTokens } from '@/utils/odataTokens'
 import { createMiniOptions, createCalendarOptions } from '@/composables/useCalendarOptions'
 import { updateTaskDates, crmFetch } from '@/api/crm'
@@ -315,7 +314,7 @@ const presetOptions = ActivityPresets.map((p) => ({
   disabled: !!p.disabled,
 }))
 const isLoading = ref(false)
-const odataFilter = vueRef('') // holds $filter string from TaskFilterForm
+const odataFilter = ref('') // holds $filter string from TaskFilterForm
 const searchTerm = ref('')
 const showShortcuts = ref(false)
 const showFilter = ref(false)
@@ -603,24 +602,6 @@ watch(searchTerm, () => {
 :deep(.n-data-table .n-data-table-tr:hover) {
   background: #f5f5f5;
 }
-
-/* tiny coloured priority dot */
-:deep(.prio-dot) {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-inline-end: 0.25rem;
-}
-:deep(.prio-high) {
-  background: #dc3545;
-} /* red */
-:deep(.prio-mid) {
-  background: #ffc107;
-} /* yellow */
-:deep(.prio-low) {
-  background: #28a745;
-} /* green */
 
 .mini-calendar-wrapper {
   width: 300px;

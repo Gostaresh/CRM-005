@@ -1,4 +1,6 @@
 @import './base.css';
+@import '../styles/_colors.scss';
+@import '../styles/_layout.scss';
 
 @font-face {
   font-family: 'IranSans';

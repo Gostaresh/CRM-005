@@ -97,9 +97,9 @@
             <DatePicker
               auto-submit
               v-model="form.endActual"
-              type="datetime"
-              format="jYYYY/jMM/jDD HH:mm"
-              display-format="jYYYY/jMM/jDD HH:mm"
+              type="date"
+              format="jYYYY/jMM/jDD"
+              display-format="jYYYY/jMM/jDD"
               :min="form.startDisplay"
               :jump-minute="30"
               :round-minute="true"
