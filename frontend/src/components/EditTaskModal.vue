@@ -8,8 +8,8 @@
     style="width: 80%; max-width: 85%"
   >
     <div class="modal-body">
-      <n-alert v-if="!canEdit" type="warning" class="mb-2">
-        شما مالک یا سازندهٔ این فعالیت نیستید؛ امکان ویرایش ندارید.
+      <n-alert v-if="formErrors.length" type="error" class="mb-2">
+        {{ formErrors[0] }}
       </n-alert>
       <div class="modal-grid">
         <!-- LEFT 50 % – موضوع + توضیحات + عطف -->
@@ -164,7 +164,9 @@
     <template #footer>
       <n-space justify="end">
         <n-button strong secondary @click="hideModal">انصراف</n-button>
-        <n-button strong type="primary" :disabled="!canEdit" @click="saveTask"> ذخیره </n-button>
+        <n-button strong type="primary" :disabled="!canEdit || formErrors.length" @click="saveTask">
+          ذخیره
+        </n-button>
       </n-space>
       <n-space justify="start">
         <n-button
@@ -194,26 +196,23 @@
 </template>
 
 <script>
-import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
+import { ref, watch, watchEffect, onMounted, onUnmounted, reactive, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
-import { getRegardingTypeOptions } from '@/composables/useEntityMap'
 import {
-  searchEntity,
-  updateActivity, // ← renamed generic patch helper
-  searchSystemUsers,
-  getTaskNotes,
-  addTaskNote,
-} from '@/api/crm'
-import moment from 'moment-jalaali'
-import momentTz from 'moment-timezone'
+  ACTIVITY_DISPLAY_NAMES,
+  PRIORITY_OPTIONS,
+  SEEN_OPTIONS,
+  STATE_OPTIONS,
+} from '@/constants/taskOptions'
+import { getRegardingTypeOptions } from '@/composables/useEntityMap'
+import { updateActivity, getTaskNotes, addTaskNote } from '@/api/crm'
+import { useRegardingSearch, useOwnerSearch } from '@/composables/useEntitySearch'
+import { formatDatetimeLocal, jalaliToIso } from '@/utils/dateHelpers'
+import { MAX_FILE_SIZE, fileToBase64 } from '@/utils/fileHelpers'
+import { validateTask } from '@/utils/validators'
 import DatePicker from 'vue3-persian-datetime-picker'
 import NoteList from './NoteList.vue'
-moment.tz = momentTz.tz
-moment.loadPersian({ usePersianDigits: false })
-
-// Maximum upload size (≈ 330 KB)
-const MAX_FILE_SIZE = 330 * 1024
 
 export default {
   name: 'EditTaskModal',
@@ -235,20 +234,9 @@ export default {
       get: () => props.visible,
       set: (v) => emit('update:visible', v),
     })
-    const activityDisplayName = {
-      task: 'وظیفه',
-      phonecall: 'تماس تلفنی',
-      appointment: 'قرار ملاقات',
-      email: 'ایمیل',
-      fax: 'فکس',
-      letter: 'نامه',
-      serviceappointment: 'فعالیت خدماتی',
-      socialactivity: 'فعالیت اجتماعی',
-      // add more if needed
-    }
     const modalTitle = computed(() => {
       const type = props.task?.activitytypecode || 'task'
-      const label = activityDisplayName[type] || 'فعالیت'
+      const label = ACTIVITY_DISPLAY_NAMES[type] || 'فعالیت'
       return `ویرایش ${label}`
     })
     /** user may edit if they’re owner or creator */
@@ -291,58 +279,28 @@ export default {
       notes.value = ok ? data : []
     }
     const newNote = reactive({ subject: '', text: '', file: null, base64: '' })
-    function onNewFile(e) {
+    const formErrors = ref([])
+    async function onNewFile(e) {
       const f = e.target.files?.[0]
       if (!f) return
-      if (f && f.size > MAX_FILE_SIZE) {
-        alert('حداکثر اندازه فایل ۳۳۰ کیلوبایت است')
+
+      try {
+        newNote.base64 = await fileToBase64(f)
+        newNote.file = f
+      } catch (err) {
+        alert(err.message)
         newNote.file = null
         newNote.base64 = ''
-        e.target.value = ''
-        return
-      }
-      newNote.file = f
-      const r = new FileReader()
-      r.onload = () => {
-        newNote.base64 = String(r.result).split(',').pop() || ''
+      } finally {
+        // reset input so same file can be re‑selected if needed
         e.target.value = ''
       }
-      r.readAsDataURL(f)
-    }
-
-    const formatDatetimeLocal = (dateStr) => {
-      if (!dateStr) return ''
-      // Parse as UTC, then convert to local time, then format as Jalali with time
-      return moment(dateStr).utc().local().format('jYYYY/jMM/jDD HH:mm')
     }
 
     // Regarding helpers
     const regardingTypeOptions = getRegardingTypeOptions()
-    const searching = ref(false)
-    const regardingOptions = ref([])
-
-    async function searchRegarding(query) {
-      console.log('Searching regarding ...', form.value.regardingType)
-      if (!form.value.regardingType || !query || query.length < 2) {
-        regardingOptions.value = []
-        return
-      }
-      searching.value = true
-      try {
-        const { ok, data } = await searchEntity(form.value.regardingType, query)
-        if (!ok) throw new Error('Search failed')
-        if (ok) {
-          regardingOptions.value = data.map((item) => ({
-            label: item.name,
-            value: item.id,
-          }))
-        }
-      } catch (e) {
-        console.error('Failed to search regarding objects:', e)
-      } finally {
-        searching.value = false
-      }
-    }
+    const regardingTypeRef = computed(() => form.value.regardingType)
+    const { regardingOptions, searching, searchRegarding } = useRegardingSearch(regardingTypeRef)
 
     function onRegardingSelect(value) {
       form.value.regardingObjectId = value
@@ -351,14 +309,7 @@ export default {
     }
 
     // Owner helpers
-    const ownerOptions = ref([])
-    const searchingOwner = ref(false)
-    async function searchOwner(q) {
-      if (!q || q.length < 2) return
-      searchingOwner.value = true
-      ownerOptions.value = await searchSystemUsers(q)
-      searchingOwner.value = false
-    }
+    const { ownerOptions, searchingOwner, searchOwner } = useOwnerSearch()
     function onOwnerSelect(value, opt) {
       if (!opt) {
         opt = ownerOptions.value.find((o) => o.value === value)
@@ -372,73 +323,11 @@ export default {
       }
     }
 
-    const priorityOptions = [
-      { label: 'کم', value: 0 },
-      { label: 'متوسط', value: 1 },
-      { label: 'زیاد', value: 2 },
-    ]
+    const priorityOptions = PRIORITY_OPTIONS
+    const seenOptions = SEEN_OPTIONS
+    const stateOptions = STATE_OPTIONS
 
-    const seenOptions = [
-      { label: 'دیده شده', value: 1 },
-      { label: 'دیده نشده', value: 0 },
-    ]
-
-    const stateOptions = [
-      { label: 'باز', value: 0 },
-      { label: 'اتمام کار', value: 1 },
-      { label: 'لغو شده', value: 2 },
-      { label: 'برنامه ریزی شده', value: 3 },
-    ]
-
-    const resetForm = () => {
-      if (!props.task) return
-
-      form.value.subject = props.task.subject || ''
-      form.value.description = props.task.description || ''
-
-      // Regarding fields
-      form.value.regardingType = props.task.regardingtype || ''
-      form.value.regardingObjectId = props.task.regardingobjectid || ''
-      form.value.regardingObjectLabel =
-        props.task.regardingname || props.task.regardingObjectLabel || ''
-
-      // Owner fields
-      form.value.ownerId = props.task._ownerid_value || ''
-      form.value.ownerLabel = props.task.owner?.name || ''
-
-      form.value.priority =
-        typeof props.task.prioritycode === 'number' ? props.task.prioritycode : 1
-      form.value.stateCode = typeof props.task.statecode === 'number' ? props.task.statecode : 1
-      form.value.newSeen =
-        typeof props.task.new_seen !== 'undefined' ? (props.task.new_seen ? true : false) : false
-
-      form.value.lastOwnerLabel = props.task.lastownername || '(N/A)'
-
-      // If we have an existing regarding ID, pre‑seed the autocomplete list
-      if (form.value.regardingObjectId) {
-        regardingOptions.value = [
-          {
-            label: form.value.regardingObjectLabel || '(انتخاب شده)',
-            value: form.value.regardingObjectId,
-          },
-        ]
-      } else {
-        regardingOptions.value = []
-      }
-
-      // If we have an existing owner ID, pre-seed the owner autocomplete list
-      if (form.value.ownerId) {
-        ownerOptions.value = [
-          {
-            label: form.value.ownerLabel || '(انتخاب شده)',
-            value: form.value.ownerId,
-          },
-        ]
-      } else {
-        ownerOptions.value = []
-      }
-
-      // Dates
+    function resetDates() {
       form.value.startDisplay = props.task.scheduledstart
         ? formatDatetimeLocal(props.task.scheduledstart)
         : ''
@@ -451,34 +340,54 @@ export default {
       form.value.endRaw = props.task.scheduledend || ''
       form.value.endARaw = props.task.actualend || ''
     }
-    loadNotes()
-    // Utility: Convert Jalali datetime string (jYYYY/jMM/jDD HH:mm) to UTC ISO string
-    const jalaliToIso = (jDateStr) => {
-      // Accept either a Moment instance or a Jalali-formatted string
-      if (!jDateStr) return ''
 
-      // If a moment object is passed, convert it directly
-      if (moment.isMoment(jDateStr)) {
-        return jDateStr.clone().utc().toISOString()
+    function seedRegardingOptions() {
+      if (form.value.regardingObjectId) {
+        regardingOptions.value = [
+          {
+            label: form.value.regardingObjectLabel || '(انتخاب شده)',
+            value: form.value.regardingObjectId,
+          },
+        ]
+      } else {
+        regardingOptions.value = []
       }
-
-      if (typeof jDateStr !== 'string') {
-        console.warn('Unsupported value for jalaliToIso:', jDateStr)
-        return ''
-      }
-
-      // Accept strings with or without an explicit time portion
-      const parseFormats = ['jYYYY/jMM/jDD HH:mm', 'jYYYY/jMM/jDD']
-      const m = moment(jDateStr, parseFormats, true) // strict parsing
-
-      if (!m.isValid()) {
-        console.warn('Invalid Jalali datetime string:', jDateStr)
-        return ''
-      }
-
-      // Convert the moment (which is created in local time) to UTC ISO string
-      return m.utc().toISOString()
     }
+
+    function seedOwnerOptions() {
+      if (form.value.ownerId) {
+        ownerOptions.value = [
+          {
+            label: form.value.ownerLabel || '(انتخاب شده)',
+            value: form.value.ownerId,
+          },
+        ]
+      } else {
+        ownerOptions.value = []
+      }
+    }
+
+    const resetForm = () => {
+      if (!props.task) return
+      Object.assign(form.value, {
+        subject: props.task.subject || '',
+        description: props.task.description || '',
+        regardingType: props.task.regardingtype || '',
+        regardingObjectId: props.task.regardingobjectid || '',
+        regardingObjectLabel: props.task.regardingname || props.task.regardingObjectLabel || '',
+        ownerId: props.task._ownerid_value || '',
+        ownerLabel: props.task.owner?.name || '',
+        priority: typeof props.task.prioritycode === 'number' ? props.task.prioritycode : 1,
+        stateCode: typeof props.task.statecode === 'number' ? props.task.statecode : 1,
+        newSeen: typeof props.task.new_seen !== 'undefined' ? !!props.task.new_seen : false,
+        lastOwnerLabel: props.task.lastownername || '(N/A)',
+      })
+
+      resetDates()
+      seedRegardingOptions()
+      seedOwnerOptions()
+    }
+    loadNotes()
 
     const updateStartTime = (value) => {
       console.log('updateStartTime received:', value)
@@ -501,21 +410,12 @@ export default {
       }
     }
 
-    let hasInitialized = false
-    watch(
-      () => form.value.regardingType,
-      (newVal, oldVal) => {
-        if (!hasInitialized) {
-          hasInitialized = true // don’t reset on first assignment
-          return
-        }
-        if (newVal !== oldVal) {
-          form.value.regardingObjectId = ''
-          form.value.regardingObjectLabel = ''
-          regardingOptions.value = []
-        }
-      },
-    )
+    watchEffect(() => {
+      // when the entity type changes clear the selected record & options
+      form.value.regardingObjectId = ''
+      form.value.regardingObjectLabel = ''
+      regardingOptions.value = []
+    })
 
     watch(
       () => props.task,
@@ -533,6 +433,13 @@ export default {
       (v) => {
         if (v) loadNotes()
       },
+    )
+    watch(
+      () => [form.value.subject, form.value.startRaw, form.value.endRaw],
+      () => {
+        formErrors.value = validateTask(form.value)
+      },
+      { immediate: true },
     )
 
     const saveTask = async () => {
@@ -626,6 +533,7 @@ export default {
       canEdit,
       shareLink,
       modalTitle,
+      formErrors,
     }
   },
 }

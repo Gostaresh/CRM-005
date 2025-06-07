@@ -43,3 +43,27 @@ export function toJalali(iso: string | null): string {
     hour12: false,
   })
 }
+
+import moment from 'moment-jalaali'
+moment.loadPersian({ usePersianDigits: false })
+
+/** ISO → local Jalali datetime string “jYYYY/jMM/jDD HH:mm” */
+export function formatDatetimeLocal(iso: string | null): string {
+  if (!iso) return ''
+  return moment(iso).utc().local().format('jYYYY/jMM/jDD HH:mm')
+}
+
+/** Jalali (string or moment) → UTC ISO string */
+export function jalaliToIso(input: any): string {
+  if (!input) return ''
+  // Already a moment instance
+  if (moment.isMoment(input)) {
+    return input.clone().utc().toISOString()
+  }
+  if (typeof input !== 'string') return ''
+
+  const parseFormats = ['jYYYY/jMM/jDD HH:mm', 'jYYYY/jMM/jDD']
+  const m = moment(input, parseFormats, true)
+  if (!m.isValid()) return ''
+  return m.utc().toISOString()
+}

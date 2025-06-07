@@ -1,0 +1,30 @@
+// ---------------------------------------------------------------------------
+// Global colour tokens & utility classes.
+// Imported once in main.scss and used everywhere.
+// ---------------------------------------------------------------------------
+
+// Variables
+$holiday-bg: #ffeb3b55; // translucent yellow
+$seen-event-bg: #fff8a6; // pale yellow
+$default-event-bg: #6c757d; // Bootstrap secondary
+
+$prio-high: #dc3545; // red
+$prio-mid: #ffc107; // amber
+$prio-low: #28a745; // green
+
+// Priority dot helpers (used by FullCalendar renderers)
+.prio-dot {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+}
+.prio-high {
+  background: $prio-high;
+}
+.prio-mid {
+  background: $prio-mid;
+}
+.prio-low {
+  background: $prio-low;
+}
