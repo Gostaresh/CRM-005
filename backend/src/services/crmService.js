@@ -59,7 +59,7 @@ class CrmService {
       url = query.nextLink;
     }
 
-    logger.info(`Fetching entity: ${url}`);
+    // logger.info(`Fetching entity: ${url}`);
     const requestOptions = {
       url,
       username: credentials.username,
@@ -80,7 +80,7 @@ class CrmService {
       });
     });
 
-    logger.info(`CRM response status: ${res.statusCode}`);
+    // logger.info(`CRM response status: ${res.statusCode}`);
     if (res.statusCode !== 200) {
       logger.error(
         `CRM request failed with status: ${res.statusCode}, body: ${res.body}`

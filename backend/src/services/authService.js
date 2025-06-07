@@ -56,7 +56,7 @@ class AuthService {
       `domainname eq '${dn}'`
     )}`;
     let url = `${env.crmUrl}${filterPath}`; // Use env.crmUrl consistently
-    logger.info(`CRM Request URL: ${url}`);
+    // logger.info(`CRM Request URL: ${url}`);
 
     try {
       const response = await this.makeNtlmRequest(url, username, password);
