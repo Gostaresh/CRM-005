@@ -7,6 +7,9 @@
     class="create-task-modal"
     style="width: 95%; max-width: 95%"
   >
+    <n-alert v-if="formErrors.length" type="error" class="mb-2">
+      {{ formErrors[0] }}
+    </n-alert>
     <div class="modal-grid">
       <!--  LEFT 50 %  – موضوع + توضیحات + عطف -->
       <div class="form-left">
@@ -132,10 +135,6 @@
         </div>
       </div>
     </div>
-
-    <n-alert v-if="formErrors.length" type="error" class="mb-2">
-      {{ formErrors[0] }}
-    </n-alert>
 
     <!-- یادداشت‌ها label -->
     <h6 class="fw-bold my-2">یادداشت‌ها</h6>

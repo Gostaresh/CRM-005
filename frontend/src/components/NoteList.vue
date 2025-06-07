@@ -12,9 +12,9 @@
       </thead>
       <tbody>
         <tr v-for="n in notes" :key="n.annotationid">
-          <td class="fw-bold">{{ n.subject || '(بدون عنوان)' }}</td>
-          <td style="white-space: pre-line">{{ n.notetext }}</td>
-          <td>
+          <td class="fw-bold ctitle">{{ n.subject || '(بدون عنوان)' }}</td>
+          <td class="ctext" style="white-space: pre-line">{{ n.notetext || '(بدون توضیحات)' }}</td>
+          <td class="cfile">
             <a
               v-if="n.filename"
               :href="`/api/crm/notes/${n.annotationid}/download`"
@@ -85,5 +85,14 @@ tr:hover {
 th {
   background-color: #04aa6d;
   color: white;
+}
+.ctitle {
+  max-width: 100px;
+}
+.ctext {
+  max-width: 300px;
+}
+.cfile {
+  max-width: 100px;
 }
 </style>
