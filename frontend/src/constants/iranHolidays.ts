@@ -3,7 +3,7 @@
 // Iranian public holidays (all‑day) from 2025 through 2030.
 // Provides helpers to feed them into FullCalendar as background events.
 // -----------------------------------------------------------------------------
-
+import { HOLIDAY_BG } from '@/constants/colors'
 /** ISO date strings (YYYY‑MM‑DD). */
 export const IRAN_HOLIDAY_DATES: string[] = [
   // 2025
@@ -173,9 +173,6 @@ export const IRAN_HOLIDAY_DATES: string[] = [
   '2030-12-26',
 ]
 
-/** Colour used for background events (translucent yellow). */
-const HOLIDAY_COLOR = '#ffeb3b55'
-
 /** Convert every date string to a FullCalendar background-event object. */
 export function getIranHolidayEvents() {
   return IRAN_HOLIDAY_DATES.map((iso) => ({
@@ -183,7 +180,7 @@ export function getIranHolidayEvents() {
     allDay: true,
     display: 'background',
     overlap: false,
-    color: HOLIDAY_COLOR,
+    color: HOLIDAY_BG,
   }))
 }
 
@@ -192,3 +189,9 @@ export function getIranHolidayDatesByYear(year: number): string[] {
   const y = String(year)
   return IRAN_HOLIDAY_DATES.filter((d) => d.startsWith(y))
 }
+
+/** A reusable FullCalendar event‑source with id 'iran‑holidays'. */
+export const HOLIDAY_SOURCE = {
+  id: 'iran-holidays',
+  events: getIranHolidayEvents(),
+} as const

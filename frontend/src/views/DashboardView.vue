@@ -234,10 +234,6 @@ const props = defineProps({
 import { ref, watch, nextTick, h, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import FullCalendar from '@fullcalendar/vue3'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin from '@fullcalendar/interaction'
-import listPlugin from '@fullcalendar/list'
 import {
   NMessageProvider,
   NSelect,
@@ -257,31 +253,32 @@ import CreateTaskModal from '@/components/CreateTaskModal.vue'
 import TaskFilterForm from '@/components/TaskFilterForm.vue'
 import { ref as vueRef } from 'vue'
 import { ActivityPresets } from '@/constants/activityFilters'
-import { getIranHolidayEvents } from '@/constants/iranHolidays'
-
-/* static background events for Iranian public holidays */
-const holidayEventSource = {
-  id: 'iran-holidays',
-  events: getIranHolidayEvents(), // already in FC event‑object format
-}
+import { HOLIDAY_SOURCE } from '@/constants/iranHolidays'
+import { VIEW, TABLE_COLUMNS } from '@/constants/ui'
+import { SEEN_EVENT_BG, DEFAULT_EVENT_BG } from '@/constants/colors'
+import { clampToGrid, formatTime, toJalali } from '@/utils/dateHelpers'
+import { replaceTokens } from '@/utils/odataTokens'
+import { createMiniOptions, createCalendarOptions } from '@/composables/useCalendarOptions'
+import { updateTaskDates, crmFetch } from '@/api/crm'
+import { useShortcuts } from '@/composables/useShortcuts'
 
 /* ---------------------------------------------------------------------------
  * constants / state
  * -------------------------------------------------------------------------*/
-
-// const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || import.meta.env.VITE_API_BASE_URL || ''
-const BASE_URL = ''
 
 const router = useRouter()
 const auth = useAuthStore()
 /* ── dynamic menu ─────────────────────────────────────────────── */
 const menuStore = useMenuStore()
 onMounted(() => {
+  // 1) populate dynamic menu (once)
   if (!menuStore.tree.length) menuStore.load()
-})
-onMounted(() => {
-  // apply the initial filter so calendar + table load right away
+
+  // 2) apply default preset so calendar / table respect initial filter
   presetChange(selectedPreset.value)
+
+  // 3) deep‑link: open EditTask modal if URL contains ?activityId=...
+  if (props.activityId) loadTaskById(props.activityId)
 })
 function treeToOptions(nodes) {
   return nodes.map((n) => ({
@@ -325,148 +322,49 @@ const showFilter = ref(false)
 const showMobileMenu = ref(false)
 
 // view toggle: calendar <-> table
-const VIEW = { CAL: 'calendar', TABLE: 'table' }
 const viewMode = ref(VIEW.CAL)
 
 // activity rows for the table
 const activities = ref([])
-const tableColumns = [
-  {
-    title: 'موضوع',
-    key: 'subject',
-    render: (row) =>
-      h(
-        'a',
-        {
-          href: '#',
-          onClick: (e) => {
-            e.preventDefault()
-            loadTaskById(row.id)
-          },
-        },
-        row.subject,
-      ),
-  },
-  { title: 'شروع', key: 'startJ' },
-  { title: 'پایان برنامه', key: 'endJ' },
-  { title: 'پایان واقعی', key: 'actualEndJ' },
-  { title: 'نوع', key: 'typeLabel' },
-  { title: 'دیده شده؟', key: 'seenLabel' },
-  { title: 'وضعیت', key: 'stateLabel' },
-  { title: 'مالک', key: 'owner' },
-]
+// clone the base columns and inject the subject renderer
+const tableColumns = TABLE_COLUMNS.map((c) => ({ ...c }))
+tableColumns[0].render = (row) =>
+  h(
+    'a',
+    {
+      href: '#',
+      onClick: (e) => {
+        e.preventDefault()
+        loadTaskById(row.id)
+      },
+    },
+    row.subject,
+  )
 
 /* ---------------------------------------------------------------------------
  * helpers
  * -------------------------------------------------------------------------*/
 
-onMounted(() => {
-  window.addEventListener('keydown', handleKeys)
+const miniOptions = createMiniOptions(calendarRef)
+
+const calendarOptions = createCalendarOptions({
+  calendarRef,
+  odataFilter,
+  auth,
+  activities,
+  viewMode,
+  HOLIDAY_SOURCE,
+  SEEN_EVENT_BG,
+  DEFAULT_EVENT_BG,
+  clampToGrid,
+  toJalali,
+  saveEventTimes,
+  loadTaskById,
 })
-
-/* open EditTaskModal when arriving with ?activityId=… */
-onMounted(() => {
-  if (props.activityId) {
-    loadTaskById(props.activityId)
-  }
-})
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleKeys)
-})
-
-function handleKeys(e) {
-  // ignore when focus is in an input / textarea / select
-  const tag = e.target && e.target.tagName
-  if (tag && ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return
-
-  const ctrl = e.ctrlKey || e.metaKey // Cmd on Mac
-  const shift = e.shiftKey
-
-  switch (true) {
-    case !ctrl && !shift && e.key === 'n': // N
-      isCreateVisible.value = true
-      e.preventDefault()
-      break
-
-    case !ctrl && !shift && e.key === 'r': // R
-      refreshCalendar()
-      e.preventDefault()
-      break
-
-    case !ctrl && !shift && e.key === 't': // T
-      viewMode.value = viewMode.value === VIEW.CAL ? VIEW.TABLE : VIEW.CAL
-      e.preventDefault()
-      break
-
-    case !ctrl && !shift && e.key === 'f': // F
-      showFilter.value = true
-      e.preventDefault()
-      break
-
-    case !ctrl && shift && e.key === 'ArrowRight': // Shift + →
-      calendarRef.value?.getApi().next()
-      e.preventDefault()
-      break
-
-    case !ctrl && shift && e.key === 'ArrowLeft': // Shift + ←
-      calendarRef.value?.getApi().prev()
-      e.preventDefault()
-      break
-
-    case !ctrl && !shift && e.key === '.': // .
-      calendarRef.value?.getApi().today()
-      e.preventDefault()
-      break
-  }
-}
-
-const miniOptions = {
-  plugins: [dayGridPlugin, interactionPlugin],
-  initialView: 'dayGridMonth',
-  headerToolbar: {
-    left: 'prev,today,next',
-    center: 'title',
-    right: '',
-  },
-  height: 'auto',
-  selectable: false,
-  showNonCurrentDates: false,
-  fixedWeekCount: false, // true gives exactly 6 rows
-  dayMaxEvents: false,
-  dayHeaders: true,
-  locale: 'fa',
-  firstDay: 6,
-  direction: 'rtl',
-  events: [], // no events in the mini
-  dayHeaderContent: ({ text }) => {
-    const map = {
-      شنبه: 'ش',
-      یکشنبه: 'ی',
-      دوشنبه: 'د',
-      سه‌شنبه: 'س',
-      چهارشنبه: 'چ',
-      پنجشنبه: 'پ',
-      جمعه: 'ج',
-    }
-    return map[text] ?? text
-  },
-  dateClick: ({ date }) => {
-    // Jump the main calendar to the clicked day
-    calendarRef.value?.getApi().gotoDate(date)
-  },
-  dayCellClassNames: ({ date }) => {
-    const today = new Date()
-    return date.toDateString() === today.toDateString() ? ['mini-today'] : []
-  },
-  dateClick({ date, dayEl }) {
-    // clear previous
-    document
-      .querySelectorAll('.mini-selected')
-      .forEach((el) => el.classList.remove('mini-selected'))
-    dayEl.classList.add('mini-selected')
-
-    calendarRef.value?.getApi().gotoDate(date)
-  },
+// attach delegations that depend on dashboard-local refs
+calendarOptions.select = handleCalendarSelect
+calendarOptions.loading = (busy) => {
+  isLoading.value = busy
 }
 
 const refreshCalendar = () => {
@@ -476,37 +374,23 @@ const refreshCalendar = () => {
   crmSource?.refetch()
 }
 
+// Register shortcuts after all referenced variables are defined
+useShortcuts({
+  n: () => (isCreateVisible.value = true),
+  r: refreshCalendar,
+  t: () => (viewMode.value = viewMode.value === VIEW.CAL ? VIEW.TABLE : VIEW.CAL),
+  f: () => (showFilter.value = true),
+  'shift+arrowright': () => calendarRef.value?.getApi().next(),
+  'shift+arrowleft': () => calendarRef.value?.getApi().prev(),
+  '.': () => calendarRef.value?.getApi().today(),
+})
+
 function presetChange(key) {
   const p = ActivityPresets.find((x) => x.key === key)
   if (!p) return
 
-  /* -------- ISO helpers – no external libs ---------------------------------*/
-  function isoStartOfDay(offsetDays = 0) {
-    const d = new Date()
-    d.setDate(d.getDate() + offsetDays)
-    d.setHours(0, 0, 0, 0)
-    return d.toISOString()
-  }
-  function isoMonthStart(offsetMonths = 0) {
-    const d = new Date()
-    d.setMonth(d.getMonth() + offsetMonths, 1) // 1 → first day
-    d.setHours(0, 0, 0, 0)
-    return d.toISOString()
-  }
-
-  const repl = {
-    '{TODAY}': isoStartOfDay(0),
-    '{TOMORROW}': isoStartOfDay(1),
-    '{TODAY+7}': isoStartOfDay(7),
-    '{MONTH_START}': isoMonthStart(0),
-    '{NEXT_MONTH_START}': isoMonthStart(1),
-    '{USERID}': auth.user?.id ?? '',
-  }
-
-  let filter = p.filter
-  Object.entries(repl).forEach(([token, val]) => {
-    filter = filter.replaceAll(token, val)
-  })
+  // replace placeholder tokens with ISO strings / user id
+  let filter = replaceTokens(p.filter, auth.user?.id ?? '')
 
   /* -------------------------------------------------------------
    * If the preset itself did NOT specify an owner condition,
@@ -570,242 +454,15 @@ function handleCalendarSelect(selection) {
 /** Persist start/end when an event is dragged or resized. */
 async function saveEventTimes(event) {
   try {
-    const res = await fetch(`${BASE_URL}/api/crm/activities/${event.id}/update-dates`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        activitytypecode: event.extendedProps.activitytypecode,
-        scheduledstart: event.start.toISOString(),
-        scheduledend: event.end ? event.end.toISOString() : event.start.toISOString(),
-      }),
+    await updateTaskDates(event.id, {
+      activitytypecode: event.extendedProps.activitytypecode,
+      scheduledstart: event.start.toISOString(),
+      scheduledend: event.end ? event.end.toISOString() : event.start.toISOString(),
     })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
   } catch (err) {
     console.error('❌ Failed to update event time:', err)
-    throw err // let FullCalendar revert
+    throw err // lets FullCalendar revert
   }
-}
-
-/** Format a Date to “HH:mm” local time */
-function formatTime(date) {
-  return date
-    ? new Date(date).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })
-    : ''
-}
-
-/* ---------------------------------------------------------------------------
- * FullCalendar options
- * -------------------------------------------------------------------------*/
-/** Time‑grid spans 07‑22.  Clamp a Date into that visible band for display
- *  while keeping the true times in extendedProps. */
-function clampToGrid(date, isStart) {
-  if (!date) return date
-  const d = new Date(date) // copy
-  const H = d.getHours()
-  if (H < 7) {
-    d.setHours(7, 0, 0, 0)
-  } else if (H >= 22) {
-    // put late events in the last slot 21:00‑22:00
-    d.setHours(21, 59, 0, 0)
-  }
-  return d
-}
-/** Format ISO into “YYYY/MM/DD HH:mm” using the Persian calendar.
- *  Works in modern browsers with Intl DateTimeFormat. */
-function toJalali(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString('fa-IR-u-ca-persian', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
-}
-
-const calendarOptions = {
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
-  initialView: 'timeGridWeek',
-  navLinks: true,
-  dayMaxEvents: true,
-  locale: 'fa',
-  firstDay: 6, // Saturday
-  timeZone: 'local',
-  selectable: true,
-  selectMirror: true,
-  editable: true,
-  nowIndicator: true,
-  eventStartEditable: true,
-  eventDurationEditable: true,
-  direction: 'rtl',
-  height: '85vh',
-  slotMinTime: '07:00:00' /* show from 07:00 */,
-  slotMaxTime: '22:00:00' /* …until 22:00 */,
-  scrollTime: '07:00:00' /* auto‑scroll to 07:00 */,
-  slotDuration: '00:30:00',
-  snapDuration: '00:30:00',
-  slotLabelInterval: '00:30:00',
-
-  customButtons: {
-    showCalendar: {
-      text: '📅',
-      click() {
-        viewMode.value = VIEW.CAL
-      },
-    },
-    showTable: {
-      text: '📋',
-      click() {
-        viewMode.value = VIEW.TABLE
-      },
-    },
-  },
-
-  headerToolbar: {
-    left: 'prev,next today',
-    center: 'title',
-    right: 'showCalendar,showTable listMonth,dayGridMonth,timeGridWeek,timeGridDay',
-  },
-
-  eventSources: [
-    holidayEventSource,
-    {
-      id: 'crm-events',
-      events: async (fetchInfo, success, failure) => {
-        try {
-          const query = odataFilter.value ? `?$filter=${encodeURIComponent(odataFilter.value)}` : ''
-          const res = await fetch(`${BASE_URL}/api/crm/activities/my${query}`, {
-            credentials: 'include',
-          })
-          const { value } = await res.json()
-          success(
-            value.map((t) => ({
-              id: t.activityid,
-              title: t.subject,
-              // display times are clamped to 07‑22 so early/late tasks remain visible
-              start: clampToGrid(t.scheduledstart, true),
-              end: clampToGrid(t.scheduledend ?? t.scheduledstart, false),
-              extendedProps: t,
-              /* prettier-ignore */ backgroundColor: t.new_seen ? '#FFF8A6' : (t.color || '#6c757d'),
-              borderColor: '#000000',
-              editable: true,
-              startEditable: true,
-              durationEditable: true,
-            })),
-          )
-          /* keep a lightweight copy for the data table */
-          activities.value = value.map((t) => {
-            return {
-              id: t.activityid,
-              key: t.activityid,
-              subject: t.subject,
-              startJ: toJalali(t.scheduledstart),
-              endJ: toJalali(t.scheduledend),
-              actualEndJ: toJalali(t.actualend),
-              typeLabel: t['activitytypecode@OData.Community.Display.V1.FormattedValue'] || '',
-              seenLabel: t['new_seen@OData.Community.Display.V1.FormattedValue'] || '',
-              stateLabel: t['statecode@OData.Community.Display.V1.FormattedValue'] || '',
-              owner: t.owner?.name ?? '',
-            }
-          })
-          console.log(value[1].color)
-        } catch (e) {
-          console.error('❌ Failed to fetch activities:', e)
-          failure(e)
-        }
-      },
-    },
-  ],
-
-  /** Render “HH:mm – HH:mm ✓ title” (✓ only if seen) */
-  eventContent: ({ event }) => {
-    const start = formatTime(event.start)
-    const end = formatTime(event.end ?? event.start)
-
-    const container = document.createElement('div')
-    container.className = 'd-flex align-items-center gap-1'
-    // Prevent line‑breaks so time, tick, and title stay on one line
-    container.style.flexWrap = 'nowrap'
-    container.style.whiteSpace = 'nowrap'
-
-    const timeSpan = document.createElement('span')
-    timeSpan.className = 'event-time'
-    timeSpan.textContent = `${start} – ${end}`
-    // container.appendChild(timeSpan)
-
-    if (event.extendedProps.new_seen) {
-      const tick = document.createElement('span')
-      tick.className = 'seen-icon'
-      tick.textContent = '✓'
-      container.appendChild(tick)
-    }
-
-    /* priority dot */
-    const prio = event.extendedProps.prioritycode
-    const dot = document.createElement('span')
-    dot.className = 'prio-dot'
-    if (prio === 2) dot.classList.add('prio-high')
-    else if (prio === 1) dot.classList.add('prio-mid')
-    else dot.classList.add('prio-low')
-    container.appendChild(dot)
-
-    const titleSpan = document.createElement('span')
-    titleSpan.className = 'event-title flex-grow-1'
-    // Avoid wrapping for long titles – truncate with ellipsis instead
-    titleSpan.style.overflow = 'hidden'
-    titleSpan.style.textOverflow = 'ellipsis'
-    titleSpan.style.whiteSpace = 'nowrap'
-    titleSpan.textContent = event.title
-    container.appendChild(titleSpan)
-
-    return { domNodes: [container] }
-  },
-
-  select: handleCalendarSelect,
-
-  eventClick: async ({ event }) => loadTaskById(event.id),
-
-  eventDrop: async ({ event, revert }) => {
-    try {
-      await saveEventTimes(event)
-    } catch {
-      revert()
-    }
-  },
-
-  eventResize: async ({ event, revert }) => {
-    try {
-      await saveEventTimes(event)
-    } catch {
-      revert()
-    }
-  },
-
-  /* ── make list‑view dots match the background (ignore borderColor) ── */
-  eventDidMount: ({ event, view, el }) => {
-    if (view.type.startsWith('list')) {
-      // The dot lives in a sibling <td>; search the entire row
-      const row = el.closest('tr') || el.parentElement
-      const dot = row?.querySelector('.fc-list-event-dot, .fc-event-dot')
-      if (dot) {
-        // Force‑set both borderColor (stroke) and background (fill)
-        const c = event.backgroundColor || ''
-        dot.style.borderColor = c
-        dot.style.backgroundColor = c
-      }
-    }
-  },
-
-  // Toggle the global spinner automatically
-  loading: (busy) => {
-    isLoading.value = busy
-  },
 }
 
 /* ---------------------------------------------------------------------------
@@ -828,11 +485,8 @@ function onTaskUpdated() {
 }
 async function loadTaskById(id) {
   try {
-    const res = await fetch(`${BASE_URL}/api/crm/activities/${id}`, {
-      credentials: 'include',
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    selectedTask.value = await res.json()
+    const { ok, data } = await crmFetch(`/api/crm/activities/${id}`)
+    selectedTask.value = ok ? data : { activityid: id }
   } catch (err) {
     console.error('❌ loadTaskById fallback:', err)
     selectedTask.value = { activityid: id }
@@ -856,12 +510,10 @@ async function fetchTableData() {
     }
 
     const q = `?$filter=${encodeURIComponent(filter)}`
-    const res = await fetch(`${BASE_URL}/api/crm/activities/my${q}`, {
-      credentials: 'include',
-    })
-    const { value } = await res.json()
+    const { ok, data } = await crmFetch(`/api/crm/activities/my${q}`)
+    const list = ok ? (Array.isArray(data.value) ? data.value : data) : []
 
-    activities.value = value.map((t) => ({
+    activities.value = list.map((t) => ({
       id: t.activityid,
       key: t.activityid,
       subject: t.subject,

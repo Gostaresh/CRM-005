@@ -3,7 +3,7 @@
     v-model:show="modelVisible"
     preset="card"
     :mask-closable="false"
-    title="ویرایش وظیفه"
+    :title="modalTitle"
     class="edit-task-modal"
     style="width: 80%; max-width: 85%"
   >
@@ -194,7 +194,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
@@ -235,6 +234,22 @@ export default {
     const modelVisible = computed({
       get: () => props.visible,
       set: (v) => emit('update:visible', v),
+    })
+    const activityDisplayName = {
+      task: 'وظیفه',
+      phonecall: 'تماس تلفنی',
+      appointment: 'قرار ملاقات',
+      email: 'ایمیل',
+      fax: 'فکس',
+      letter: 'نامه',
+      serviceappointment: 'فعالیت خدماتی',
+      socialactivity: 'فعالیت اجتماعی',
+      // add more if needed
+    }
+    const modalTitle = computed(() => {
+      const type = props.task?.activitytypecode || 'task'
+      const label = activityDisplayName[type] || 'فعالیت'
+      return `ویرایش ${label}`
     })
     /** user may edit if they’re owner or creator */
     const canEdit = computed(() => {
@@ -610,6 +625,7 @@ export default {
       NoteList,
       canEdit,
       shareLink,
+      modalTitle,
     }
   },
 }

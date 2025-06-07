@@ -1,4 +1,6 @@
 // src/api/crm.ts
+
+import { BASE_URL } from '@/utils/env'
 /**
  * Thin wrapper around fetch that automatically prefixes the backend base URL,
  * attaches credentials and handles JSON ↔ JS conversion.
@@ -10,14 +12,11 @@ export interface CRMResponse<T> {
   status: number
 }
 
-// const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || import.meta.env.VITE_API_BASE_URL || ''
-const baseUrl = ''
-
 export async function crmFetch<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<CRMResponse<T>> {
-  const res = await fetch(`${baseUrl}${path}`, {
+  const res = await fetch(`${BASE_URL}${path}`, {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
