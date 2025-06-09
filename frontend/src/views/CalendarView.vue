@@ -204,7 +204,7 @@
       </n-drawer>
 
       <!-- Edit existing task -->
-      <EditTaskModal
+      <EditActivityModal
         v-if="selectedTask"
         v-model:visible="isEditModalVisible"
         :task="selectedTask"
@@ -250,7 +250,7 @@ import {
 
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
-import EditTaskModal from '@/components/EditTaskModal.vue'
+import EditActivityModal from '@/components/EditActivityModal.vue'
 import CreateTaskModal from '@/components/CreateTaskModal.vue'
 import TaskFilterForm from '@/components/TaskFilterForm.vue'
 import { ActivityPresets } from '@/constants/activityFilters'

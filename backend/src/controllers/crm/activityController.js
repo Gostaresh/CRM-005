@@ -6,6 +6,9 @@ const {
   ActivityPointer,
   SystemUser,
   activityStatusMap,
+  buildStateOptions,
+  buildStatusOptions,
+  LanguageCodes,
 } = require("../../core/resources");
 
 const fetchAllActivities = async (req, res) => {
@@ -95,6 +98,10 @@ const fetchActivityDetails = async (req, res) => {
     `Fetching activity details for activityId: ${activityId}, user: ${credentials.username}`
   );
   const data = await CrmService.fetchActivityDetails(activityId, credentials);
+
+  const logicalType = data.activitytypecode || "task";
+  data.stateOptions = buildStateOptions(LanguageCodes.PERSIAN);
+  data.statusOptions = buildStatusOptions(logicalType, LanguageCodes.PERSIAN);
 
   res.status(200).json(data);
 };

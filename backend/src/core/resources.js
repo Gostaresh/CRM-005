@@ -300,6 +300,51 @@ const activityTypeToDisplayName = {
   email: "ایمیل",
 };
 
+// ────────────────────────────────────────────────────────────
+// Temporary fallback: minimal EN→FA status translations
+// until full Persian labels are generated per entity
+const enToFaStatus = {
+  Open: "باز",
+  "Not Started": "شروع نشده",
+  "In Progress": "در حال انجام",
+  Pending: "در انتظار",
+  Completed: "تکمیل شده",
+  Closed: "بسته شده",
+  Canceled: "لغو شده",
+  Scheduled: "زمان‌بندی شده",
+  Busy: "مشغول",
+  Tentative: "موقتی",
+  Free: "آزاد",
+  Draft: "پیش‌نویس",
+  Sent: "ارسال شده",
+  Received: "دریافت شده",
+  Failed: "ناموفق",
+};
+// ── Helpers to build dropdown arrays ──────────────────────────────
+function buildStateOptions(lang = LanguageCodes.PERSIAN) {
+  return Object.values(StateCode).map((code) => ({
+    value: code,
+    label: getStateLabel(code, lang),
+  }));
+}
+
+function buildStatusOptions(type, lang = LanguageCodes.PERSIAN) {
+  const map = activityStatusMap[type] || {};
+  const byState = {};
+
+  for (const [state, statuses] of Object.entries(map)) {
+    byState[state] = Object.entries(statuses)
+      .filter(([key]) => key !== "__stateLabel")
+      .map(([statusCode, enLabel]) => ({
+        value: Number(statusCode),
+        label:
+          lang === LanguageCodes.PERSIAN
+            ? (enToFaStatus[enLabel] ?? enLabel)
+            : enLabel,
+      }));
+  }
+  return byState;
+}
 // Helper Functions
 const getStatusLabel = (
   entityName,
@@ -333,7 +378,18 @@ const getStatusLabel = (
     },
   };
 
-  return statusMap[entityName]?.[statusCode]?.[languageCode] || "Unknown";
+  const explicit = statusMap[entityName]?.[statusCode]?.[languageCode];
+  if (explicit) return explicit;
+
+  // fallback: if Persian requested but missing, translate EN → FA
+  if (languageCode === LanguageCodes.PERSIAN) {
+    const en = statusMap[entityName]?.[statusCode]?.[LanguageCodes.ENGLISH];
+    return enToFaStatus[en] ?? en ?? "Unknown";
+  }
+
+  return (
+    statusMap[entityName]?.[statusCode]?.[LanguageCodes.ENGLISH] || "Unknown"
+  );
 };
 
 const getStateLabel = (stateCode, languageCode = LanguageCodes.ENGLISH) => {
@@ -605,4 +661,6 @@ module.exports = {
   activityTypeToEntitySet,
   activityTypeToDisplayName,
   activityStatusMap,
+  buildStateOptions,
+  buildStatusOptions,
 };

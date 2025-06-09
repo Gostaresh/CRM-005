@@ -130,10 +130,13 @@
               <template #unchecked>دیده نشده</template>
             </n-switch>
             <n-select
-              v-model:value="form.stateCode"
-              :options="stateOptions"
+              v-model:value="form.statuscode"
+              :options="statusOptionsRef"
               placement="bottom-start"
               :consistent-menu-width="true"
+              :virtual-scroll="false"
+              label-field="label"
+              value-field="value"
               placeholder="وضعیت"
             />
           </div>
@@ -196,7 +199,7 @@
 </template>
 
 <script>
-import { ref, watch, watchEffect, onMounted, onUnmounted, reactive, computed } from 'vue'
+import { ref, watch, reactive, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -252,6 +255,23 @@ export default {
         ? `${window.location.origin}/dashboard?activityId=${props.task.activityid}`
         : '',
     )
+    // dropdown options provided by backend (Persian)
+    const stateOptionsRef = computed(() => props.task?.stateOptions || [])
+    const statusMapRef = computed(() => props.task?.statusOptions || {})
+
+    const statusOptionsRef = computed(() =>
+      (stateOptionsRef.value || []).map((state) => ({
+        type: 'group',
+        key: state.value,
+        label: state.label,
+        disabled: true,
+        children: (statusMapRef.value[state.value] || []).map((opt) => ({
+          label: opt.label,
+          value: opt.value,
+          key: `${state.value}-${opt.value}`,
+        })),
+      })),
+    )
 
     const form = ref({
       subject: '',
@@ -268,6 +288,7 @@ export default {
       ownerId: '',
       ownerLabel: '',
       priority: 1,
+      statuscode: null,
       stateCode: 0, // 0 = open , 1 = completed , 2 = canceled , 3 - scheduled
       newSeen: 0, // option‑set: 0 = No, 1 = Yes
       lastOwnerLabel: '', // read‑only label
@@ -378,6 +399,7 @@ export default {
         ownerId: props.task._ownerid_value || '',
         ownerLabel: props.task.owner?.name || '',
         priority: typeof props.task.prioritycode === 'number' ? props.task.prioritycode : 1,
+        statuscode: typeof props.task.statuscode === 'number' ? props.task.statuscode : null,
         stateCode: typeof props.task.statecode === 'number' ? props.task.statecode : 1,
         newSeen: typeof props.task.new_seen !== 'undefined' ? !!props.task.new_seen : false,
         lastOwnerLabel: props.task.lastownername || '(N/A)',
@@ -410,13 +432,7 @@ export default {
       }
     }
 
-    watchEffect(() => {
-      // when the entity type changes clear the selected record & options
-      form.value.regardingObjectId = ''
-      form.value.regardingObjectLabel = ''
-      regardingOptions.value = []
-    })
-
+    // Removed obsolete watchEffect and currentState watcher.
     watch(
       () => props.task,
       (newTask) => {
@@ -432,6 +448,21 @@ export default {
       () => props.visible,
       (v) => {
         if (v) loadNotes()
+      },
+    )
+
+    // keep stateCode in sync with the selected status
+    watch(
+      () => form.value.statuscode,
+      (newStatus) => {
+        if (newStatus == null) return
+        // find the parent state that owns this status
+        for (const [stateKey, arr] of Object.entries(statusMapRef.value)) {
+          if (arr.some((opt) => opt.value === newStatus)) {
+            form.value.stateCode = Number(stateKey)
+            return
+          }
+        }
       },
     )
     watch(
@@ -453,6 +484,7 @@ export default {
           prioritycode: String(form.value.priority),
           new_seen: !!Number(form.value.newSeen),
           statecode: String(form.value.stateCode),
+          statuscode: String(form.value.statuscode),
 
           // Required by backend to resolve the correct entity‑set
           activitytypecode: props.task.activitytypecode || 'task',
@@ -523,6 +555,7 @@ export default {
       onOwnerSelect,
       priorityOptions,
       seenOptions,
+      statusOptionsRef,
       stateOptions,
       notes,
       newNote,

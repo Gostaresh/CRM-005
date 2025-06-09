@@ -32,12 +32,22 @@ export const ActivityPresets: ActivityPreset[] = [
   {
     key: 'DUE_TODAY_OPEN',
     label: 'سررسید گذشته (باز)',
-    filter: 'scheduledend lt {TOMORROW} and statecode eq 0',
+    filter: 'actualend lt {TOMORROW} and statecode eq 0',
   },
   {
     key: 'COMPLETED',
     label: 'فعالیت‌های من (بسته)',
     filter: 'statecode eq 1',
+  },
+  {
+    key: 'CANCELED',
+    label: 'فعالیت‌های من (لغو شده ها)',
+    filter: 'statecode eq 2',
+  },
+  {
+    key: 'SCHEDULED',
+    label: 'فعالیت‌های من (برنامه‌ریزی‌شده)',
+    filter: 'statecode eq 3',
   },
   {
     key: 'LAST_OWNER',

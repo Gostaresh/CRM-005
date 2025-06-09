@@ -228,6 +228,8 @@ const form = reactive({
   state: 0,
 })
 
+const formErrors = ref<string[]>([])
+
 /**
  * If the parent passes defaultStart / defaultEnd, initialise the form.
  * Runs when the component is mounted and every time the modal is (re‑)opened.
@@ -364,8 +366,6 @@ const note = reactive<{ subject: string; text: string; file: File | null; base64
   file: null,
   base64: '',
 })
-
-const formErrors = ref<string[]>([])
 
 async function onFileChange(e: Event) {
   const target = e.target as HTMLInputElement
