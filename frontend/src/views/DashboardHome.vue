@@ -8,14 +8,20 @@ import {
   SettingOutlined,
 } from '@vicons/antd'
 import { NIcon } from 'naive-ui'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const auth = useAuthStore()
 
+const logout = async () => {
+  await auth.logout()
+  router.push('/login')
+}
 const tiles = [
   { label: 'تقویم و فعالیت‌ها', route: '/calendar', icon: CalendarOutlined, ready: true },
   { label: 'فروش', route: '/sales', icon: LineChartOutlined, ready: false },
   { label: 'مخاطبین', route: '/contacts', icon: TeamOutlined, ready: false },
-  { label: 'گزارشات', route: '/reports', icon: BarChartOutlined, ready: false },
+  { label: 'گزارشات', route: '/reports', icon: BarChartOutlined, ready: true },
   { label: 'تنظیمات', route: '/settings', icon: SettingOutlined, ready: false },
 ]
 </script>
@@ -24,7 +30,10 @@ const tiles = [
   <div class="dashboard-bg">
     <div class="dash-center">
       <div class="tile-box">
-        <h2 class="dashboard-title">سلام، خوش آمدید</h2>
+        <div class="dashboard-header">
+          <n-button type="error" ghost @click="logout">خروج</n-button>
+          <h2 class="dashboard-title">سلام، خوش آمدید</h2>
+        </div>
         <div class="tile-grid">
           <n-card
             v-for="t in tiles"
@@ -50,6 +59,7 @@ const tiles = [
 .tile-grid {
   display: grid;
   gap: 1rem;
+  align-content: center;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
@@ -69,6 +79,11 @@ const tiles = [
 
 .tile-card .label {
   font-weight: 700;
+}
+
+/* Ensure the content block inside n-card is fully centered vertical grid */
+:deep(.tile-card > .n-card__content:first-child) {
+  align-content: center;
 }
 
 .tile-card.disabled {
@@ -102,6 +117,13 @@ const tiles = [
 .dashboard-title {
   text-align: right;
   font-size: 1.35rem;
+  margin: 0;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 1.5rem;
 }
 </style>
