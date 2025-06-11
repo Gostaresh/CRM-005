@@ -6,6 +6,7 @@
     :title="modalTitle"
     class="edit-task-modal"
     style="width: 80%; max-width: 85%"
+    dir="rtl"
   >
     <div class="modal-body">
       <n-alert v-if="formErrors.length" type="error" class="mb-2">
