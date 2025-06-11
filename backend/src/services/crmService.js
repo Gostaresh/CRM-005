@@ -585,7 +585,7 @@ class CrmService {
     const query = {
       select: "annotationid,subject,notetext,filename,mimetype,createdon",
       filter: `_objectid_value eq '${taskId}'`,
-      orderby: "createdon asc",
+      orderby: "createdon desc",
       expand: "createdby($select=fullname)",
     };
     const data = await this.fetchEntity("annotations", query, credentials);
