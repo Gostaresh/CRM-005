@@ -1,29 +1,278 @@
 {
-  "account": { "set": "accounts", "display": "name", "id": "accountid" },
-  "contact": { "set": "contacts", "display": "fullname", "id": "contactid" },
-  "lead": { "set": "leads", "display": "subject", "id": "leadid" },
+  "account": {
+    "set": "accounts",
+    "display": "name",
+    "id": "accountid",
+    "logicalName": "account"
+  },
+  "bookableresourcebooking": {
+    "set": "bookableresourcebookings",
+    "display": "name",
+    "id": "bookableresourcebookingid",
+    "logicalName": "bookableresourcebooking"
+  },
+  "bookableresourcebookingheader": {
+    "set": "bookableresourcebookingheaders",
+    "display": "name",
+    "id": "bookableresourcebookingheaderid",
+    "logicalName": "bookableresourcebookingheader"
+  },
+  "campaign": {
+    "set": "campaigns",
+    "display": "name",
+    "id": "campaignid",
+    "logicalName": "campaign"
+  },
+  "campaignactivity": {
+    "set": "campaignactivities",
+    "display": "name",
+    "id": "campaignactivityid",
+    "logicalName": "campaignactivity"
+  },
+  "case": {
+    "set": "incidents",
+    "display": "title",
+    "id": "incidentid",
+    "logicalName": "incident"
+  },
+  "contact": {
+    "set": "contacts",
+    "display": "fullname",
+    "id": "contactid",
+    "logicalName": "contact"
+  },
+  "contract": {
+    "set": "contracts",
+    "display": "name",
+    "id": "contractid",
+    "logicalName": "contract"
+  },
+  "entitlement": {
+    "set": "entitlements",
+    "display": "name",
+    "id": "entitlementid",
+    "logicalName": "entitlement"
+  },
+  "entitlementtemplate": {
+    "set": "entitlementtemplates",
+    "display": "name",
+    "id": "entitlementtemplateid",
+    "logicalName": "entitlementtemplate"
+  },
+  "incident": {
+    "set": "incidents",
+    "display": "title",
+    "id": "incidentid",
+    "logicalName": "incident"
+  },
+  "invoice": {
+    "set": "invoices",
+    "display": "name",
+    "id": "invoiceid",
+    "logicalName": "invoice"
+  },
+  "knowledgearticle": {
+    "set": "knowledgearticles",
+    "display": "title",
+    "id": "knowledgearticleid",
+    "logicalName": "knowledgearticle"
+  },
+  "knowledgebaserecord": {
+    "set": "knowledgebaserecords",
+    "display": "title",
+    "id": "knowledgebaserecordid",
+    "logicalName": "knowledgebaserecord"
+  },
+  "lead": {
+    "set": "leads",
+    "display": "subject",
+    "id": "leadid",
+    "logicalName": "lead"
+  },
+  "msdyn_playbookinstance": {
+    "set": "msdyn_playbookinstances",
+    "display": "name",
+    "id": "msdyn_playbookinstanceid",
+    "logicalName": "msdyn_playbookinstance"
+  },
+  "msdyn_postalbum": {
+    "set": "msdyn_postalbums",
+    "display": "name",
+    "id": "msdyn_postalbumid",
+    "logicalName": "msdyn_postalbum"
+  },
+  "new_barbarigabz": {
+    "set": "new_barbarigabzs",
+    "display": "name",
+    "id": "new_barbarigabzid",
+    "logicalName": "new_barbarigabz"
+  },
+  "new_barnamehersaltarbari": {
+    "set": "new_barnamehersaltarbaris",
+    "display": "name",
+    "id": "new_barnamehersaltarbariid",
+    "logicalName": "new_barnamehersaltarbari"
+  },
+  "new_brand": {
+    "set": "new_brands",
+    "display": "name",
+    "id": "new_brandid",
+    "logicalName": "new_brand"
+  },
+  "new_certificatesandcontracts": {
+    "set": "new_certificatesandcontracts",
+    "display": "name",
+    "id": "new_certificatesandcontractsid",
+    "logicalName": "new_certificatesandcontracts"
+  },
+  "new_city": {
+    "set": "new_cities",
+    "display": "name",
+    "id": "new_cityid",
+    "logicalName": "new_city"
+  },
+  "new_color": {
+    "set": "new_colors",
+    "display": "name",
+    "id": "new_colorid",
+    "logicalName": "new_color"
+  },
+  "new_customeractivity": {
+    "set": "new_customeractivities",
+    "display": "name",
+    "id": "new_customeractivityid",
+    "logicalName": "new_customeractivity"
+  },
+  "new_gift": {
+    "set": "new_gifts",
+    "display": "name",
+    "id": "new_giftid",
+    "logicalName": "new_gift"
+  },
+  "new_guarantee": {
+    "set": "new_guarantees",
+    "display": "name",
+    "id": "new_guaranteeid",
+    "logicalName": "new_guarantee"
+  },
+  "new_haml": {
+    "set": "new_hamls",
+    "display": "name",
+    "id": "new_hamlid",
+    "logicalName": "new_haml"
+  },
+  "new_hamler": {
+    "set": "new_hamlers",
+    "display": "name",
+    "id": "new_hamlerid",
+    "logicalName": "new_hamler"
+  },
+  "new_marketingcategories": {
+    "set": "new_marketingcategories",
+    "display": "name",
+    "id": "new_marketingcategoriesid",
+    "logicalName": "new_marketingcategories"
+  },
+  "new_noetarfhesab": {
+    "set": "new_noetarfhesabs",
+    "display": "name",
+    "id": "new_noetarfhesabid",
+    "logicalName": "new_noetarfhesab"
+  },
+  "new_noetasviyeh": {
+    "set": "new_noetasviyehs",
+    "display": "name",
+    "id": "new_noetasviyehid",
+    "logicalName": "new_noetasviyeh"
+  },
+  "new_payrcvspeyvast": {
+    "set": "new_payrcvspeyvasts",
+    "display": "name",
+    "id": "new_payrcvspeyvastid",
+    "logicalName": "new_payrcvspeyvast"
+  },
+  "new_proforma": {
+    "set": "new_proformas",
+    "display": "name",
+    "id": "new_proformaid",
+    "logicalName": "new_proforma"
+  },
+  "new_proformainvoices": {
+    "set": "new_proformainvoices",
+    "display": "name",
+    "id": "new_proformainvoicesid",
+    "logicalName": "new_proformainvoices"
+  },
+  "new_proformav1": {
+    "set": "new_proformav1s",
+    "display": "name",
+    "id": "new_proformav1id",
+    "logicalName": "new_proformav1"
+  },
+  "new_province": {
+    "set": "new_provinces",
+    "display": "name",
+    "id": "new_provinceid",
+    "logicalName": "new_province"
+  },
+  "new_saatamaranbar": {
+    "set": "new_saatamaranbars",
+    "display": "name",
+    "id": "new_saatamaranbarid",
+    "logicalName": "new_saatamaranbar"
+  },
+  "new_shippingco": {
+    "set": "new_shippingcos",
+    "display": "name",
+    "id": "new_shippingcoid",
+    "logicalName": "new_shippingco"
+  },
+  "new_standard": {
+    "set": "new_standards",
+    "display": "name",
+    "id": "new_standardid",
+    "logicalName": "new_standard"
+  },
+  "new_subshippngco": {
+    "set": "new_subshippngcos",
+    "display": "name",
+    "id": "new_subshippngcoid",
+    "logicalName": "new_subshippngco"
+  },
+  "new_transportationemployee": {
+    "set": "new_transportationemployees",
+    "display": "name",
+    "id": "new_transportationemployeeid",
+    "logicalName": "new_transportationemployee"
+  },
   "opportunity": {
     "set": "opportunities",
     "display": "name",
-    "id": "opportunityid"
+    "id": "opportunityid",
+    "logicalName": "opportunity"
   },
-  "invoice": { "set": "invoices", "display": "name", "id": "invoiceid" },
-  "order": { "set": "salesorders", "display": "name", "id": "salesorderid" },
-  "quote": { "set": "quotes", "display": "name", "id": "quoteid" },
-  "case": { "set": "incidents", "display": "title", "id": "incidentid" },
+  "quote": {
+    "set": "quotes",
+    "display": "name",
+    "id": "quoteid",
+    "logicalName": "quote"
+  },
+  "salesorder": {
+    "set": "salesorders",
+    "display": "name",
+    "id": "salesorderid",
+    "logicalName": "salesorder"
+  },
+  "site": {
+    "set": "sites",
+    "display": "name",
+    "id": "siteid",
+    "logicalName": "site"
+  },
   "systemuser": {
     "set": "systemusers",
     "display": "fullname",
-    "id": "systemuserid"
-  },
-  "new_seen": {
-    "set": "new_seens",
-    "display": "new_name",
-    "id": "new_seenid"
-  },
-  "new_lastowner": {
-    "set": "new_lastowners",
-    "display": "new_name",
-    "id": "new_lastownerid"
+    "id": "systemuserid",
+    "logicalName": "systemuser"
   }
 }

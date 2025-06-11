@@ -1,33 +1,50 @@
 // Grid helpers (gap 0.5rem)
-.sub-grid-50-50,
-.sub-grid-33-66,
-.sub-grid-66-33,
-.sub-grid-33-33-33 {
+.sub-grid-1-1,
+.sub-grid-1-2,
+.sub-grid-2-1,
+.sub-grid-1-1-1,
+.sub-grid-1-2-m2,
+.sub-grid-1,
+.sub-grid-1-m5-1,
+.sub-grid-1-m2-1-m2-1 {
   display: grid;
   gap: 0.5rem;
+  direction: rtl; // ensure columns flow right‑to‑left
 }
 
-.sub-grid-50-50 {
+.sub-grid-1-1 {
   grid-template-columns: 1fr 1fr;
 }
-.sub-grid-33-66 {
-  grid-template-columns: 33% 67%;
+.sub-grid-1-2 {
+  grid-template-columns: 1fr 2fr;
 }
-.sub-grid-66-33 {
-  grid-template-columns: 66% 34%;
+.sub-grid-2-1 {
+  grid-template-columns: 2fr 1fr;
 }
-.sub-grid-33-33-33 {
+.sub-grid-1-1-1 {
   grid-template-columns: repeat(3, 1fr);
 }
+.sub-grid-1-2-m2 {
+  grid-template-columns: 1fr 2fr 0.2fr;
+}
+.sub-grid-1-m5-1 {
+  grid-template-columns: 1fr 0.5fr 1fr;
+}
 
+.sub-grid-1-m2-1-m2-1 {
+  grid-template-columns: 1fr 0.2fr 1fr 0.2fr 1fr;
+}
+.sub-grid-1 {
+  grid-template-columns: 1fr;
+}
 // ---------------------------------------------------------------------------
 // Modal two‑column layout (used by CreateTaskModal & EditTaskModal)
 // ---------------------------------------------------------------------------
 .modal-grid {
   display: grid;
-  grid-template-columns: 0.4fr 0.6fr;
-  gap: 1rem;             // keep the original 1 rem gap from modal‑grid.css
-  direction: rtl;        // ensure columns flow right‑to‑left
+  grid-template-columns: 0.5fr 0.5fr;
+  gap: 1rem; // keep the original 1 rem gap from modal‑grid.css
+  direction: rtl; // ensure columns flow right‑to‑left
 }
 
 /* Left & right column containers */

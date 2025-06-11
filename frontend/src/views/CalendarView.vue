@@ -86,7 +86,9 @@
                 🔍 فیلتر
               </n-button>
 
-              <n-button secondary class="w-100" @click="refreshCalendar"> 🔄 بروزرسانی </n-button>
+              <n-button secondary class="w-100" @click="refreshCurrentView">
+                🔄 بروزرسانی
+              </n-button>
 
               <n-button
                 type="primary"
@@ -161,19 +163,20 @@
         <!-- Full‑width data‑table when view is TABLE -->
         <template v-else>
           <!-- toolbar row -->
-          <div class="d-flex justify-content-end mb-2 gap-2">
-            <n-input
-              v-model:value="searchTerm"
-              placeholder="جستجو..."
-              clearable
-              style="max-width: 240px"
-              @keydown.enter.native="fetchTableData"
-            />
-            <button class="btn btn-outline-secondary" @click="viewMode = VIEW.CAL">
-              📅 بازگشت به تقویم
-            </button>
-          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+            <div class="d-flex gap-2">
+              <n-input
+                v-model:value="searchTerm"
+                placeholder="جستجو..."
+                clearable
+                style="max-width: 240px"
+                @keydown.enter.native="fetchTableData"
+              />
+              <n-button type="default" @click="fetchTableData">🔄 بروزرسانی جدول</n-button>
+            </div>
 
+            <n-button type="default" @click="viewMode = VIEW.CAL">📅 بازگشت به تقویم</n-button>
+          </div>
           <div class="table-responsive">
             <n-data-table
               :columns="tableColumns"
@@ -256,7 +259,7 @@ import TaskFilterForm from '@/components/TaskFilterForm.vue'
 import { ActivityPresets } from '@/constants/activityFilters'
 import { HOLIDAY_SOURCE } from '@/constants/iranHolidays'
 import { VIEW, TABLE_COLUMNS } from '@/constants/ui'
-import { SEEN_EVENT_BG, DEFAULT_EVENT_BG } from '@/constants/colors'
+import { SEEN_EVENT_BG, DEFAULT_EVENT_BG, DEFAULT_EVENT_BORDER } from '@/constants/colors'
 import { clampToGrid, toJalali } from '@/utils/dateHelpers'
 import { replaceTokens } from '@/utils/odataTokens'
 import { createMiniOptions, createCalendarOptions } from '@/composables/useCalendarOptions'
@@ -356,6 +359,7 @@ const calendarOptions = createCalendarOptions({
   viewMode,
   HOLIDAY_SOURCE,
   SEEN_EVENT_BG,
+  DEFAULT_EVENT_BORDER,
   DEFAULT_EVENT_BG,
   clampToGrid,
   toJalali,
@@ -522,7 +526,7 @@ async function fetchTableData() {
       endJ: toJalali(t.scheduledend),
       actualEndJ: toJalali(t.actualend),
       typeLabel: t['activitytypecode@OData.Community.Display.V1.FormattedValue'] || '',
-      seenLabel: t['new_seen@OData.Community.Display.V1.FormattedValue'] || '',
+      seenLabel: t.new_seen || '',
       stateLabel: t['statecode@OData.Community.Display.V1.FormattedValue'] || '',
       owner: t.owner?.name ?? '',
     }))
@@ -530,6 +534,14 @@ async function fetchTableData() {
     console.error('❌ fetchTableData:', err)
   } finally {
     isLoading.value = false
+  }
+}
+
+function refreshCurrentView() {
+  if (viewMode.value === VIEW.TABLE) {
+    fetchTableData()
+  } else {
+    refreshCalendar()
   }
 }
 

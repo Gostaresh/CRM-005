@@ -21,8 +21,14 @@ const logger = winston.createLogger({
       level: "error",
       filter: (info) => ["error", "warn"].includes(info.level),
     }),
+    // Logins logs to logins.log
+    new winston.transports.File({
+      filename: "login.log",
+      level: "info",
+      filter: (info) => info.message.includes("Login"),
+    }),
     // All logs to console
-    new winston.transports.Console(),
+    // new winston.transports.Console(),
   ],
 });
 

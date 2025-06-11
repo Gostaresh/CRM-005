@@ -26,7 +26,7 @@
         />
 
         <!-- نوع عطف + عطف به (33 % / 66 %) -->
-        <div class="sub-grid-33-66 mb-3">
+        <div class="sub-grid-1-2-m2 mb-3">
           <n-select
             v-model:value="form.regardingType"
             :options="regardingTypeOptions"
@@ -47,13 +47,23 @@
             @update:value="searchRegarding"
             @select="onRegardingSelect"
           />
+          <n-button
+            type="info"
+            dashed
+            tag="a"
+            target="_blank"
+            size="medium"
+            :href="form.regardingUrl"
+            v-if="form.regardingUrl"
+            >⛓️‍💥</n-button
+          >
         </div>
       </div>
 
       <!--  RIGHT 50 %  – owner / dates / priority‑seen -->
       <div class="form-right">
         <!-- مالک فعلی (+ hidden previous owner) -->
-        <div class="sub-grid-50-50 mb-3">
+        <div class="sub-grid-1-1 mb-3">
           <n-auto-complete
             v-model:value="form.ownerLabel"
             :options="ownerOptions"
@@ -70,7 +80,7 @@
         </div>
 
         <!-- تاریخ شروع / پایان -->
-        <div class="sub-grid-33-33-33 mb-3">
+        <div class="sub-grid-1-1-1 mb-3">
           <DatePicker
             auto-submit
             v-model="form.startMoment"
@@ -105,7 +115,7 @@
         </div>
 
         <!-- اولویت / دیده شده -->
-        <div class="sub-grid-33-33-33 mb-3">
+        <div class="sub-grid-1-1-1 mb-3">
           <n-select
             v-model:value="form.priority"
             placement="bottom-end"
@@ -140,13 +150,13 @@
     <h6 class="fw-bold my-2">یادداشت‌ها</h6>
 
     <!-- Note subject + file row -->
-    <div class="sub-grid-50-50 mb-2">
-      <n-input v-model:value="note.subject" placeholder="موضوع" />
+    <div class="sub-grid-1-1 mb-2">
+      <n-input v-model:value="note.subject" dir="rtl" placeholder="موضوع" />
       <input type="file" class="form-control form-control-sm" @change="onFileChange" />
     </div>
 
     <!-- Note textarea -->
-    <n-input v-model:value="note.text" type="textarea" rows="3" placeholder="توضیحات" />
+    <n-input v-model:value="note.text" type="textarea" rows="3" dir="rtl" placeholder="توضیحات" />
 
     <template #footer>
       <n-space justify="end">
@@ -175,7 +185,7 @@ import { searchEntity, createTask, searchSystemUsers, addTaskNote } from '@/api/
 import { PRIORITY_OPTIONS, SEEN_OPTIONS, STATE_OPTIONS } from '@/constants/taskOptions'
 import { MAX_FILE_SIZE, fileToBase64 } from '@/utils/fileHelpers'
 import { useRegardingSearch, useOwnerSearch } from '@/composables/useEntitySearch'
-import { validateTask } from '@/utils/validators'
+import { checkActivityRealTimeValidity } from '@/utils/validators'
 /* ---------------------------------------------------------------- *\
   Create‑task modal
   – Uses Naive‑UI & vue3-persian-datetime-picker
@@ -218,10 +228,11 @@ const form = reactive({
   startIso: '',
   endIso: '',
   endAIso: '',
-  priority: 0,
+  priority: 1,
   regardingType: 'account',
   regardingObjectId: '',
   regardingObjectLabel: '',
+  regadingUrl: '',
   ownerId: '',
   ownerLabel: '',
   newSeen: false,
@@ -292,6 +303,7 @@ function onRegardingSelect(value: string) {
   form.regardingObjectId = value // GUID
   const match = regardingOptions.value.find((o) => o.value === value)
   form.regardingObjectLabel = match ? match.label : ''
+  form.regardingUrl = match ? match.url : ''
 }
 function onOwnerSelect(value: string, opt?: { label: string; value: string }) {
   if (!opt) {
@@ -334,7 +346,7 @@ const isValid = computed(() => formErrors.value.length === 0)
 watch(
   () => [form.subject, form.startIso, form.endIso],
   () => {
-    formErrors.value = validateTask({
+    formErrors.value = checkActivityRealTimeValidity({
       subject: form.subject,
       startRaw: form.startIso,
       endRaw: form.endIso,
@@ -437,8 +449,8 @@ async function save() {
       // If user entered a note, create it
       if (note.text.trim() || note.base64) {
         const notePayload: Record<string, unknown> = {
-          subject: note.subject,
-          notetext: note.text,
+          subject: note.subject || 'بدون موضوع',
+          notetext: note.text || 'بدون توضیحات',
         }
         if (note.base64) {
           notePayload.filename = note.file?.name
@@ -473,10 +485,11 @@ function resetFormFields() {
     startIso: '',
     endIso: '',
     endAIso: '',
-    priority: '1',
+    priority: 1,
     regardingType: 'account',
     regardingObjectId: '',
     regardingObjectLabel: '',
+    regardingUrl: '',
     ownerId: '',
     ownerLabel: '',
     newSeen: 0,

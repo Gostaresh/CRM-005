@@ -296,7 +296,7 @@ class CrmService {
 
     // Extract regarding lookup fields
     const regardingId = data._regardingobjectid_value || null;
-    const regardingName =
+    let regardingName =
       data[
         "_regardingobjectid_value@OData.Community.Display.V1.FormattedValue"
       ] || "";
@@ -313,6 +313,66 @@ class CrmService {
     data.regardingname = regardingName;
     data.regardingtype = regardingType;
 
+    // ── ENHANCED regardingname logic: append related entity info ──
+    try {
+      if (regardingType === "contact" && regardingId) {
+        // Fetch contact, include parent account name if available
+        const contact = await this.fetchEntity(
+          `contacts(${regardingId})`,
+          {
+            select: "fullname,_parentcustomerid_value",
+            headers: {
+              Prefer:
+                'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+            },
+          },
+          credentials
+        );
+        const parentAccountName =
+          contact[
+            "_parentcustomerid_value@OData.Community.Display.V1.FormattedValue"
+          ];
+        if (parentAccountName) {
+          data.regardingname = `${regardingName} (${parentAccountName})`;
+        }
+      } else if (regardingType === "account" && regardingId) {
+        // Fetch account, include first associated contact as label enhancement
+        const account = await this.fetchEntity(
+          `accounts(${regardingId})`,
+          {
+            select: "name",
+            headers: {
+              Prefer:
+                'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+            },
+          },
+          credentials
+        );
+        // Query contacts with _parentcustomerid_value = regardingId
+        const contactsData = await this.fetchEntity(
+          "contacts",
+          {
+            select: "fullname",
+            filter: `_parentcustomerid_value eq '${regardingId}'`,
+            top: 1,
+            headers: {
+              Prefer:
+                'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+            },
+          },
+          credentials
+        );
+        if (contactsData.value && contactsData.value.length > 0) {
+          const firstContact = contactsData.value[0];
+          if (firstContact.fullname) {
+            data.regardingname = `${regardingName} (${firstContact.fullname})`;
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn(`Unable to enhance regardingname: ${err.message}`);
+    }
+
     // Get owner name from formatted-value annotation
     const ownerName =
       data["_ownerid_value@OData.Community.Display.V1.FormattedValue"] || "-";
@@ -328,6 +388,12 @@ class CrmService {
       `http://192.168.1.6/Gostaresh/main.aspx?pagetype=entityrecord&etc=${entityTypeCode}` +
       `&id=%7B${activityId}%7D`; // encode {GUID}
 
+    // Build regardingUrl for frontend linking
+    const regardingUrl =
+      regardingId && regardingType
+        ? `http://192.168.1.6/Gostaresh/main.aspx?pagetype=entityrecord&etn=${regardingType}&id=%7B${regardingId}%7D`
+        : null;
+
     return {
       ...data,
       new_seen: newSeen,
@@ -339,6 +405,7 @@ class CrmService {
         name: ownerName,
       },
       recordUrl,
+      regardingUrl,
     };
   }
 
@@ -609,7 +676,7 @@ class CrmService {
     const query = {
       select: "annotationid,subject,notetext,filename,mimetype,createdon",
       filter: `_objectid_value eq '${taskId}'`,
-      orderby: "createdon asc",
+      orderby: "createdon desc",
       expand: "createdby($select=fullname)",
     };
     const data = await this.fetchEntity("annotations", query, credentials);

@@ -5,7 +5,7 @@
     :mask-closable="false"
     :title="modalTitle"
     class="edit-task-modal"
-    style="width: 80%; max-width: 85%"
+    style="width: 90%; max-width: 95%"
   >
     <div class="modal-body">
       <n-alert v-if="formErrors.length" type="error" class="mb-2">
@@ -16,18 +16,39 @@
         <div class="form-left">
           <!-- موضوع -->
           <n-input v-model:value.trim="form.subject" placeholder="موضوع *" class="mb-3" />
-
-          <!-- توضیحات -->
-          <n-input
-            v-model:value="form.description"
-            type="textarea"
-            rows="3"
-            placeholder="توضیحات"
-            class="mb-3"
-          />
-
+        </div>
+        <div class="form-right">
+          <!-- نوع فعالیت -->
+          <div class="sub-grid-1-1 mb-3">
+            <n-auto-complete
+              v-model:value="form.ownerLabel"
+              :options="ownerOptions"
+              :loading="searchingOwner"
+              :filter="false"
+              placement="bottom-start"
+              :consistent-menu-width="true"
+              placeholder="مالک فعلی"
+              @update:value="searchOwner"
+              @select="onOwnerSelect"
+            />
+            <n-input :value="form.lastOwnerLabel" disabled placeholder="مالک قبلی" />
+          </div>
+        </div>
+      </div>
+      <div class="sub-grid-1">
+        <!-- توضیحات -->
+        <n-input
+          v-model:value="form.description"
+          type="textarea"
+          rows="3"
+          placeholder="توضیحات"
+          class="mb-3"
+        />
+      </div>
+      <div class="modal-grid">
+        <div class="form-left">
           <!-- نوع عطف + عطف به -->
-          <div class="sub-grid-33-66 mb-3">
+          <div class="sub-grid-1-2-m2 mb-3">
             <n-select
               v-model:value="form.regardingType"
               :options="regardingTypeOptions"
@@ -46,71 +67,19 @@
               @update:value="searchRegarding"
               @select="onRegardingSelect"
             />
+            <n-button
+              type="info"
+              dashed
+              tag="a"
+              target="_blank"
+              size="medium"
+              :href="task.regardingUrl"
+              v-if="task.regardingUrl"
+              >⛓️‍💥</n-button
+            >
           </div>
-        </div>
-
-        <!-- RIGHT 50 % – owners / dates / priority‑seen -->
-        <div class="form-right">
-          <!-- مالک فعلی + قبلی -->
-          <div class="sub-grid-50-50 mb-3">
-            <n-auto-complete
-              v-model:value="form.ownerLabel"
-              :options="ownerOptions"
-              :loading="searchingOwner"
-              :filter="false"
-              placement="bottom-start"
-              :consistent-menu-width="true"
-              placeholder="مالک فعلی"
-              @update:value="searchOwner"
-              @select="onOwnerSelect"
-            />
-            <n-input :value="form.lastOwnerLabel" disabled placeholder="مالک قبلی" />
-          </div>
-
-          <!-- تاریخ‌ها -->
-          <div class="sub-grid-33-33-33 mb-3">
-            <DatePicker
-              auto-submit
-              v-model="form.startDisplay"
-              type="datetime"
-              format="jYYYY/jMM/jDD HH:mm"
-              display-format="jYYYY/jMM/jDD HH:mm"
-              :jump-minute="30"
-              :round-minute="true"
-              placeholder="تاریخ شروع *"
-              @change="updateStartTime"
-              @update:modelValue="updateStartTime"
-            />
-            <DatePicker
-              auto-submit
-              v-model="form.endDisplay"
-              type="datetime"
-              format="jYYYY/jMM/jDD HH:mm"
-              display-format="jYYYY/jMM/jDD HH:mm"
-              :min="form.startDisplay"
-              :jump-minute="30"
-              :round-minute="true"
-              placeholder="تاریخ پایان *"
-              @change="updateEndTime"
-              @update:modelValue="updateEndTime"
-            />
-            <DatePicker
-              auto-submit
-              v-model="form.endActual"
-              type="date"
-              format="jYYYY/jMM/jDD"
-              display-format="jYYYY/jMM/jDD"
-              :min="form.startDisplay"
-              :jump-minute="30"
-              :round-minute="true"
-              placeholder="مهلت انجام *"
-              @change="updateEndActual"
-              @update:modelValue="updateEndActual"
-            />
-          </div>
-
           <!-- اولویت / دیده شده -->
-          <div class="sub-grid-33-33-33 mb-3">
+          <div class="sub-grid-1-m5-1 mb-3">
             <n-select
               v-model:value="form.priority"
               :options="priorityOptions"
@@ -141,6 +110,59 @@
             />
           </div>
         </div>
+
+        <div class="form-right">
+          <!-- تاریخ‌ها -->
+          <div class="sub-grid-1-1-1 mb-3">
+            <div class="sub-grid-1">
+              <div class="form-label">تاریخ شروع:</div>
+              <DatePicker
+                auto-submit
+                v-model="form.startDisplay"
+                type="datetime"
+                format="jYYYY/jMM/jDD HH:mm"
+                display-format="jYYYY/jMM/jDD HH:mm"
+                :jump-minute="30"
+                :round-minute="true"
+                placeholder="تاریخ شروع *"
+                @change="updateStartTime"
+                @update:modelValue="updateStartTime"
+              />
+            </div>
+            <div class="sub-grid-1">
+              <div class="form-label">تاریخ پایان:</div>
+              <DatePicker
+                auto-submit
+                v-model="form.endDisplay"
+                type="datetime"
+                format="jYYYY/jMM/jDD HH:mm"
+                display-format="jYYYY/jMM/jDD HH:mm"
+                :min="form.startDisplay"
+                :jump-minute="30"
+                :round-minute="true"
+                placeholder="تاریخ پایان *"
+                @change="updateEndTime"
+                @update:modelValue="updateEndTime"
+              />
+            </div>
+            <div class="sub-grid-1">
+              <div class="form-label">مهلت انجام:</div>
+              <DatePicker
+                auto-submit
+                v-model="form.endActual"
+                type="date"
+                format="jYYYY/jMM/jDD"
+                display-format="jYYYY/jMM/jDD"
+                :min="form.startDisplay"
+                :jump-minute="30"
+                :round-minute="true"
+                placeholder="مهلت انجام *"
+                @change="updateEndActual"
+                @update:modelValue="updateEndActual"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- یادداشت‌ها -->
@@ -148,8 +170,8 @@
       <NoteList :notes="notes" class="mb-2" />
 
       <!-- افزودن یادداشت -->
-      <div class="sub-grid-50-50 mb-2">
-        <n-input v-model:value="newNote.subject" placeholder="موضوع" />
+      <div class="sub-grid-1-1 mb-2">
+        <n-input v-model:value="newNote.subject" dir="rtl" placeholder="موضوع" />
         <input type="file" class="form-control form-control-sm" @change="onNewFile" />
       </div>
       <n-input
@@ -158,6 +180,7 @@
         rows="3"
         placeholder="توضیحات"
         class="mb-2"
+        dir="rtl"
       />
       <button type="button" class="btn btn-sm btn-outline-primary" @click="addNote">
         افزودن یادداشت
@@ -165,34 +188,42 @@
     </div>
 
     <template #footer>
-      <n-space justify="end">
-        <n-button strong secondary @click="hideModal">انصراف</n-button>
-        <n-button strong type="primary" :disabled="!canEdit || formErrors.length" @click="saveTask">
-          ذخیره
-        </n-button>
-      </n-space>
-      <n-space justify="start">
-        <n-button
-          strong
-          secondary
-          type="warning"
-          tag="a"
-          target="_blank"
-          :href="task.recordUrl"
-          v-if="task.recordUrl"
-          >CRM</n-button
-        >
-        <n-button
-          strong
-          secondary
-          tag="a"
-          :href="shareLink"
-          target="_blank"
-          type="default"
-          v-if="shareLink"
-        >
-          لینک اشتراک
-        </n-button>
+      <n-space justify="space-between" wrap class="w-100 mt-2">
+        <n-space>
+          <n-button strong secondary @click="hideModal">انصراف</n-button>
+          <n-button
+            strong
+            type="primary"
+            :disabled="!canEdit || formErrors.length"
+            @click="saveTask"
+          >
+            ذخیره
+          </n-button>
+        </n-space>
+        <n-space>
+          <n-button
+            strong
+            secondary
+            type="warning"
+            tag="a"
+            target="_blank"
+            :href="task.recordUrl"
+            v-if="task.recordUrl"
+          >
+            CRM
+          </n-button>
+          <n-button
+            strong
+            secondary
+            tag="a"
+            :href="shareLink"
+            target="_blank"
+            type="default"
+            v-if="shareLink"
+          >
+            لینک اشتراک
+          </n-button>
+        </n-space>
       </n-space>
     </template>
   </n-modal>
@@ -212,7 +243,7 @@ import { getRegardingTypeOptions } from '@/composables/useEntityMap'
 import { updateActivity, getTaskNotes, addTaskNote } from '@/api/crm'
 import { useRegardingSearch, useOwnerSearch } from '@/composables/useEntitySearch'
 import { formatDatetimeLocal, jalaliToIso } from '@/utils/dateHelpers'
-import { fileToBase64 } from '@/utils/fileHelpers'
+import { MAX_FILE_SIZE, fileToBase64 } from '@/utils/fileHelpers'
 import { validateTask } from '@/utils/validators'
 import DatePicker from 'vue3-persian-datetime-picker'
 import NoteList from './NoteList.vue'
@@ -468,7 +499,7 @@ export default {
     watch(
       () => [form.value.subject, form.value.startRaw, form.value.endRaw],
       () => {
-        formErrors.value = validateTask(form.value)
+        formErrors.value = checkActivityRealTimeValidity(form.value)
       },
       { immediate: true },
     )
@@ -521,8 +552,8 @@ export default {
     async function addNote() {
       if (!newNote.text.trim() && !newNote.base64) return
       const payload = {
-        subject: newNote.subject,
-        notetext: newNote.text,
+        subject: newNote.subject || 'بدون موضوع',
+        notetext: newNote.text || 'بدون توضیحات',
       }
       if (newNote.base64) {
         payload.filename = newNote.file?.name
