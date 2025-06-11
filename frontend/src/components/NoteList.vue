@@ -21,7 +21,7 @@
               target="_blank"
               class="text-decoration-none"
             >
-              📎 {{ n.filename }}
+              📎 دانلود
             </a>
           </td>
           <td>{{ n.createdby || '-' }}</td>
@@ -93,6 +93,6 @@ th {
   max-width: 300px;
 }
 .cfile {
-  max-width: 100px;
+  max-width: 45px;
 }
 </style>

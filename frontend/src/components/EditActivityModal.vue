@@ -167,34 +167,42 @@
     </div>
 
     <template #footer>
-      <n-space justify="end">
-        <n-button strong secondary @click="hideModal">انصراف</n-button>
-        <n-button strong type="primary" :disabled="!canEdit || formErrors.length" @click="saveTask">
-          ذخیره
-        </n-button>
-      </n-space>
-      <n-space justify="start">
-        <n-button
-          strong
-          secondary
-          type="warning"
-          tag="a"
-          target="_blank"
-          :href="task.recordUrl"
-          v-if="task.recordUrl"
-          >CRM</n-button
-        >
-        <n-button
-          strong
-          secondary
-          tag="a"
-          :href="shareLink"
-          target="_blank"
-          type="default"
-          v-if="shareLink"
-        >
-          لینک اشتراک
-        </n-button>
+      <n-space justify="space-between" wrap class="w-100 mt-2">
+        <n-space>
+          <n-button strong secondary @click="hideModal">انصراف</n-button>
+          <n-button
+            strong
+            type="primary"
+            :disabled="!canEdit || formErrors.length"
+            @click="saveTask"
+          >
+            ذخیره
+          </n-button>
+        </n-space>
+        <n-space>
+          <n-button
+            strong
+            secondary
+            type="warning"
+            tag="a"
+            target="_blank"
+            :href="task.recordUrl"
+            v-if="task.recordUrl"
+          >
+            CRM
+          </n-button>
+          <n-button
+            strong
+            secondary
+            tag="a"
+            :href="shareLink"
+            target="_blank"
+            type="default"
+            v-if="shareLink"
+          >
+            لینک اشتراک
+          </n-button>
+        </n-space>
       </n-space>
     </template>
   </n-modal>
