@@ -3,9 +3,13 @@
 .sub-grid-1-2,
 .sub-grid-2-1,
 .sub-grid-1-1-1,
-.sub-grid-1-2-m2 {
+.sub-grid-1-2-m2,
+.sub-grid-1,
+.sub-grid-1-m5-1,
+.sub-grid-1-m2-1-m2-1 {
   display: grid;
   gap: 0.5rem;
+  direction: rtl; // ensure columns flow right‑to‑left
 }
 
 .sub-grid-1-1 {
@@ -23,7 +27,16 @@
 .sub-grid-1-2-m2 {
   grid-template-columns: 1fr 2fr 0.2fr;
 }
+.sub-grid-1-m5-1 {
+  grid-template-columns: 1fr 0.5fr 1fr;
+}
 
+.sub-grid-1-m2-1-m2-1 {
+  grid-template-columns: 1fr 0.2fr 1fr 0.2fr 1fr;
+}
+.sub-grid-1 {
+  grid-template-columns: 1fr;
+}
 // ---------------------------------------------------------------------------
 // Modal two‑column layout (used by CreateTaskModal & EditTaskModal)
 // ---------------------------------------------------------------------------
