@@ -6,7 +6,6 @@
     :title="modalTitle"
     class="edit-task-modal"
     style="width: 80%; max-width: 85%"
-    dir="rtl"
   >
     <div class="modal-body">
       <n-alert v-if="formErrors.length" type="error" class="mb-2">
@@ -28,7 +27,7 @@
           />
 
           <!-- نوع عطف + عطف به -->
-          <div class="sub-grid-33-66 mb-3">
+          <div class="sub-grid-1-2-m2 mb-3">
             <n-select
               v-model:value="form.regardingType"
               :options="regardingTypeOptions"
@@ -47,13 +46,23 @@
               @update:value="searchRegarding"
               @select="onRegardingSelect"
             />
+            <n-button
+              type="info"
+              dashed
+              tag="a"
+              target="_blank"
+              size="medium"
+              :href="task.regardingUrl"
+              v-if="task.regardingUrl"
+              >⛓️‍💥</n-button
+            >
           </div>
         </div>
 
         <!-- RIGHT 50 % – owners / dates / priority‑seen -->
         <div class="form-right">
           <!-- مالک فعلی + قبلی -->
-          <div class="sub-grid-50-50 mb-3">
+          <div class="sub-grid-1-1 mb-3">
             <n-auto-complete
               v-model:value="form.ownerLabel"
               :options="ownerOptions"
@@ -69,7 +78,7 @@
           </div>
 
           <!-- تاریخ‌ها -->
-          <div class="sub-grid-33-33-33 mb-3">
+          <div class="sub-grid-1-1-1 mb-3">
             <DatePicker
               auto-submit
               v-model="form.startDisplay"
@@ -111,7 +120,7 @@
           </div>
 
           <!-- اولویت / دیده شده -->
-          <div class="sub-grid-33-33-33 mb-3">
+          <div class="sub-grid-1-1-1 mb-3">
             <n-select
               v-model:value="form.priority"
               :options="priorityOptions"
@@ -149,7 +158,7 @@
       <NoteList :notes="notes" class="mb-2" />
 
       <!-- افزودن یادداشت -->
-      <div class="sub-grid-50-50 mb-2">
+      <div class="sub-grid-1-1 mb-2">
         <n-input v-model:value="newNote.subject" dir="rtl" placeholder="موضوع" />
         <input type="file" class="form-control form-control-sm" @change="onNewFile" />
       </div>

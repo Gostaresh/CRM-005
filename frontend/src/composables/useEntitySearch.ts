@@ -28,8 +28,9 @@ export function useRegardingSearch(regardingType: Ref<string>) {
       const { ok, data } = await searchEntity(regardingType.value, query)
       if (ok) {
         options.value = data.map((item: any) => ({
-          label: item.name,
+          label: item.name /* enhanced */,
           value: item.id,
+          url: item.url,
         }))
       }
     } catch (err) {

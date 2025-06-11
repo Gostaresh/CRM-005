@@ -22,7 +22,7 @@ export function createMiniOptions(calendarRef: Ref<any>) {
     plugins: [dayGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
     headerToolbar: {
-      left: 'prev,today,next',
+      left: 'prev,next',
       center: 'title',
       right: '',
     },

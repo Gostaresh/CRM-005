@@ -32,20 +32,72 @@ exports.search = async (req, res) => {
     // Encode non‑ASCII so the URL is valid
     const safeQ = encodeURIComponent(q).replace(/'/g, "''");
     const filter = `contains(${meta.display}, '${safeQ}')`;
+    const extra = type === "contact" ? ",_parentcustomerid_value" : "";
     const query = {
-      select: `${meta.id},${meta.display}`,
+      select: `${meta.id},${meta.display}${extra}`,
       filter,
       top,
+      headers: {
+        Prefer:
+          'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+      },
     };
 
-    logger.info(`Search ${type}: "${q}", top ${top}`);
+    // logger.info(`Search ${type}: "${q}", top ${top}`);
     const data = await CrmService.fetchEntity(meta.set, query, creds);
 
-    const list = (data.value || []).map((r) => ({
-      id: r[meta.id],
-      name: r[meta.display],
-      type,
-    }));
+    // Enhance name for contact/account
+    const list = await Promise.all(
+      (data.value || []).map(async (r) => {
+        let name = r[meta.display];
+        // If contact, append (account name)
+        if (type === "contact") {
+          // Use parent account name from annotation if available
+          const parentAccountName =
+            r[
+              "_parentcustomerid_value@OData.Community.Display.V1.FormattedValue"
+            ];
+          if (parentAccountName) {
+            name = `${name} (${parentAccountName})`;
+          }
+        }
+        // If account, append (first contact name)
+        else if (type === "account") {
+          // Try to get first related contact
+          try {
+            const contactMeta = entityMap["contact"];
+            const contactsData = await CrmService.fetchEntity(
+              contactMeta.set,
+              {
+                select: contactMeta.display,
+                filter: `_parentcustomerid_value eq ${r[meta.id]}`,
+                top: 1,
+                headers: {
+                  Prefer:
+                    'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+                },
+              },
+              creds
+            );
+            const contactName =
+              contactsData.value &&
+              contactsData.value[0] &&
+              contactsData.value[0][contactMeta.display];
+            if (contactName) {
+              name = `${name} (${contactName})`;
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+        return {
+          id: r[meta.id],
+          name,
+          type,
+          url: `http://192.168.1.6/Gostaresh/main.aspx?pagetype=entityrecord&etn=${meta.logicalName}&id=%7B${r[meta.id]}%7D`,
+        };
+      })
+    );
 
     res.json(list);
   } catch (err) {

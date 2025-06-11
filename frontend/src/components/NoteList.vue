@@ -24,8 +24,8 @@
               📎 دانلود
             </a>
           </td>
-          <td>{{ n.createdby || '-' }}</td>
-          <td>{{ formatDate(n.createdon) }}</td>
+          <td class="ccreateby">{{ n.createdby || '-' }}</td>
+          <td class="ccreatedon">{{ formatDate(n.createdon) }}</td>
         </tr>
       </tbody>
     </table>
@@ -94,5 +94,11 @@ th {
 }
 .cfile {
   max-width: 45px;
+}
+.ccreateby {
+  max-width: 60px;
+}
+.ccreatedon {
+  max-width: 75px;
 }
 </style>

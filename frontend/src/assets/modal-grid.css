@@ -59,9 +59,16 @@
   gap: 1rem;
   direction: rtl;
 }
+.sub-grid-33-50-16 {
+  display: grid;
+  grid-template-columns: 0.3333fr 0.3333fr 0.3333fr;
+  gap: 1rem;
+  direction: rtl;
+}
 .sub-grid-33-66 > *,
 .sub-grid-50-50 > *,
-.sub-grid-33-33-33 > * {
+.sub-grid-33-33-33 > *,
+.sub-grid-33-50-16 > * {
   width: 100%;
   box-sizing: border-box;
 }

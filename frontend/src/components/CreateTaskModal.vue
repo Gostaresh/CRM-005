@@ -6,7 +6,6 @@
     title="ایجاد وظیفه"
     class="create-task-modal"
     style="width: 95%; max-width: 95%"
-    dir="rtl"
   >
     <n-alert v-if="formErrors.length" type="error" class="mb-2">
       {{ formErrors[0] }}
@@ -27,7 +26,7 @@
         />
 
         <!-- نوع عطف + عطف به (33 % / 66 %) -->
-        <div class="sub-grid-33-66 mb-3">
+        <div class="sub-grid-1-2-m2 mb-3">
           <n-select
             v-model:value="form.regardingType"
             :options="regardingTypeOptions"
@@ -48,13 +47,23 @@
             @update:value="searchRegarding"
             @select="onRegardingSelect"
           />
+          <n-button
+            type="info"
+            dashed
+            tag="a"
+            target="_blank"
+            size="medium"
+            :href="form.regardingUrl"
+            v-if="form.regardingUrl"
+            >⛓️‍💥</n-button
+          >
         </div>
       </div>
 
       <!--  RIGHT 50 %  – owner / dates / priority‑seen -->
       <div class="form-right">
         <!-- مالک فعلی (+ hidden previous owner) -->
-        <div class="sub-grid-50-50 mb-3">
+        <div class="sub-grid-1-1 mb-3">
           <n-auto-complete
             v-model:value="form.ownerLabel"
             :options="ownerOptions"
@@ -71,7 +80,7 @@
         </div>
 
         <!-- تاریخ شروع / پایان -->
-        <div class="sub-grid-33-33-33 mb-3">
+        <div class="sub-grid-1-1-1 mb-3">
           <DatePicker
             auto-submit
             v-model="form.startMoment"
@@ -106,7 +115,7 @@
         </div>
 
         <!-- اولویت / دیده شده -->
-        <div class="sub-grid-33-33-33 mb-3">
+        <div class="sub-grid-1-1-1 mb-3">
           <n-select
             v-model:value="form.priority"
             placement="bottom-end"
@@ -141,7 +150,7 @@
     <h6 class="fw-bold my-2">یادداشت‌ها</h6>
 
     <!-- Note subject + file row -->
-    <div class="sub-grid-50-50 mb-2">
+    <div class="sub-grid-1-1 mb-2">
       <n-input v-model:value="note.subject" dir="rtl" placeholder="موضوع" />
       <input type="file" class="form-control form-control-sm" @change="onFileChange" />
     </div>
@@ -219,10 +228,11 @@ const form = reactive({
   startIso: '',
   endIso: '',
   endAIso: '',
-  priority: 0,
+  priority: 1,
   regardingType: 'account',
   regardingObjectId: '',
   regardingObjectLabel: '',
+  regadingUrl: '',
   ownerId: '',
   ownerLabel: '',
   newSeen: false,
@@ -293,6 +303,7 @@ function onRegardingSelect(value: string) {
   form.regardingObjectId = value // GUID
   const match = regardingOptions.value.find((o) => o.value === value)
   form.regardingObjectLabel = match ? match.label : ''
+  form.regardingUrl = match ? match.url : ''
 }
 function onOwnerSelect(value: string, opt?: { label: string; value: string }) {
   if (!opt) {
@@ -474,10 +485,11 @@ function resetFormFields() {
     startIso: '',
     endIso: '',
     endAIso: '',
-    priority: '1',
+    priority: 1,
     regardingType: 'account',
     regardingObjectId: '',
     regardingObjectLabel: '',
+    regardingUrl: '',
     ownerId: '',
     ownerLabel: '',
     newSeen: 0,
