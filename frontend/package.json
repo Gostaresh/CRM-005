@@ -27,7 +27,6 @@
     "vue3-persian-datetime-picker": "^1.2.2"
   },
   "devDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.42.0",
     "@vicons/antd": "^0.13.0",
     "@vicons/carbon": "^0.13.0",
     "@vicons/fa": "^0.13.0",
@@ -46,8 +45,5 @@
     "vfonts": "^0.0.3",
     "vite": "^6.2.4",
     "vite-plugin-vue-devtools": "^7.7.2"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.6.1"
   }
 }
