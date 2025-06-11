@@ -438,8 +438,8 @@ async function save() {
       // If user entered a note, create it
       if (note.text.trim() || note.base64) {
         const notePayload: Record<string, unknown> = {
-          subject: note.subject,
-          notetext: note.text,
+          subject: note.subject || 'بدون موضوع',
+          notetext: note.text || 'بدون توضیحات',
         }
         if (note.base64) {
           notePayload.filename = note.file?.name

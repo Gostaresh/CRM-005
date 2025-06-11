@@ -522,8 +522,8 @@ export default {
     async function addNote() {
       if (!newNote.text.trim() && !newNote.base64) return
       const payload = {
-        subject: newNote.subject,
-        notetext: newNote.text,
+        subject: newNote.subject || 'بدون موضوع',
+        notetext: newNote.text || 'بدون توضیحات',
       }
       if (newNote.base64) {
         payload.filename = newNote.file?.name
