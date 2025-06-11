@@ -521,7 +521,6 @@ const activityStatusMap = {
       3: "In Progress",
       4: "Waiting on someone else",
       7: "Deferred",
-      100000000: "ssss",
     },
     1: { 5: "Completed" },
     2: { 6: "Canceled" },

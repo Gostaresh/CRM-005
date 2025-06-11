@@ -21,7 +21,7 @@ const tiles = [
   { label: 'تقویم و فعالیت‌ها', route: '/calendar', icon: CalendarOutlined, ready: true },
   { label: 'فروش', route: '/sales', icon: LineChartOutlined, ready: false },
   { label: 'مخاطبین', route: '/contacts', icon: TeamOutlined, ready: false },
-  { label: 'گزارشات', route: '/reports', icon: BarChartOutlined, ready: true },
+  { label: 'گزارشات', route: '/reports', icon: BarChartOutlined, ready: false },
   { label: 'تنظیمات', route: '/settings', icon: SettingOutlined, ready: false },
 ]
 </script>

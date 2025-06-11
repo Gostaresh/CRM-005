@@ -212,7 +212,7 @@ import { getRegardingTypeOptions } from '@/composables/useEntityMap'
 import { updateActivity, getTaskNotes, addTaskNote } from '@/api/crm'
 import { useRegardingSearch, useOwnerSearch } from '@/composables/useEntitySearch'
 import { formatDatetimeLocal, jalaliToIso } from '@/utils/dateHelpers'
-import { MAX_FILE_SIZE, fileToBase64 } from '@/utils/fileHelpers'
+import { fileToBase64 } from '@/utils/fileHelpers'
 import { validateTask } from '@/utils/validators'
 import DatePicker from 'vue3-persian-datetime-picker'
 import NoteList from './NoteList.vue'
@@ -252,7 +252,7 @@ export default {
     }
     const shareLink = computed(() =>
       props.task?.activityid
-        ? `${window.location.origin}/dashboard?activityId=${props.task.activityid}`
+        ? `${window.location.origin}/calendar?activityId=${props.task.activityid}`
         : '',
     )
     // dropdown options provided by backend (Persian)

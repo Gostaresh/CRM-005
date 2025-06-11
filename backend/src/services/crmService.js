@@ -266,7 +266,31 @@ class CrmService {
             "_new_lastowner_value@OData.Community.Display.V1.FormattedValue"
           ] || "";
       } catch (err) {
-        logger.warn(`Unable to fetch task extras: ${err.message}`);
+        logger.warn(`Unable to fetch activity extras: ${err.message}`);
+      }
+    }
+
+    if (data.activitytypecode === "new_morakhasi") {
+      try {
+        const taskData = await this.fetchEntity(
+          `new_morakhasis(${activityId})`,
+          {
+            select: "new_seen,_new_lastowner_value",
+            headers: {
+              Prefer: 'odata.include-annotations="*"',
+            },
+          },
+          credentials
+        );
+
+        newSeen = !!taskData.new_seen;
+        lastOwnerId = taskData._new_lastowner_value || null;
+        lastOwnerName =
+          taskData[
+            "_new_lastowner_value@OData.Community.Display.V1.FormattedValue"
+          ] || "";
+      } catch (err) {
+        logger.warn(`Unable to fetch activity extras: ${err.message}`);
       }
     }
 
