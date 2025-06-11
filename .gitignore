@@ -7,3 +7,5 @@ frontend/build
 tools/.venv
 node_modules
 tools/d365-env
+.env
+frontend/.env

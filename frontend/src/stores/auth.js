@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
+import { BASE_URL } from '@/utils/env'
 
 // const baseUrl = import.meta.env.VITE_API_BASE_URL
-const baseUrl = ''
+const baseUrl = BASE_URL || 'http://localhost:3000'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({

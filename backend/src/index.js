@@ -55,6 +55,8 @@ app.use(
         "https://192.168.1.22",
         "http://192.168.1.22:5173",
         "https://192.168.1.22:5173",
+        "http://localhost:5173",
+        "https://localhost:5173",
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {

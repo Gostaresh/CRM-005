@@ -6,6 +6,7 @@
     title="ایجاد وظیفه"
     class="create-task-modal"
     style="width: 95%; max-width: 95%"
+    dir="rtl"
   >
     <n-alert v-if="formErrors.length" type="error" class="mb-2">
       {{ formErrors[0] }}
@@ -141,12 +142,12 @@
 
     <!-- Note subject + file row -->
     <div class="sub-grid-50-50 mb-2">
-      <n-input v-model:value="note.subject" placeholder="موضوع" />
+      <n-input v-model:value="note.subject" dir="rtl" placeholder="موضوع" />
       <input type="file" class="form-control form-control-sm" @change="onFileChange" />
     </div>
 
     <!-- Note textarea -->
-    <n-input v-model:value="note.text" type="textarea" rows="3" placeholder="توضیحات" />
+    <n-input v-model:value="note.text" type="textarea" rows="3" dir="rtl" placeholder="توضیحات" />
 
     <template #footer>
       <n-space justify="end">

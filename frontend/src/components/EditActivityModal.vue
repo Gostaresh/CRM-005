@@ -149,7 +149,7 @@
 
       <!-- افزودن یادداشت -->
       <div class="sub-grid-50-50 mb-2">
-        <n-input v-model:value="newNote.subject" placeholder="موضوع" />
+        <n-input v-model:value="newNote.subject" dir="rtl" placeholder="موضوع" />
         <input type="file" class="form-control form-control-sm" @change="onNewFile" />
       </div>
       <n-input
@@ -158,6 +158,7 @@
         rows="3"
         placeholder="توضیحات"
         class="mb-2"
+        dir="rtl"
       />
       <button type="button" class="btn btn-sm btn-outline-primary" @click="addNote">
         افزودن یادداشت
