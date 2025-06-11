@@ -176,7 +176,7 @@ import { searchEntity, createTask, searchSystemUsers, addTaskNote } from '@/api/
 import { PRIORITY_OPTIONS, SEEN_OPTIONS, STATE_OPTIONS } from '@/constants/taskOptions'
 import { MAX_FILE_SIZE, fileToBase64 } from '@/utils/fileHelpers'
 import { useRegardingSearch, useOwnerSearch } from '@/composables/useEntitySearch'
-import { validateTask } from '@/utils/validators'
+import { checkActivityRealTimeValidity } from '@/utils/validators'
 /* ---------------------------------------------------------------- *\
   Create‑task modal
   – Uses Naive‑UI & vue3-persian-datetime-picker
@@ -335,7 +335,7 @@ const isValid = computed(() => formErrors.value.length === 0)
 watch(
   () => [form.subject, form.startIso, form.endIso],
   () => {
-    formErrors.value = validateTask({
+    formErrors.value = checkActivityRealTimeValidity({
       subject: form.subject,
       startRaw: form.startIso,
       endRaw: form.endIso,

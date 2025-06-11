@@ -215,7 +215,7 @@ import { updateActivity, getTaskNotes, addTaskNote } from '@/api/crm'
 import { useRegardingSearch, useOwnerSearch } from '@/composables/useEntitySearch'
 import { formatDatetimeLocal, jalaliToIso } from '@/utils/dateHelpers'
 import { MAX_FILE_SIZE, fileToBase64 } from '@/utils/fileHelpers'
-import { validateTask } from '@/utils/validators'
+import { checkActivityRealTimeValidity } from '@/utils/validators'
 import DatePicker from 'vue3-persian-datetime-picker'
 import NoteList from './NoteList.vue'
 
@@ -470,7 +470,7 @@ export default {
     watch(
       () => [form.value.subject, form.value.startRaw, form.value.endRaw],
       () => {
-        formErrors.value = validateTask(form.value)
+        formErrors.value = checkActivityRealTimeValidity(form.value)
       },
       { immediate: true },
     )

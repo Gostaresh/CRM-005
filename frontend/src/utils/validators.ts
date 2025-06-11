@@ -6,10 +6,8 @@ export interface TaskFormShape {
 }
 
 /** Very small validation: subject required, end ≥ start */
-export function validateTask(form: TaskFormShape): string[] {
+export function checkActivityRealTimeValidity(form: TaskFormShape): string[] {
   const errors: string[] = []
-
-  if (!form.subject.trim()) errors.push('موضوع وارد نشده است.')
 
   if (form.startRaw && form.endRaw) {
     const start = new Date(form.startRaw).getTime()

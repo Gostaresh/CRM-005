@@ -90,6 +90,7 @@ export function createCalendarOptions(args: MainArgs) {
     viewMode,
     HOLIDAY_SOURCE,
     SEEN_EVENT_BG,
+    DEFAULT_EVENT_BORDER,
     DEFAULT_EVENT_BG,
     clampToGrid,
     toJalali,
@@ -127,7 +128,16 @@ export function createCalendarOptions(args: MainArgs) {
       center: 'title',
       right: 'showCalendar,showTable listMonth,dayGridMonth,timeGridWeek,timeGridDay',
     },
-
+    buttonText: {
+      today: 'امروز',
+      month: 'ماهانه',
+      week: 'هفتگی',
+      day: 'روزانه',
+      listMonth: 'لیست ماهانه',
+      // Optional custom buttons (if "showCalendar" or "showTable" are custom buttons)
+      showCalendar: 'تقویم',
+      showTable: 'جدول',
+    },
     eventSources: [
       HOLIDAY_SOURCE,
       {
@@ -145,8 +155,9 @@ export function createCalendarOptions(args: MainArgs) {
                 start: clampToGrid(t.scheduledstart, true),
                 end: clampToGrid(t.scheduledend ?? t.scheduledstart, false),
                 extendedProps: t,
-                backgroundColor: t.new_seen ? SEEN_EVENT_BG : t.color || DEFAULT_EVENT_BG,
-                borderColor: '#000000',
+                // prettier-ignore
+                backgroundColor: t.new_seen ? (t.color || SEEN_EVENT_BG) : SEEN_EVENT_BG,
+                borderColor: DEFAULT_EVENT_BORDER,
                 editable: true,
               })),
             )
